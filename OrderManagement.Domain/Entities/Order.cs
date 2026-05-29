@@ -6,6 +6,7 @@ public class Order
     public int Id { get; set; }
 
     // Scalar properties
+    // Note: DateTime is configured to be set by EF Core at DB level
     public OrderStatus Status { get; set; }
     public DateTime Created { get; set; }
     

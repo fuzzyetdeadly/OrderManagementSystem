@@ -14,5 +14,6 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
 
         // Make status save as string
         builder.Property(o => o.Status).HasConversion<string>();
+        builder.Property(o => o.Created).HasDefaultValueSql("NOW()");
     }
 }
