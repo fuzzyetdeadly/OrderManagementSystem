@@ -1,9 +1,21 @@
+using Microsoft.EntityFrameworkCore;
+using OrderManagement.Infrastructure.Persistence;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+#region services
+// Register DbContext and Controller support
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddControllers();
+
+// Register OpenAPI generation service
+// Learn more at https://aka.ms/aspnet/openapi
+builder.Services.AddOpenApi();
+#endregion
+
+#region middleware
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -13,7 +25,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+#endregion
 
+#region endpoints
 var summaries = new[]
 {
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
@@ -32,6 +46,7 @@ app.MapGet("/weatherforecast", () =>
     return forecast;
 })
 .WithName("GetWeatherForecast");
+#endregion
 
 app.Run();
 
