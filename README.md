@@ -5,6 +5,34 @@ This repository contains a demo order management system.
 It was built to get a better understanding of the .NET/ASP.NET Core, EF Core technologies.
 It is intended to use PostgreSQL as a back-end, and React for it's front end.
 
+## Features
+
+Lorem ipsum
+
+## How to run
+
+Required installs:
+
+* PostgreSQL
+* Visual Studio or Visual Studio Code
+* .NET SDK for .NET 10.0
+* `dotnet ef` with `dotnet tool install --global dotnet-ef`
+
+Run steps:
+
+1\. Clone the project and open it locally
+2\. Open `OrderManagement.API/appsettings.json` and set your PostgreSQL password
+3\. (Optional) Run `dotnet restore` to install dependencies
+3\. `cd OrderManagement.API/appsettings.json` to give Visual Studio startup context
+4\. Run `dotnet ef database update` to create the initial database and it's tables.
+
+Note: If you see the logs creating tables, it should have succeeded, but you can double check with `dotnet ef migrations list`, which will connect to the DB and list them from `__EFMigrationsHistory`.
+
+5\. (Optional) Connect to the DB with `pgAdmin` 
+(run as admin, because Windows Smart control sometimes blocks `libpq.dll`,
+which requires a re-install to fix.)
+6\. (Optional) Inspect the DB to verify that tables were created correctly.
+
 ## Author's professional summary
 
 Timothy Guan is a Software Engineering Manager with 14 years of experience across the full SDLC, delivering enterprise-grade applications and tools in a global multinational environment. 
