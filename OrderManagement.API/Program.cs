@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OrderManagement.Application.Services;
+using OrderManagement.Domain.Entities;
 using OrderManagement.Domain.Interfaces;
 using OrderManagement.Infrastructure.Persistence;
 using OrderManagement.Infrastructure.Repositories;
@@ -32,12 +33,31 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    // Seed test customer data (if there are none)
+    using(var scope = app.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        if(!context.Customers.Any())
+        {
+            context.Customers.Add(new Customer()
+            {
+                Name = "Jane Doe",
+                Email = "Jane.Doe@gmail.com"
+            });
+            await context.SaveChangesAsync();
+        }
+    }
 }
 
 app.UseHttpsRedirection();
 #endregion
 
 #region endpoints
+// Implicitly handles routing and endpoints
+app.MapControllers();
+
 var summaries = new[]
 {
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
