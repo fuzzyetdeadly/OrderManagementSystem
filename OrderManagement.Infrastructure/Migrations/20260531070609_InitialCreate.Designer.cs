@@ -12,7 +12,7 @@ using OrderManagement.Infrastructure.Persistence;
 namespace OrderManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260529074246_InitialCreate")]
+    [Migration("20260531070609_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -121,7 +121,7 @@ namespace OrderManagement.Infrastructure.Migrations
             modelBuilder.Entity("OrderManagement.Domain.Entities.OrderItem", b =>
                 {
                     b.HasOne("OrderManagement.Domain.Entities.Order", "Order")
-                        .WithMany("OrderItems")
+                        .WithMany("Items")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -136,7 +136,7 @@ namespace OrderManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("OrderManagement.Domain.Entities.Order", b =>
                 {
-                    b.Navigation("OrderItems");
+                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

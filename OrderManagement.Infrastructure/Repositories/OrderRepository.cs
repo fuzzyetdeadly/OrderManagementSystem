@@ -25,7 +25,7 @@ public class OrderRepository : IOrderRepository
         // The Select here is also used to map data without Customer
         // Otherwise, 
         return await _context.Orders
-            .Include(o => o.OrderItems)
+            .Include(o => o.Items)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -36,7 +36,7 @@ public class OrderRepository : IOrderRepository
         // Returns an order if found, with Customer/OrderItem navigations
         return await _context.Orders
             .Include(o => o.Customer)
-            .Include(o => o.OrderItems)
+            .Include(o => o.Items)
             .FirstOrDefaultAsync(o => o.Id == id);
     }
 
