@@ -1,0 +1,76 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using OrderManagement.Application.DTOs;
+using OrderManagement.Application.Services;
+using OrderManagement.Domain.Entities;
+
+namespace OrderManagement.API.Controllers;
+
+/* Note:
+ * ApiController
+  1. Automatic model validation. Removes a lot of boilerplate code
+	 If required fields missing, will toss 400 bad request
+  2. Auto-bind body parameters. Anything from body gets mapped to request DTOs
+  3. Detailed problem responses in standard ProblemDetails shape.	
+  4. Route attribute is required.
+ */
+[ApiController]
+[Route("api/orders")]
+public class OrdersController : ControllerBase
+{
+    private readonly OrderService _orderService;
+
+    public OrdersController(OrderService orderService)
+    {
+        _orderService = orderService;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        var orders = await _orderService.GetAllAsync(page, pageSize);
+
+        return Ok(orders);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var order = await _orderService.GetOrderIdAsync(id);
+
+        return order == null ? NotFound() : Ok(order);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CreateOrderDto dto)
+    {
+        var createdOrder = await _orderService.CreateAsync(dto);
+
+        /* Note:
+         * Sets Status = 201 and the location header to
+         * Location: https://<host>/api/orders/{id}
+         * Returns 'createdOrder' in the response
+         * Mind: location is a bit redundant, since response already returns dto
+         * this pattern is more about following REST conventions
+         * In older web dev, apparently Location is used to trigger a client callback
+         * to GET the location.
+         */
+        return CreatedAtAction(nameof(GetById), new { id = createdOrder.Id }, createdOrder);
+    }
+
+    [HttpPatch("{id}/status")]
+    public async Task<IActionResult> UpdateStatus(int id, [FromBody] OrderStatus status)
+    {
+        var updatedOrder = await _orderService.UpdateStatusAsync(id, status);
+
+        return updatedOrder == null ? NotFound() : Ok(updatedOrder);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var isDeleted = await _orderService.DeleteAsync(id);
+
+        // Status 204 on successful deletion (no content)
+        return isDeleted ? NoContent() : NotFound();
+    }
+}

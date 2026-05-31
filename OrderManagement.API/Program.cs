@@ -1,13 +1,22 @@
 using Microsoft.EntityFrameworkCore;
+using OrderManagement.Application.Services;
+using OrderManagement.Domain.Interfaces;
 using OrderManagement.Infrastructure.Persistence;
+using OrderManagement.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 #region services
-// Register DbContext and Controller support
+// Register DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Register repositories/services
+// Scoped = One instance per request
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<OrderService>();
+
+// Add controller support
 builder.Services.AddControllers();
 
 // Register OpenAPI generation service
