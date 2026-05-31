@@ -33,6 +33,19 @@ Note: If you see the logs creating tables, it should have succeeded, but you can
 which requires a re-install to fix.)
 6\. (Optional) Inspect the DB to verify that tables were created correctly.
 
+## Resetting migrations 
+
+If there are changes to any of the following:
+
+* `OrderManagement/Domain/Entities/*.cs`
+* `OrderManagement/Infrastructure/AppDbContext.cs`
+* `OrderManagement/Infrastructure/Migrations/Persistence/*` configurations
+
+Then it will be necessary to reset migrations for fresh clones.
+This can be done by running `ResetMigrations.bat` from the solution folder.
+
+Warning: Must be done from the solution folder, or the script will fail!
+
 ## Author's professional summary
 
 Timothy Guan is a Software Engineering Manager with 14 years of experience across the full SDLC, delivering enterprise-grade applications and tools in a global multinational environment. 
