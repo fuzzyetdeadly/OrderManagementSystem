@@ -1,0 +1,17 @@
+@apiEndpoint = https://localhost:7000/api
+
+# Legend:
+# ! = Not testable via SwaggerUI
+
+### Get Orders
+GET {{apiEndpoint}}/orders
+Accept: application/json
+
+### Update Order Status - Invalid order id (!)
+PATCH {{apiEndpoint}}/orders/a/status
+Accept: application/json
+Content-Type: application/json
+
+{
+  "status": "Pending"
+}
