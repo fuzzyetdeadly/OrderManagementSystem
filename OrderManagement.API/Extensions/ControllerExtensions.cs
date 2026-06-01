@@ -14,8 +14,9 @@ public static class ControllerExtensions
         services.AddControllers()
             .AddJsonOptions(options =>
             {
-                // Make API accept strings for enums
-                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                // Make API accept strings for enums, do not allow integers (prevent bad casts)
+                options.JsonSerializerOptions.Converters.Add(
+                    new JsonStringEnumConverter(allowIntegerValues: false));
             })
             .ConfigureApiBehaviorOptions(options =>
             {
