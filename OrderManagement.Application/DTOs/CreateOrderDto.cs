@@ -1,4 +1,6 @@
-﻿/*
+﻿namespace OrderManagement.Application.DTOs;
+
+/*
  * For inbound DTOs, good practice for prefix to indicate purpose
  */
 public record CreateOrderDto

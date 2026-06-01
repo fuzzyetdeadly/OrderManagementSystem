@@ -5,6 +5,6 @@ public static class ErrorMessages
 {
     public static class Validation
     {
-        public static string InvalidValue = "The provided value is invalid";
+        public const string InvalidValue = "The provided value is invalid";
     }
 }
