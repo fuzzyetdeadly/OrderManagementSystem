@@ -1,4 +1,4 @@
-﻿using OrderManagement.Application.DTOs;
+﻿using OrderManagement.Application.Models;
 using OrderManagement.Domain.Entities;
 using OrderManagement.Domain.Interfaces;
 
@@ -18,14 +18,14 @@ public class OrderService
      * Results are fully materialized (IEnumerable) before return from  async
      * Caller is responsible for enforcing page/pageSize
      */
-    public async Task<IEnumerable<OrderDto>> GetAllAsync(int page, int pageSize)
+    public async Task<IEnumerable<OrderResponse>> GetAllAsync(int page, int pageSize)
     {
         var orders = await _repository.GetAllAsync(page, pageSize);
 
         return orders.Select(MapToDto);
     }
 
-    public async Task<OrderDto?> GetOrderIdAsync(int id)
+    public async Task<OrderResponse?> GetOrderIdAsync(int id)
     {
         var order = await _repository.GetOrderIdAsync(id);
 
@@ -33,7 +33,7 @@ public class OrderService
         return order is null ? null : MapToDto(order);
     }
 
-    public async Task<OrderDto> CreateAsync(CreateOrderDto dto)
+    public async Task<OrderResponse> CreateAsync(CreateOrderRequest dto)
     {
         // Map the order and pass it to repository
         var order = new Order()
@@ -54,7 +54,7 @@ public class OrderService
         return MapToDto(createdOrder);
     }
 
-    public async Task<OrderDto?> UpdateStatusAsync(int id, OrderStatus status)
+    public async Task<OrderResponse?> UpdateStatusAsync(int id, OrderStatus status)
     {
         // Exist check is checked in the repository (not needed here)
         // i.e. Service just needs to forward the parameters directly
@@ -67,17 +67,10 @@ public class OrderService
     public async Task<bool> DeleteAsync(int id) => 
         await _repository.DeleteAsync(id);
 
-    private static OrderDto MapToDto(Order o) => new()
-    {
-        Id = o.Id,
-        Status = o.Status.ToString(),
-        Created = o.Created,
-        CustomerId = o.CustomerId,
-        Items = [.. o.Items.Select(oi => new OrderItem()
-        {
-            ProductName = oi.ProductName,
-            Quantity = oi.Quantity,
-            UnitPrice = oi.UnitPrice,
-        })]
-    };
+    private static OrderResponse MapToDto(Order o) => new(
+        o.Id, o.Status.ToString(), o.Created, o.CustomerId,
+        [.. o.Items.Select(oi =>
+            new OrderItemResponse(oi.ProductName, oi.Quantity, oi.UnitPrice)
+        )]
+    );
 }

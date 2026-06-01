@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using OrderManagement.Application.DTOs;
+using OrderManagement.API.DTOs;
+using OrderManagement.Application.Models;
 using OrderManagement.Application.Services;
 using OrderManagement.Domain.Entities;
 
@@ -43,7 +44,14 @@ public class OrdersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateOrderDto dto)
     {
-        var createdOrder = await _orderService.CreateAsync(dto);
+        // Map DTO to OrderRequest (no null values)
+        var orderRequest = new CreateOrderRequest(
+            dto.CustomerId!.Value, 
+            [.. dto.Items.Select(i => 
+                new CreateOrderItemRequest(i.ProductName, i.Quantity, i.UnitPrice))]
+        );
+
+        var createdOrder = await _orderService.CreateAsync(orderRequest);
 
         /* Note:
          * Sets Status = 201 and the location header to

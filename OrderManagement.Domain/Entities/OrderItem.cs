@@ -1,9 +1,10 @@
 ﻿namespace OrderManagement.Domain.Entities;
 
+// Note: 'required' indicates ProductName must be set on construct
 public class OrderItem
 {
     public int Id { get; set; }
-    public string ProductName { get; set; } = string.Empty;
+    public required string ProductName { get; set; }
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
     public int OrderId { get; set; }
