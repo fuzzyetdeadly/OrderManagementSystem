@@ -1,4 +1,6 @@
-﻿namespace OrderManagement.Domain.Entities;
+﻿using System.Text.Json.Serialization;
+
+namespace OrderManagement.Domain.Entities;
 
 public class Order
 {
@@ -18,6 +20,9 @@ public class Order
     public ICollection<OrderItem> Items { get; set; } = [];
 }
 
+// This attribute will make swagger generate enum options
+// as strings for OrderStatus inputs.
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum OrderStatus
 {
     Pending,

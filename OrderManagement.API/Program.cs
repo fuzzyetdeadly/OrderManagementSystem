@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using OrderManagement.API.Extensions;
 using OrderManagement.Application.Services;
 using OrderManagement.Domain.Entities;
 using OrderManagement.Domain.Interfaces;
@@ -14,11 +15,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Register repositories/services
 // Scoped = One instance per request
+// Concrete service, likely won't explore other
+// OrderService implementations for this demo project
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<OrderService>();
 
-// Add controller support
-builder.Services.AddControllers();
+// Add custom controller support
+builder.Services.AddCustomControllers();
 
 // Register Swagger generation service
 builder.Services.AddEndpointsApiExplorer();

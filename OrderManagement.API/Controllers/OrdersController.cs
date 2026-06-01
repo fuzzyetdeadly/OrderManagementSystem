@@ -58,9 +58,11 @@ public class OrdersController : ControllerBase
     }
 
     [HttpPatch("{id}/status")]
-    public async Task<IActionResult> UpdateStatus(int id, [FromBody] OrderStatus status)
+    public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateOrderStatusDto dto)
     {
-        var updatedOrder = await _orderService.UpdateStatusAsync(id, status);
+        // Status is guarenteed not null here, as [Required] validates it's presence
+        // [ApiController] will automatically reject with status 400 if validation failed
+        var updatedOrder = await _orderService.UpdateStatusAsync(id, dto.Status!.Value);
 
         return updatedOrder == null ? NotFound() : Ok(updatedOrder);
     }

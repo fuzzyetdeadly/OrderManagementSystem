@@ -1,13 +1,13 @@
 ﻿/*
  * For inbound DTOs, good practice for prefix to indicate purpose
  */
-public class CreateOrderDto
+public record CreateOrderDto
 {
     public int CustomerId { get; set; }
     public List<CreateOrderItemDto> Items { get; set; } = [];
 }
 
-public class CreateOrderItemDto
+public record CreateOrderItemDto
 {
     public string ProductName { get; set; } = string.Empty;
     public int Quantity { get; set; }
