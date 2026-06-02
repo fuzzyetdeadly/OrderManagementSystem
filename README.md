@@ -28,17 +28,17 @@ Required installs:
 
 Run steps:
 
-1\. Clone the project and open it locally
-2\. Open `OrderManagement.API/appsettings.json` and set your PostgreSQL password
-3\. (Optional) Run `dotnet restore` to install dependencies
-3\. `cd OrderManagement.API/appsettings.json` to give Visual Studio startup context
-4\. Run `dotnet ef database update` to create the initial database and it's tables.
+1\. Clone the project and open it locally  
+2\. Open `OrderManagement.API/appsettings.json` and set your PostgreSQL password  
+3\. (Optional) Run `dotnet restore` to install dependencies  
+3\. `cd OrderManagement.API/appsettings.json` to give Visual Studio startup context  
+4\. Run `dotnet ef database update` to create the initial database and it's tables.   
 
 Note: If you see the logs creating tables, it should have succeeded, but you can double check with `dotnet ef migrations list`, which will connect to the DB and list them from `__EFMigrationsHistory`.
 
-5\. (Optional) Connect to the DB with `pgAdmin` 
-(run as admin, because Windows Smart control sometimes blocks `libpq.dll`,
-which requires a re-install to fix.)
+5\. (Optional) Connect to the DB with `pgAdmin`  
+(run as admin, because Windows Smart control sometimes blocks `libpq.dll`,  
+which requires a re-install to fix.)  
 6\. (Optional) Inspect the DB to verify that tables were created correctly.
 
 ## Resetting migrations 
