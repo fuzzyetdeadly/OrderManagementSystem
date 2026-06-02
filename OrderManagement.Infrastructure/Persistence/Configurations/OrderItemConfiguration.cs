@@ -18,13 +18,13 @@ public class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
             .IsRequired();
 
         builder.ToTable(t => t.HasCheckConstraint(
-            DbConstraints.OrderItem.QuantityPositive, "[Quantity] > 0")
+            DbConstraints.OrderItem.QuantityPositive, "\"Quantity\" > 0")
         );
 
         // 18, 2 is Standard for money
         builder.Property(oi => oi.UnitPrice).HasPrecision(18, 2);   
 
         builder.ToTable(t => t.HasCheckConstraint(
-            DbConstraints.OrderItem.UnitPricePositive, "[UnitPrice] > 0"));
+            DbConstraints.OrderItem.UnitPricePositive, "\"UnitPrice\" > 0"));
     }
 }

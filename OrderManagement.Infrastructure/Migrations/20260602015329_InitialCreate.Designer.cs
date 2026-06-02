@@ -12,7 +12,7 @@ using OrderManagement.Infrastructure.Persistence;
 namespace OrderManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260531070609_InitialCreate")]
+    [Migration("20260602015329_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -90,8 +90,8 @@ namespace OrderManagement.Infrastructure.Migrations
 
                     b.Property<string>("ProductName")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
@@ -104,7 +104,12 @@ namespace OrderManagement.Infrastructure.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("OrderItems");
+                    b.ToTable("OrderItems", t =>
+                        {
+                            t.HasCheckConstraint("CK_OrderItem_Quantity", "\"Quantity\" > 0");
+
+                            t.HasCheckConstraint("CK_OrderItem_UnitPrice", "\"UnitPrice\" > 0");
+                        });
                 });
 
             modelBuilder.Entity("OrderManagement.Domain.Entities.Order", b =>

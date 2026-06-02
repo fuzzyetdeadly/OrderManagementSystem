@@ -53,7 +53,7 @@ namespace OrderManagement.Infrastructure.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    ProductName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    ProductName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     Quantity = table.Column<int>(type: "integer", nullable: false),
                     UnitPrice = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     OrderId = table.Column<int>(type: "integer", nullable: false)
@@ -61,6 +61,8 @@ namespace OrderManagement.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_OrderItems", x => x.Id);
+                    table.CheckConstraint("CK_OrderItem_Quantity", "\"Quantity\" > 0");
+                    table.CheckConstraint("CK_OrderItem_UnitPrice", "\"UnitPrice\" > 0");
                     table.ForeignKey(
                         name: "FK_OrderItems_Orders_OrderId",
                         column: x => x.OrderId,
