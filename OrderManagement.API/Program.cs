@@ -1,10 +1,12 @@
 using Microsoft.EntityFrameworkCore;
+using OrderManagement.API.DTOs;
 using OrderManagement.API.Extensions;
 using OrderManagement.Application.Services;
 using OrderManagement.Domain.Entities;
 using OrderManagement.Domain.Interfaces;
 using OrderManagement.Infrastructure.Persistence;
 using OrderManagement.Infrastructure.Repositories;
+using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,9 +25,14 @@ builder.Services.AddScoped<OrderService>();
 // Add custom controller support
 builder.Services.AddCustomControllers();
 
-// Register Swagger generation service
+// Register Swagger generation service and examples
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.ExampleFilters();   // Instruct Swagger to use examples
+});
+
+builder.Services.AddSwaggerExamplesFromAssemblyOf<CreateOrderDtoExample>();
 #endregion
 
 #region middleware
