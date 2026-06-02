@@ -4,7 +4,7 @@ namespace OrderManagement.API.DTOs;
 
 using OrderManagement.API.Constants;
 
-public class OrderQueryDto
+public class GetAllQueryDto
 {
     [Range(1, int.MaxValue, ErrorMessage = Errors.General.InvalidPage)]
     public int Page { get; set; } = 1;

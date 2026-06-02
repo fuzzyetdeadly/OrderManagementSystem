@@ -26,7 +26,7 @@ public class OrdersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] OrderQueryDto dto)
+    public async Task<IActionResult> GetAll([FromQuery] GetAllQueryDto dto)
     {
         var orders = await _orderService.GetAllAsync(dto.Page, dto.PageSize);
 
