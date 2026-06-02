@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using OrderManagement.API.Constants;
 using OrderManagement.API.DTOs;
 using OrderManagement.Application.Models;
 using OrderManagement.Application.Services;
-using OrderManagement.Domain.Entities;
 
 namespace OrderManagement.API.Controllers;
 
@@ -38,7 +38,12 @@ public class OrdersController : ControllerBase
     {
         var order = await _orderService.GetOrderIdAsync(id);
 
-        return order == null ? NotFound() : Ok(order);
+        return order != null ? Ok(order) :
+            Problem(
+                title: Errors.Order.NotFound,
+                detail: Errors.Order.NotFoundDetail(id),
+                statusCode: StatusCodes.Status404NotFound
+            );
     }
 
     [HttpPost]
@@ -72,7 +77,12 @@ public class OrdersController : ControllerBase
         // [ApiController] will automatically reject with status 400 if validation failed
         var updatedOrder = await _orderService.UpdateStatusAsync(id, dto.Status!.Value);
 
-        return updatedOrder == null ? NotFound() : Ok(updatedOrder);
+        return updatedOrder != null ? Ok(updatedOrder) :
+            Problem(
+                title: Errors.Order.NotFound,
+                detail: Errors.Order.NotFoundDetail(id),
+                statusCode: StatusCodes.Status404NotFound
+            );
     }
 
     [HttpDelete("{id}")]
@@ -81,6 +91,11 @@ public class OrdersController : ControllerBase
         var isDeleted = await _orderService.DeleteAsync(id);
 
         // Status 204 on successful deletion (no content)
-        return isDeleted ? NoContent() : NotFound();
+        return isDeleted ? NoContent() : 
+            Problem(
+                title: Errors.Order.NotFound,
+                detail: Errors.Order.NotFoundDetail(id),
+                statusCode: StatusCodes.Status404NotFound
+            );
     }
 }

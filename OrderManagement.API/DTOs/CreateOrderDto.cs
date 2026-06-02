@@ -11,7 +11,7 @@ namespace OrderManagement.API.DTOs;
 public record CreateOrderDto
 {
     [Required]
-    [Range(1, int.MaxValue, ErrorMessage = ErrorMessages.Order.InvalidCustomerId)]
+    [Range(1, int.MaxValue, ErrorMessage = Errors.Order.InvalidCustomerId)]
     public int? CustomerId { get; init; }
     public List<CreateOrderItemDto> Items { get; init; } = [];
 }
@@ -19,13 +19,13 @@ public record CreateOrderDto
 public record CreateOrderItemDto
 {
     [Required]
-    [MinLength(1, ErrorMessage = ErrorMessages.OrderItem.InvalidProductNameLength)]
-    [MaxLength(50, ErrorMessage = ErrorMessages.OrderItem.InvalidProductNameLength)]
+    [MinLength(1, ErrorMessage = Errors.OrderItem.InvalidProductNameLength)]
+    [MaxLength(50, ErrorMessage = Errors.OrderItem.InvalidProductNameLength)]
     public string ProductName { get; init; } = string.Empty;
     [Required]
-    [Range(1, int.MaxValue, ErrorMessage = ErrorMessages.OrderItem.InvalidQuantity)]
+    [Range(1, int.MaxValue, ErrorMessage = Errors.OrderItem.InvalidQuantity)]
     public int Quantity { get; init; }
     [Required]
-    [Range(0.01, double.MaxValue, ErrorMessage = ErrorMessages.OrderItem.InvalidUnitPrice)]
+    [Range(0.01, double.MaxValue, ErrorMessage = Errors.OrderItem.InvalidUnitPrice)]
     public decimal UnitPrice { get; init; }
 }

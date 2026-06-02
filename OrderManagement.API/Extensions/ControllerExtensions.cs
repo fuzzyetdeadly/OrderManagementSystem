@@ -44,7 +44,7 @@ public static class ControllerExtensions
                     {
                         problemDetails.Errors[key] = [.. problemDetails.Errors[key]
                             .Select(msg => msg.Contains("System.") | msg.Contains("Path:")
-                                ? ErrorMessages.General.InvalidValue : msg)];
+                                ? Errors.General.InvalidValue : msg)];
                     }
 
                     return new BadRequestObjectResult(problemDetails);
