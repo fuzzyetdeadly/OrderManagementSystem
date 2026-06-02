@@ -42,7 +42,7 @@ public class OrderRepository : IOrderRepository
 
     public async Task<Order> CreateAsync(Order order)
     {
-        // Add the order, the save it
+        // Add the order, then save it
         // Note: DB is configured to set 'Created' time
         _context.Orders.Add(order);
         await _context.SaveChangesAsync();
