@@ -7,7 +7,15 @@ It is intended to use PostgreSQL as a back-end, and React for it's front end.
 
 ## Features
 
-Lorem ipsum
+* In developer mode, will seed a test customer if there is none on startup
+* A simple RESTful Order Web API built on ASP.NET Core
+* Swagger UI for testing the API
+* Contains built in validation logic for existing scenarios
+
+## Next steps
+
+* Fix invalid `Order.CustomerId` exception not being handled correctly
+* Tests for Repository, Service and Controller (Integration tests) layers
 
 ## How to run
 
