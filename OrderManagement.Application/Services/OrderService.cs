@@ -37,19 +37,19 @@ public class OrderService
         // Prefer Result pattern with ErrorOr instead of returning 'null'
         // 'null' is ambiguous, and the controller shouldn't have to guess it's meaning
         if (order == null)
-            return Error.NotFound();
+            return Error.NotFound(description: $"{typeof(Order)} was not found");
         
         return MapToDto(order);
     }
 
-    public async Task<OrderResponse?> CreateAsync(CreateOrderRequest dto)
+    public async Task<ErrorOr<OrderResponse>> CreateAsync(CreateOrderRequest dto)
     {
         // Verify that the customer exists
         var customer = await _customerRepository.GetCustomerIdAsync(dto.CustomerId);
 
         // ToDo: use ErrorOr
         if (customer is null)
-            return null;
+            return Error.NotFound(description: $"{typeof(Customer)} was not found"); ;
 
         // Map the order and pass it to repository
         var order = new Order()

@@ -43,9 +43,9 @@ public class OrdersController : ControllerBase
     public async Task<IActionResult> GetAll([FromQuery] GetAllQueryDto dto)
     {
         // Validate the DTO before any operations
-        var result = await _getAllValidator.ValidateAsync(dto);
-        if (!result.IsValid)
-            return ValidationProblem(new ValidationProblemDetails(result.ToDictionary()));
+        var outcome = await _getAllValidator.ValidateAsync(dto);
+        if (!outcome.IsValid)
+            return ValidationProblem(new ValidationProblemDetails(outcome.ToDictionary()));
 
         var orders = await _orderService.GetAllAsync(dto.Page, dto.PageSize);
 
@@ -78,9 +78,9 @@ public class OrdersController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreateOrderDto dto)
     {
         // Validate the DTO before any operations
-        var result = await _createValidator.ValidateAsync(dto);
-        if (!result.IsValid)
-            return ValidationProblem(new ValidationProblemDetails(result.ToDictionary()));
+        var outcome = await _createValidator.ValidateAsync(dto);
+        if (!outcome.IsValid)
+            return ValidationProblem(new ValidationProblemDetails(outcome.ToDictionary()));
 
         // Map DTO to OrderRequest (no null values)
         var orderRequest = new CreateOrderRequest(
@@ -92,35 +92,39 @@ public class OrdersController : ControllerBase
                     oi.UnitPrice!.Value))]
         );
 
-        var createdOrder = await _orderService.CreateAsync(orderRequest);
-
-        // ToDo: replace with ErrorOr
-        if (createdOrder is null)
-            return Problem(
-                title: Errors.Customer.NotFound,
-                detail: Errors.Customer.NotFoundDetail(orderRequest.CustomerId),
-                statusCode: StatusCodes.Status404NotFound
-            );
+        var result = await _orderService.CreateAsync(orderRequest);
 
         /* Note:
-         * Sets Status = 201 and the location header to
+         * OnSuccess: Sets Status = 201 and the location header to
          * Location: https://<host>/api/orders/{id}
          * Returns 'createdOrder' in the response
          * Mind: location is a bit redundant, since response already returns dto
          * this pattern is more about following REST conventions
          * In older web dev, apparently Location is used to trigger a client callback
          * to GET the location.
+         * OnFailure: Return error response
          */
-        return CreatedAtAction(nameof(GetById), new { id = createdOrder.Id }, createdOrder);
+        return result.Match(
+                order => CreatedAtAction(nameof(GetById), new { id = order.Id }, order),
+                errors => errors.First().Type switch
+                {
+                    ErrorType.NotFound => Problem(
+                            title: Errors.Customer.NotFound,
+                            detail: Errors.Customer.NotFoundDetail(orderRequest.CustomerId),
+                            statusCode: StatusCodes.Status404NotFound
+                        ),
+                    _ => Problem()
+                }
+            );
     }
 
     [HttpPatch("{id}/status")]
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateOrderStatusDto dto)
     {
         // Validate the DTO before any operations
-        var result = await _updateStatusValidator.ValidateAsync(dto);
-        if (!result.IsValid)
-            return ValidationProblem(new ValidationProblemDetails(result.ToDictionary()));
+        var outcome = await _updateStatusValidator.ValidateAsync(dto);
+        if (!outcome.IsValid)
+            return ValidationProblem(new ValidationProblemDetails(outcome.ToDictionary()));
 
         // Status is guarenteed not null here, as [Required] validates it's presence
         // [ApiController] will automatically reject with status 400 if validation failed
