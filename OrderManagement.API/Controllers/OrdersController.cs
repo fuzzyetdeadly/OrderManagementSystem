@@ -23,15 +23,18 @@ public class OrdersController : ControllerBase
     private readonly OrderService _orderService;
 
     // Validators
+    private readonly IValidator<GetAllQueryDto> _getAllValidator;
     private readonly IValidator<CreateOrderDto> _createValidator;
     private readonly IValidator<UpdateOrderStatusDto> _updateStatusValidator;
 
-    public OrdersController(OrderService orderService, 
+    public OrdersController(OrderService orderService,
+        IValidator<GetAllQueryDto> getAllValidator,
         IValidator<CreateOrderDto> createValidator, 
         IValidator<UpdateOrderStatusDto> updateStatusValidator)
     {
         _orderService = orderService;
 
+        _getAllValidator = getAllValidator;
         _createValidator = createValidator;
         _updateStatusValidator = updateStatusValidator;
     }
@@ -39,6 +42,11 @@ public class OrdersController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] GetAllQueryDto dto)
     {
+        // Validate the DTO before any operations
+        var result = await _getAllValidator.ValidateAsync(dto);
+        if (!result.IsValid)
+            return ValidationProblem(new ValidationProblemDetails(result.ToDictionary()));
+
         var orders = await _orderService.GetAllAsync(dto.Page, dto.PageSize);
 
         return Ok(orders);
