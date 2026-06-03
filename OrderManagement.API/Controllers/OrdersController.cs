@@ -66,7 +66,7 @@ public class OrdersController : ControllerBase
                     //ErrorType.NotFound => NotFound(errors.First().Description),
                     ErrorType.NotFound => Problem(
                         title: Errors.Order.NotFound,
-                        detail: errors.First().Description,
+                        detail: Errors.Order.NotFoundDetail(id),
                         statusCode: StatusCodes.Status404NotFound
                     ),
                     _ => Problem()

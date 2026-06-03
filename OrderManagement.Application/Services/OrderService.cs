@@ -37,7 +37,7 @@ public class OrderService
         // Prefer Result pattern with ErrorOr instead of returning 'null'
         // 'null' is ambiguous, and the controller shouldn't have to guess it's meaning
         if (order == null)
-            return Error.NotFound(description: $"Order with ID {id} was not found");
+            return Error.NotFound();
         
         return MapToDto(order);
     }
