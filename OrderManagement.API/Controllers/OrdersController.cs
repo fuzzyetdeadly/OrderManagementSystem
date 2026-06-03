@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 using OrderManagement.API.Constants;
 using OrderManagement.API.DTOs;
 using OrderManagement.Application.Models;
@@ -47,13 +48,21 @@ public class OrdersController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateOrderDto dto)
+    public async Task<IActionResult> Create([FromBody] CreateOrderDto dto, [FromServices] IValidator<CreateOrderDto> validator)
     {
+        // Validate the DTO before any operations
+        var result = await validator.ValidateAsync(dto);
+        if (!result.IsValid)
+            return ValidationProblem(new ValidationProblemDetails(result.ToDictionary()));
+
         // Map DTO to OrderRequest (no null values)
         var orderRequest = new CreateOrderRequest(
             dto.CustomerId!.Value, 
-            [.. dto.Items.Select(i => 
-                new CreateOrderItemRequest(i.ProductName, i.Quantity, i.UnitPrice))]
+            [.. dto.Items.Select(oi => 
+                new CreateOrderItemRequest(
+                    oi.ProductName!, 
+                    oi.Quantity!.Value, 
+                    oi.UnitPrice!.Value))]
         );
 
         var createdOrder = await _orderService.CreateAsync(orderRequest);

@@ -13,6 +13,7 @@ public static class Errors
     public static class Order
     {
         public const string InvalidCustomerId = "CustomerId must be > 0";
+        public const string NoItems = "Order must contain at least one item";
         public const string NotFound = "Order not found";
         public static string NotFoundDetail(int id) => $"Order with ID {id} was not found";
     }
