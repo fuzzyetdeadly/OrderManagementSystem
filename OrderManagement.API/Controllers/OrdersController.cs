@@ -67,6 +67,14 @@ public class OrdersController : ControllerBase
 
         var createdOrder = await _orderService.CreateAsync(orderRequest);
 
+        // ToDo: replace with ErrorOr
+        if (createdOrder is null)
+            return Problem(
+                title: Errors.Customer.NotFound,
+                detail: Errors.Customer.NotFoundDetail(orderRequest.CustomerId),
+                statusCode: StatusCodes.Status404NotFound
+            );
+
         /* Note:
          * Sets Status = 201 and the location header to
          * Location: https://<host>/api/orders/{id}

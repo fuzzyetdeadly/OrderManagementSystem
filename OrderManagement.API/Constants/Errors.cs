@@ -10,6 +10,12 @@ public static class Errors
         public const string InvalidValue = "The provided value is invalid";
     }
 
+    public static class Customer
+    {
+        public const string NotFound = "Customer not found";
+        public static string NotFoundDetail(int id) => $"Customer with ID {id} was not found";
+    }
+
     public static class Order
     {
         public const string InvalidCustomerId = "CustomerId must be > 0";

@@ -6,11 +6,13 @@ namespace OrderManagement.Application.Services;
 
 public class OrderService
 {
-    private readonly IOrderRepository _repository;
+    private readonly ICustomerRepository _customerRepository;
+    private readonly IOrderRepository _orderRepository;
 
-    public OrderService(IOrderRepository repository)
+    public OrderService(ICustomerRepository customerRepository, IOrderRepository orderRepository)
     {
-        _repository = repository;
+        _customerRepository = customerRepository;
+        _orderRepository = orderRepository;
     }
 
     /*
@@ -20,21 +22,28 @@ public class OrderService
      */
     public async Task<IEnumerable<OrderResponse>> GetAllAsync(int page, int pageSize)
     {
-        var orders = await _repository.GetAllAsync(page, pageSize);
+        var orders = await _orderRepository.GetAllAsync(page, pageSize);
 
         return orders.Select(MapToDto);
     }
 
     public async Task<OrderResponse?> GetOrderIdAsync(int id)
     {
-        var order = await _repository.GetOrderIdAsync(id);
+        var order = await _orderRepository.GetOrderIdAsync(id);
 
         // Null check required in case no order found
         return order is null ? null : MapToDto(order);
     }
 
-    public async Task<OrderResponse> CreateAsync(CreateOrderRequest dto)
+    public async Task<OrderResponse?> CreateAsync(CreateOrderRequest dto)
     {
+        // Verify that the customer exists
+        var customer = await _customerRepository.GetCustomerIdAsync(dto.CustomerId);
+
+        // ToDo: use ErrorOr
+        if (customer is null)
+            return null;
+
         // Map the order and pass it to repository
         var order = new Order()
         {
@@ -49,7 +58,7 @@ public class OrderService
 
         // Note: expect order create process to return
         // an order updated with assigned Id and Create time
-        var createdOrder = await _repository.CreateAsync(order);
+        var createdOrder = await _orderRepository.CreateAsync(order);
 
         return MapToDto(createdOrder);
     }
@@ -58,14 +67,14 @@ public class OrderService
     {
         // Exist check is checked in the repository (not needed here)
         // i.e. Service just needs to forward the parameters directly
-        var updatedOrder = await _repository.UpdateStatusAsync(id, status);
+        var updatedOrder = await _orderRepository.UpdateStatusAsync(id, status);
 
         // Null check required in case no order found
         return updatedOrder is null ? null : MapToDto(updatedOrder);
     }
 
     public async Task<bool> DeleteAsync(int id) => 
-        await _repository.DeleteAsync(id);
+        await _orderRepository.DeleteAsync(id);
 
     private static OrderResponse MapToDto(Order o) => new(
         o.Id, o.Status.ToString(), o.Created, o.CustomerId,
