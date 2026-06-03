@@ -14,6 +14,6 @@ public interface IOrderRepository
     Task<IEnumerable<Order>> GetAllAsync(int page, int pageSize);
     Task<Order?> GetOrderIdAsync(int id);
     Task<Order> CreateAsync(Order order);
-    Task<Order?> UpdateStatusAsync(int id, OrderStatus status);
+    Task UpdateAsync(Order order);
     Task<bool> DeleteAsync(int id);
 }

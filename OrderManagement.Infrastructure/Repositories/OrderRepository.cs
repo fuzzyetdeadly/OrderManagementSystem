@@ -49,15 +49,11 @@ public class OrderRepository : IOrderRepository
         return order;
     }
 
-    public async Task<Order?> UpdateStatusAsync(int id, OrderStatus status)
+    // The update method just saves the latest state.
+    // The order parameter is redundant, but kept to be explicit about what's updated
+    public async Task UpdateAsync(Order order)
     {
-        var order = await _context.Orders.FindAsync(id);
-        if (order == null) 
-            return null;
-
-        order.Status = status;
         await _context.SaveChangesAsync();
-        return order;
     }
 
     public async Task<bool> DeleteAsync(int id)

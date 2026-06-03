@@ -37,7 +37,7 @@ public class OrderService
         // Prefer Result pattern with ErrorOr instead of returning 'null'
         // 'null' is ambiguous, and the controller shouldn't have to guess it's meaning
         if (order == null)
-            return Error.NotFound(description: $"{typeof(Order)} was not found");
+            return Error.NotFound(description: $"Order was not found");
         
         return MapToDto(order);
     }
@@ -49,7 +49,7 @@ public class OrderService
 
         // ToDo: use ErrorOr
         if (customer is null)
-            return Error.NotFound(description: $"{typeof(Customer)} was not found"); ;
+            return Error.NotFound(description: $"Customer was not found"); ;
 
         // Map the order and pass it to repository
         var order = new Order()
@@ -70,14 +70,21 @@ public class OrderService
         return MapToDto(createdOrder);
     }
 
-    public async Task<OrderResponse?> UpdateStatusAsync(int id, OrderStatus status)
+    public async Task<ErrorOr<OrderResponse>> UpdateStatusAsync(int id, OrderStatus status)
     {
-        // Exist check is checked in the repository (not needed here)
-        // i.e. Service just needs to forward the parameters directly
-        var updatedOrder = await _orderRepository.UpdateStatusAsync(id, status);
+        // Verify that the order exists
+        var order = await _orderRepository.GetOrderIdAsync(id);
+        if(order is null)
+            return Error.NotFound(description: $"Order was not found");
 
-        // Null check required in case no order found
-        return updatedOrder is null ? null : MapToDto(updatedOrder);
+        // Design choice to have service own the mutation
+        order.Status = status;
+
+        // Return value isn't required as order is a reference to an object from repo.
+        await _orderRepository.UpdateAsync(order);
+
+        // Design choice to return order instead of 204
+        return MapToDto(order);
     }
 
     public async Task<bool> DeleteAsync(int id) => 

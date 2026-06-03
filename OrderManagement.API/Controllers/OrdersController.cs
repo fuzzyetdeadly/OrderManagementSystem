@@ -126,16 +126,20 @@ public class OrdersController : ControllerBase
         if (!outcome.IsValid)
             return ValidationProblem(new ValidationProblemDetails(outcome.ToDictionary()));
 
-        // Status is guarenteed not null here, as [Required] validates it's presence
-        // [ApiController] will automatically reject with status 400 if validation failed
-        var updatedOrder = await _orderService.UpdateStatusAsync(id, dto.Status!.Value);
+        var result = await _orderService.UpdateStatusAsync(id, dto.Status!.Value);
 
-        return updatedOrder != null ? Ok(updatedOrder) :
-            Problem(
-                title: Errors.Order.NotFound,
-                detail: Errors.Order.NotFoundDetail(id),
-                statusCode: StatusCodes.Status404NotFound
-            );
+        return result.Match(
+            order => Ok(order),
+            errors => errors.First().Type switch
+            {
+                ErrorType.NotFound => Problem(
+                        title: Errors.Order.NotFound,
+                        detail: Errors.Order.NotFoundDetail(id),
+                        statusCode: StatusCodes.Status404NotFound
+                    ),
+                _ => Problem()
+            }
+        );
     }
 
     [HttpDelete("{id}")]
