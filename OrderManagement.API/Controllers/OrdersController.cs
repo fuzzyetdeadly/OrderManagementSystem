@@ -22,9 +22,18 @@ public class OrdersController : ControllerBase
 {
     private readonly OrderService _orderService;
 
-    public OrdersController(OrderService orderService)
+    // Validators
+    private readonly IValidator<CreateOrderDto> _createValidator;
+    private readonly IValidator<UpdateOrderStatusDto> _updateStatusValidator;
+
+    public OrdersController(OrderService orderService, 
+        IValidator<CreateOrderDto> createValidator, 
+        IValidator<UpdateOrderStatusDto> updateStatusValidator)
     {
         _orderService = orderService;
+
+        _createValidator = createValidator;
+        _updateStatusValidator = updateStatusValidator;
     }
 
     [HttpGet]
@@ -58,10 +67,10 @@ public class OrdersController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateOrderDto dto, [FromServices] IValidator<CreateOrderDto> validator)
+    public async Task<IActionResult> Create([FromBody] CreateOrderDto dto)
     {
         // Validate the DTO before any operations
-        var result = await validator.ValidateAsync(dto);
+        var result = await _createValidator.ValidateAsync(dto);
         if (!result.IsValid)
             return ValidationProblem(new ValidationProblemDetails(result.ToDictionary()));
 
@@ -98,10 +107,10 @@ public class OrdersController : ControllerBase
     }
 
     [HttpPatch("{id}/status")]
-    public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateOrderStatusDto dto, [FromServices] IValidator<UpdateOrderStatusDto> validator)
+    public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateOrderStatusDto dto)
     {
         // Validate the DTO before any operations
-        var result = await validator.ValidateAsync(dto);
+        var result = await _updateStatusValidator.ValidateAsync(dto);
         if (!result.IsValid)
             return ValidationProblem(new ValidationProblemDetails(result.ToDictionary()));
 
