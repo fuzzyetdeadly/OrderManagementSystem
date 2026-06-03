@@ -1,9 +1,12 @@
-﻿using OrderManagement.Application.Models;
+﻿using ErrorOr;
+using OrderManagement.Application.Models;
 using OrderManagement.Domain.Entities;
 using OrderManagement.Domain.Interfaces;
 
 namespace OrderManagement.Application.Services;
 
+// Not using IOrderService was a design choice for this toy project
+// It does not intend to cover different service implementations
 public class OrderService
 {
     private readonly ICustomerRepository _customerRepository;
@@ -27,12 +30,16 @@ public class OrderService
         return orders.Select(MapToDto);
     }
 
-    public async Task<OrderResponse?> GetOrderIdAsync(int id)
+    public async Task<ErrorOr<OrderResponse>> GetOrderIdAsync(int id)
     {
         var order = await _orderRepository.GetOrderIdAsync(id);
 
-        // Null check required in case no order found
-        return order is null ? null : MapToDto(order);
+        // Prefer Result pattern with ErrorOr instead of returning 'null'
+        // 'null' is ambiguous, and the controller shouldn't have to guess it's meaning
+        if (order == null)
+            return Error.NotFound(description: $"Order with ID {id} was not found");
+        
+        return MapToDto(order);
     }
 
     public async Task<OrderResponse?> CreateAsync(CreateOrderRequest dto)

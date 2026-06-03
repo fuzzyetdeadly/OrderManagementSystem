@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using ErrorOr;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using OrderManagement.API.Constants;
 using OrderManagement.API.DTOs;
@@ -37,13 +38,22 @@ public class OrdersController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var order = await _orderService.GetOrderIdAsync(id);
+        var result = await _orderService.GetOrderIdAsync(id);
 
-        return order != null ? Ok(order) :
-            Problem(
-                title: Errors.Order.NotFound,
-                detail: Errors.Order.NotFoundDetail(id),
-                statusCode: StatusCodes.Status404NotFound
+        // 'Match' accepts delegates that fire based on whether
+        // the result returned a valid response object or error
+        return result.Match(
+                order => Ok(order),
+                errors => errors.First().Type switch
+                {
+                    //ErrorType.NotFound => NotFound(errors.First().Description),
+                    ErrorType.NotFound => Problem(
+                        title: Errors.Order.NotFound,
+                        detail: errors.First().Description,
+                        statusCode: StatusCodes.Status404NotFound
+                    ),
+                    _ => Problem()
+                }
             );
     }
 
