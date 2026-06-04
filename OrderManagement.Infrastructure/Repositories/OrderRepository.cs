@@ -18,14 +18,25 @@ public class OrderRepository : IOrderRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Order>> GetAllAsync(int page, int pageSize)
+    public async Task<IReadOnlyList<Order>> GetAllAsync(int page, int pageSize)
     {
         // Note: 'Include' order items is required to ensure navigable items
         // are also accessible with the returned data.
-        // The Select here is also used to map data without Customer
-        // Otherwise, 
+        // OrderBy is required because SQL doesn't guarantee row order
         return await _context.Orders
             .Include(o => o.Items)
+            .OrderBy(o => o.Created)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+    }
+
+    public async Task<IReadOnlyList<Order>> GetByCustomerIdAsync(int customerId, int page, int pageSize)
+    {
+        return await _context.Orders
+            .Where(o => o.CustomerId == customerId)
+            .Include(o => o.Items)
+            .OrderBy(o => o.Created)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();

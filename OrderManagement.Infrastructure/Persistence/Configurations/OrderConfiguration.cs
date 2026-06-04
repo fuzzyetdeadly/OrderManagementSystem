@@ -11,6 +11,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         // Index columns with frequent access (scalability)
         builder.HasIndex(o => o.Id);
         builder.HasIndex(o => o.Status);
+        builder.HasIndex(o => o.CustomerId);
 
         // Make status save as string
         builder.Property(o => o.Status).HasConversion<string>();

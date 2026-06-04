@@ -11,7 +11,8 @@ namespace OrderManagement.Domain.Interfaces;
  */
 public interface IOrderRepository
 {
-    Task<IEnumerable<Order>> GetAllAsync(int page, int pageSize);
+    Task<IReadOnlyList<Order>> GetAllAsync(int page, int pageSize);
+    Task<IReadOnlyList<Order>> GetByCustomerIdAsync(int customerId, int page, int pageSize);
     Task<Order?> GetOrderIdAsync(int id);
     Task<Order> CreateAsync(Order order);
     Task UpdateAsync(Order order);

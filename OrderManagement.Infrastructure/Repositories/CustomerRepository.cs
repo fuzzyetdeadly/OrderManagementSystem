@@ -14,7 +14,7 @@ public class CustomerRepository : ICustomerRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Customer>> GetAllAsync(int page, int pageSize)
+    public async Task<IReadOnlyList<Customer>> GetAllAsync(int page, int pageSize)
     {
         // Note: 'Include' order items is required to ensure navigable items
         // are also accessible with the returned data.

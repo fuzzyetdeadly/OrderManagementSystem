@@ -4,7 +4,7 @@ namespace OrderManagement.Domain.Interfaces;
 
 public interface ICustomerRepository
 {
-    Task<IEnumerable<Customer>> GetAllAsync(int page, int pageSize);
+    Task<IReadOnlyList<Customer>> GetAllAsync(int page, int pageSize);
     Task<Customer?> GetCustomerIdAsync(int id);
     Task<Customer> CreateAsync(Customer customer);
     Task UpdateAsync(Customer customer);
