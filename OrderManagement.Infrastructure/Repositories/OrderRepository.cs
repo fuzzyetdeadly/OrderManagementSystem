@@ -52,6 +52,9 @@ public class OrderRepository : IOrderRepository
             .FirstOrDefaultAsync(o => o.Id == id);
     }
 
+    public async Task<bool> ExistsAsync(int id) => 
+        await _context.Orders.AnyAsync(o => o.Id == id);
+
     public async Task<Order> CreateAsync(Order order)
     {
         // Add the order, then save it

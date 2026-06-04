@@ -34,6 +34,9 @@ public class CustomerRepository : ICustomerRepository
             .FirstOrDefaultAsync(o => o.Id == id);
     }
 
+    public async Task<bool> ExistsAsync(int id) => 
+        await _context.Customers.AnyAsync(c => c.Id == id);
+
     public async Task<Customer> CreateAsync(Customer customer)
     {
         // Add the customer, the save it

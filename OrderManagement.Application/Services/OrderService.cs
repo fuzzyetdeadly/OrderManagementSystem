@@ -25,12 +25,20 @@ public class OrderService
      * Results are fully materialized (IEnumerable) before return from  async
      * Caller is responsible for enforcing page/pageSize
      */
-    public async Task<IEnumerable<OrderResponse>> GetAllAsync(int page, int pageSize)
+    public async Task<IReadOnlyList<OrderResponse>> GetAllAsync(int page, int pageSize)
     {
         var pagination = new Pagination(Page: page, PageSize: pageSize);
         var orders = await _orderRepository.GetAllAsync(pagination);
 
-        return orders.Select(MapToDto);
+        return [.. orders.Select(MapToDto)];
+    }
+
+    public async Task<IReadOnlyList<OrderResponse>> GetByCustomerIdAsync(int customerId, int page, int pageSize)
+    {
+        var pagination = new Pagination(Page: page, PageSize: pageSize);
+        var orders = await _orderRepository.GetByCustomerIdAsync(customerId, pagination);
+
+        return [.. orders.Select(MapToDto)];
     }
 
     public async Task<ErrorOr<OrderResponse>> GetOrderIdAsync(int id)
@@ -48,10 +56,9 @@ public class OrderService
     public async Task<ErrorOr<OrderResponse>> CreateAsync(CreateOrderRequest dto)
     {
         // Verify that the customer exists
-        var customer = await _customerRepository.GetCustomerIdAsync(dto.CustomerId);
+        var exists = await _customerRepository.ExistsAsync(dto.CustomerId);
 
-        // ToDo: use ErrorOr
-        if (customer is null)
+        if (!exists)
             return Error.NotFound(code: ErrorCodes.CustomerNotFound); ;
 
         // Map the order and pass it to repository
@@ -93,8 +100,8 @@ public class OrderService
     public async Task<ErrorOr<Deleted>> DeleteAsync(int id)
     {
         // Verify that the order exists
-        var order = await _orderRepository.GetOrderIdAsync(id);
-        if (order is null)
+        var exists = await _orderRepository.ExistsAsync(id);
+        if (!exists)
             return Error.NotFound(code: ErrorCodes.OrderNotFound);
 
         await _orderRepository.DeleteAsync(id);
