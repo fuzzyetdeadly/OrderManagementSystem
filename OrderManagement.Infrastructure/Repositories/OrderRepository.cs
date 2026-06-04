@@ -68,14 +68,12 @@ public class OrderRepository : IOrderRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task DeleteAsync(int id)
     {
-        var order = await _context.Orders.FindAsync(id);
-        if (order == null) 
-            return false;
-
+        // Expect service to validate exists already
+        // Therefore, just construct order for direct removal (skip DB read)
+        var order = new Order { Id = id };
         _context.Orders.Remove(order);
         await _context.SaveChangesAsync();
-        return true;
     }
 }
