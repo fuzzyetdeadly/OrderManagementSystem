@@ -3,9 +3,9 @@ using FluentValidation;
 
 namespace OrderManagement.API.DTOs;
 
-public class GetAllQueryDtoValidator : AbstractValidator<GetAllQueryDto>
+public class PaginationDtoValidator : AbstractValidator<PaginationDto>
 {
-    public GetAllQueryDtoValidator()
+    public PaginationDtoValidator()
     {
         RuleFor(q => q.Page)
             .GreaterThan(0);

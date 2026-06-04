@@ -33,12 +33,18 @@ public class OrderService
         return [.. orders.Select(MapToDto)];
     }
 
-    public async Task<IReadOnlyList<OrderResponse>> GetByCustomerIdAsync(int customerId, int page, int pageSize)
+    public async Task<ErrorOr<IReadOnlyList<OrderResponse>>> GetByCustomerIdAsync(int customerId, int page, int pageSize)
     {
+        // Verify that the customer exists
+        var exists = await _customerRepository.ExistsAsync(customerId);
+        if (!exists)
+            return Error.NotFound(code: ErrorCodes.CustomerNotFound); ;
+
         var pagination = new Pagination(Page: page, PageSize: pageSize);
         var orders = await _orderRepository.GetByCustomerIdAsync(customerId, pagination);
 
-        return [.. orders.Select(MapToDto)];
+        // Collection expression doesn't work here with ErrorOr
+        return orders.Select(MapToDto).ToList();
     }
 
     public async Task<ErrorOr<OrderResponse>> GetOrderIdAsync(int id)
@@ -57,7 +63,6 @@ public class OrderService
     {
         // Verify that the customer exists
         var exists = await _customerRepository.ExistsAsync(dto.CustomerId);
-
         if (!exists)
             return Error.NotFound(code: ErrorCodes.CustomerNotFound); ;
 

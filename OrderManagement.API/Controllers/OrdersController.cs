@@ -23,12 +23,12 @@ public class OrdersController : ApiControllerBase
     private readonly OrderService _orderService;
 
     // Validators
-    private readonly IValidator<GetAllQueryDto> _getAllValidator;
+    private readonly IValidator<PaginationDto> _getAllValidator;
     private readonly IValidator<CreateOrderDto> _createValidator;
     private readonly IValidator<UpdateOrderStatusDto> _updateStatusValidator;
 
     public OrdersController(OrderService orderService,
-        IValidator<GetAllQueryDto> getAllValidator,
+        IValidator<PaginationDto> getAllValidator,
         IValidator<CreateOrderDto> createValidator, 
         IValidator<UpdateOrderStatusDto> updateStatusValidator)
     {
@@ -40,7 +40,7 @@ public class OrdersController : ApiControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] GetAllQueryDto dto)
+    public async Task<IActionResult> GetAll([FromQuery] PaginationDto dto)
     {
         // Validate the DTO before any operations
         var outcome = await _getAllValidator.ValidateAsync(dto);
@@ -50,6 +50,24 @@ public class OrdersController : ApiControllerBase
         var orders = await _orderService.GetAllAsync(dto.Page, dto.PageSize);
 
         return Ok(orders);
+    }
+
+    // API returns orders, which is why it's in this controller
+    // Using '/' tells ASP.NET Core to use an absolute route here
+    [HttpGet("/api/customers/{customerId}/orders")]
+    public async Task<IActionResult> GetByCustomerId(int customerId, [FromQuery] PaginationDto dto)
+    {
+        // Validate the DTO before any operations
+        var outcome = await _getAllValidator.ValidateAsync(dto);
+        if (!outcome.IsValid)
+            return ValidationProblem(new ValidationProblemDetails(outcome.ToDictionary()));
+
+        var result = await _orderService.GetByCustomerIdAsync(customerId, dto.Page, dto.PageSize);
+
+        return result.Match(
+                orders => Ok(orders),
+                errors => Problem(errors)
+            );
     }
 
     [HttpGet("{id}")]
