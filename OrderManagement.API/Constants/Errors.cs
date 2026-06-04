@@ -6,20 +6,19 @@ public static class Errors
     public static class General
     {
         public const string InvalidValue = "The provided value is invalid";
+        public const string UnexpectedError = "An unexpected error occurred";
     }
 
     public static class Customer
     {
-        public const string NotFound = "Customer not found";
-        public static string NotFoundDetail(int id) => $"Customer with ID {id} was not found";
+        public const string NotFound = "The requested customer doesn't exist";
     }
 
     public static class Order
     {
         public const string InvalidCustomerId = "CustomerId must be > 0";
         public const string NoItems = "Order must contain at least one item";
-        public const string NotFound = "Order not found";
-        public static string NotFoundDetail(int id) => $"Order with ID {id} was not found";
+        public const string NotFound = "The requested order doesn't exist";
     }
 
     public static class OrderItem

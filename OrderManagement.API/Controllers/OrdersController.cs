@@ -18,7 +18,7 @@ namespace OrderManagement.API.Controllers;
  */
 [ApiController]
 [Route("api/orders")]
-public class OrdersController : ControllerBase
+public class OrdersController : ApiControllerBase
 {
     private readonly OrderService _orderService;
 
@@ -61,16 +61,7 @@ public class OrdersController : ControllerBase
         // the result returned a valid response object or error
         return result.Match(
                 order => Ok(order),
-                errors => errors.First().Type switch
-                {
-                    //ErrorType.NotFound => NotFound(errors.First().Description),
-                    ErrorType.NotFound => Problem(
-                        title: Errors.Order.NotFound,
-                        detail: Errors.Order.NotFoundDetail(id),
-                        statusCode: StatusCodes.Status404NotFound
-                    ),
-                    _ => Problem()
-                }
+                errors => Problem(errors)
             );
     }
 
@@ -106,15 +97,7 @@ public class OrdersController : ControllerBase
          */
         return result.Match(
                 order => CreatedAtAction(nameof(GetById), new { id = order.Id }, order),
-                errors => errors.First().Type switch
-                {
-                    ErrorType.NotFound => Problem(
-                            title: Errors.Customer.NotFound,
-                            detail: Errors.Customer.NotFoundDetail(orderRequest.CustomerId),
-                            statusCode: StatusCodes.Status404NotFound
-                        ),
-                    _ => Problem()
-                }
+                errors => Problem(errors)
             );
     }
 
@@ -130,15 +113,7 @@ public class OrdersController : ControllerBase
 
         return result.Match(
             order => Ok(order),
-            errors => errors.First().Type switch
-            {
-                ErrorType.NotFound => Problem(
-                        title: Errors.Order.NotFound,
-                        detail: Errors.Order.NotFoundDetail(id),
-                        statusCode: StatusCodes.Status404NotFound
-                    ),
-                _ => Problem()
-            }
+            errors => Problem(errors)
         );
     }
 
@@ -152,15 +127,7 @@ public class OrdersController : ControllerBase
         // for 'NoContent', Match couldn't infer it
         return result.Match<IActionResult>(
             deleted => NoContent(),
-            errors => errors.First().Type switch
-            {
-                ErrorType.NotFound => Problem(
-                        title: Errors.Order.NotFound,
-                        detail: Errors.Order.NotFoundDetail(id),
-                        statusCode: StatusCodes.Status404NotFound
-                    ),
-                _ => Problem()
-            }
+            errors => Problem(errors)
         );
     }
 }
