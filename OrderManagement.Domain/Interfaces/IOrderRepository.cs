@@ -1,4 +1,5 @@
-﻿using OrderManagement.Domain.Entities;
+﻿using OrderManagement.Domain.Common;
+using OrderManagement.Domain.Entities;
 
 namespace OrderManagement.Domain.Interfaces;
 
@@ -11,9 +12,11 @@ namespace OrderManagement.Domain.Interfaces;
  */
 public interface IOrderRepository
 {
-    Task<IEnumerable<Order>> GetAllAsync(int page, int pageSize);
+    Task<IReadOnlyList<Order>> GetAllAsync(Pagination pagination);
+    Task<IReadOnlyList<Order>> GetByCustomerIdAsync(int customerId, Pagination pagination);
     Task<Order?> GetOrderIdAsync(int id);
+    Task<bool> ExistsAsync(int id);
     Task<Order> CreateAsync(Order order);
-    Task<Order?> UpdateStatusAsync(int id, OrderStatus status);
-    Task<bool> DeleteAsync(int id);
+    Task UpdateAsync(Order order);
+    Task DeleteAsync(int id);
 }

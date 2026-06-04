@@ -39,13 +39,14 @@ public static class ControllerExtensions
                             StatusCodes.Status400BadRequest
                         );
 
-                    // Post-process error messages to sanitize away project structure leaks
-                    foreach (var key in problemDetails.Errors.Keys.ToList())
-                    {
-                        problemDetails.Errors[key] = [.. problemDetails.Errors[key]
-                            .Select(msg => msg.Contains("System.") | msg.Contains("Path:")
-                                ? Errors.General.InvalidValue : msg)];
-                    }
+                // Post-process error messages to sanitize away project structure leaks
+                problemDetails.Errors = problemDetails.Errors.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value
+                            .Select(msg => msg.Contains("System.") || msg.Contains("Path:")
+                                ? Errors.General.InvalidValue : msg)
+                            .ToArray()
+                    );
 
                     return new BadRequestObjectResult(problemDetails);
                 };

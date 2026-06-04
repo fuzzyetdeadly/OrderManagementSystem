@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using ErrorOr;
+using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 using OrderManagement.API.Constants;
 using OrderManagement.API.DTOs;
 using OrderManagement.Application.Models;
@@ -16,86 +18,134 @@ namespace OrderManagement.API.Controllers;
  */
 [ApiController]
 [Route("api/orders")]
-public class OrdersController : ControllerBase
+public class OrdersController : ApiControllerBase
 {
     private readonly OrderService _orderService;
 
-    public OrdersController(OrderService orderService)
+    // Validators
+    private readonly IValidator<PaginationDto> _getAllValidator;
+    private readonly IValidator<CreateOrderDto> _createValidator;
+    private readonly IValidator<UpdateOrderStatusDto> _updateStatusValidator;
+
+    public OrdersController(OrderService orderService,
+        IValidator<PaginationDto> getAllValidator,
+        IValidator<CreateOrderDto> createValidator, 
+        IValidator<UpdateOrderStatusDto> updateStatusValidator)
     {
         _orderService = orderService;
+
+        _getAllValidator = getAllValidator;
+        _createValidator = createValidator;
+        _updateStatusValidator = updateStatusValidator;
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    public async Task<IActionResult> GetAll([FromQuery] PaginationDto dto)
     {
-        var orders = await _orderService.GetAllAsync(page, pageSize);
+        // Validate the DTO before any operations
+        var outcome = await _getAllValidator.ValidateAsync(dto);
+        if (!outcome.IsValid)
+            return ValidationProblem(new ValidationProblemDetails(outcome.ToDictionary()));
+
+        var orders = await _orderService.GetAllAsync(dto.Page, dto.PageSize);
 
         return Ok(orders);
+    }
+
+    // API returns orders, which is why it's in this controller
+    // Using '/' tells ASP.NET Core to use an absolute route here
+    [HttpGet("/api/customers/{customerId}/orders")]
+    public async Task<IActionResult> GetByCustomerId(int customerId, [FromQuery] PaginationDto dto)
+    {
+        // Validate the DTO before any operations
+        var outcome = await _getAllValidator.ValidateAsync(dto);
+        if (!outcome.IsValid)
+            return ValidationProblem(new ValidationProblemDetails(outcome.ToDictionary()));
+
+        var result = await _orderService.GetByCustomerIdAsync(customerId, dto.Page, dto.PageSize);
+
+        return result.Match(
+                orders => Ok(orders),
+                errors => Problem(errors)
+            );
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var order = await _orderService.GetOrderIdAsync(id);
+        var result = await _orderService.GetOrderIdAsync(id);
 
-        return order != null ? Ok(order) :
-            Problem(
-                title: Errors.Order.NotFound,
-                detail: Errors.Order.NotFoundDetail(id),
-                statusCode: StatusCodes.Status404NotFound
+        // 'Match' accepts delegates that fire based on whether
+        // the result returned a valid response object or error
+        return result.Match(
+                order => Ok(order),
+                errors => Problem(errors)
             );
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateOrderDto dto)
     {
+        // Validate the DTO before any operations
+        var outcome = await _createValidator.ValidateAsync(dto);
+        if (!outcome.IsValid)
+            return ValidationProblem(new ValidationProblemDetails(outcome.ToDictionary()));
+
         // Map DTO to OrderRequest (no null values)
         var orderRequest = new CreateOrderRequest(
             dto.CustomerId!.Value, 
-            [.. dto.Items.Select(i => 
-                new CreateOrderItemRequest(i.ProductName, i.Quantity, i.UnitPrice))]
+            [.. dto.Items.Select(oi => 
+                new CreateOrderItemRequest(
+                    oi.ProductName!, 
+                    oi.Quantity!.Value, 
+                    oi.UnitPrice!.Value))]
         );
 
-        var createdOrder = await _orderService.CreateAsync(orderRequest);
+        var result = await _orderService.CreateAsync(orderRequest);
 
         /* Note:
-         * Sets Status = 201 and the location header to
+         * OnSuccess: Sets Status = 201 and the location header to
          * Location: https://<host>/api/orders/{id}
          * Returns 'createdOrder' in the response
          * Mind: location is a bit redundant, since response already returns dto
          * this pattern is more about following REST conventions
          * In older web dev, apparently Location is used to trigger a client callback
          * to GET the location.
+         * OnFailure: Return error response
          */
-        return CreatedAtAction(nameof(GetById), new { id = createdOrder.Id }, createdOrder);
+        return result.Match(
+                order => CreatedAtAction(nameof(GetById), new { id = order.Id }, order),
+                errors => Problem(errors)
+            );
     }
 
     [HttpPatch("{id}/status")]
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateOrderStatusDto dto)
     {
-        // Status is guarenteed not null here, as [Required] validates it's presence
-        // [ApiController] will automatically reject with status 400 if validation failed
-        var updatedOrder = await _orderService.UpdateStatusAsync(id, dto.Status!.Value);
+        // Validate the DTO before any operations
+        var outcome = await _updateStatusValidator.ValidateAsync(dto);
+        if (!outcome.IsValid)
+            return ValidationProblem(new ValidationProblemDetails(outcome.ToDictionary()));
 
-        return updatedOrder != null ? Ok(updatedOrder) :
-            Problem(
-                title: Errors.Order.NotFound,
-                detail: Errors.Order.NotFoundDetail(id),
-                statusCode: StatusCodes.Status404NotFound
-            );
+        var result = await _orderService.UpdateStatusAsync(id, dto.Status!.Value);
+
+        return result.Match(
+            order => Ok(order),
+            errors => Problem(errors)
+        );
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var isDeleted = await _orderService.DeleteAsync(id);
+        var result = await _orderService.DeleteAsync(id);
 
         // Status 204 on successful deletion (no content)
-        return isDeleted ? NoContent() : 
-            Problem(
-                title: Errors.Order.NotFound,
-                detail: Errors.Order.NotFoundDetail(id),
-                statusCode: StatusCodes.Status404NotFound
-            );
+        // Explicit 'IActionResult' generic needed because
+        // for 'NoContent', Match couldn't infer it
+        return result.Match<IActionResult>(
+            deleted => NoContent(),
+            errors => Problem(errors)
+        );
     }
 }

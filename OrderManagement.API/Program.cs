@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using OrderManagement.API.DTOs;
 using OrderManagement.API.Extensions;
@@ -19,11 +20,16 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Scoped = One instance per request
 // Concrete service, likely won't explore other
 // OrderService implementations for this demo project
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<OrderService>();
 
 // Add custom controller support
 builder.Services.AddCustomControllers();
+
+// Register validators
+// (Just requires one concrete validator class, reflection will find the rest)
+builder.Services.AddValidatorsFromAssemblyContaining<CreateOrderDtoValidator>();
 
 // Register Swagger generation service and examples
 builder.Services.AddEndpointsApiExplorer();
