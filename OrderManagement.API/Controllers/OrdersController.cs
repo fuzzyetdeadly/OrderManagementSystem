@@ -145,14 +145,22 @@ public class OrdersController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var isDeleted = await _orderService.DeleteAsync(id);
+        var result = await _orderService.DeleteAsync(id);
 
         // Status 204 on successful deletion (no content)
-        return isDeleted ? NoContent() : 
-            Problem(
-                title: Errors.Order.NotFound,
-                detail: Errors.Order.NotFoundDetail(id),
-                statusCode: StatusCodes.Status404NotFound
-            );
+        // Explicit 'IActionResult' generic needed because
+        // for 'NoContent', Match couldn't infer it
+        return result.Match<IActionResult>(
+            deleted => NoContent(),
+            errors => errors.First().Type switch
+            {
+                ErrorType.NotFound => Problem(
+                        title: Errors.Order.NotFound,
+                        detail: Errors.Order.NotFoundDetail(id),
+                        statusCode: StatusCodes.Status404NotFound
+                    ),
+                _ => Problem()
+            }
+        );
     }
 }

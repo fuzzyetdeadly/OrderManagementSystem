@@ -87,8 +87,17 @@ public class OrderService
         return MapToDto(order);
     }
 
-    public async Task<bool> DeleteAsync(int id) => 
+    public async Task<ErrorOr<Deleted>> DeleteAsync(int id)
+    {
+        // Verify that the order exists
+        var order = await _orderRepository.GetOrderIdAsync(id);
+        if (order is null)
+            return Error.NotFound(description: $"Order was not found");
+
         await _orderRepository.DeleteAsync(id);
+
+        return Result.Deleted;
+    }
 
     private static OrderResponse MapToDto(Order o) => new(
         o.Id, o.Status.ToString(), o.Created, o.CustomerId,
