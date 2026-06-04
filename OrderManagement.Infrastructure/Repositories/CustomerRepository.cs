@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using OrderManagement.Domain.Common;
 using OrderManagement.Domain.Entities;
 using OrderManagement.Domain.Interfaces;
 using OrderManagement.Infrastructure.Persistence;
@@ -14,15 +15,15 @@ public class CustomerRepository : ICustomerRepository
         _context = context;
     }
 
-    public async Task<IReadOnlyList<Customer>> GetAllAsync(int page, int pageSize)
+    public async Task<IReadOnlyList<Customer>> GetAllAsync(Pagination pagination)
     {
         // Note: 'Include' order items is required to ensure navigable items
         // are also accessible with the returned data.
         // The Select here is also used to map data without Customer
         // Otherwise, 
         return await _context.Customers
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((pagination.Page - 1) * pagination.PageSize)
+            .Take(pagination.PageSize)
             .ToListAsync();
     }
 

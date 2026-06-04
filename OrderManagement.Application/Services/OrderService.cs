@@ -1,6 +1,7 @@
 ﻿using ErrorOr;
 using OrderManagement.Application.Common;
 using OrderManagement.Application.Models;
+using OrderManagement.Domain.Common;
 using OrderManagement.Domain.Entities;
 using OrderManagement.Domain.Interfaces;
 
@@ -26,7 +27,8 @@ public class OrderService
      */
     public async Task<IEnumerable<OrderResponse>> GetAllAsync(int page, int pageSize)
     {
-        var orders = await _orderRepository.GetAllAsync(page, pageSize);
+        var pagination = new Pagination(Page: page, PageSize: pageSize);
+        var orders = await _orderRepository.GetAllAsync(pagination);
 
         return orders.Select(MapToDto);
     }

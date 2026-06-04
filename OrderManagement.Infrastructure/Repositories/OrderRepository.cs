@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using OrderManagement.Domain.Common;
 using OrderManagement.Domain.Entities;
 using OrderManagement.Domain.Interfaces;
 using OrderManagement.Infrastructure.Persistence;
@@ -18,7 +19,7 @@ public class OrderRepository : IOrderRepository
         _context = context;
     }
 
-    public async Task<IReadOnlyList<Order>> GetAllAsync(int page, int pageSize)
+    public async Task<IReadOnlyList<Order>> GetAllAsync(Pagination pagination)
     {
         // Note: 'Include' order items is required to ensure navigable items
         // are also accessible with the returned data.
@@ -26,19 +27,19 @@ public class OrderRepository : IOrderRepository
         return await _context.Orders
             .Include(o => o.Items)
             .OrderBy(o => o.Created)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((pagination.Page - 1) * pagination.PageSize)
+            .Take(pagination.PageSize)
             .ToListAsync();
     }
 
-    public async Task<IReadOnlyList<Order>> GetByCustomerIdAsync(int customerId, int page, int pageSize)
+    public async Task<IReadOnlyList<Order>> GetByCustomerIdAsync(int customerId, Pagination pagination)
     {
         return await _context.Orders
             .Where(o => o.CustomerId == customerId)
             .Include(o => o.Items)
             .OrderBy(o => o.Created)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((pagination.Page - 1) * pagination.PageSize)
+            .Take(pagination.PageSize)
             .ToListAsync();
     }
 
