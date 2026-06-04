@@ -1,4 +1,5 @@
 ﻿using ErrorOr;
+using OrderManagement.Application.Common;
 using OrderManagement.Application.Models;
 using OrderManagement.Domain.Entities;
 using OrderManagement.Domain.Interfaces;
@@ -37,7 +38,7 @@ public class OrderService
         // Prefer Result pattern with ErrorOr instead of returning 'null'
         // 'null' is ambiguous, and the controller shouldn't have to guess it's meaning
         if (order == null)
-            return Error.NotFound(description: $"Order was not found");
+            return Error.NotFound(code: ErrorCodes.OrderNotFound);
         
         return MapToDto(order);
     }
@@ -49,7 +50,7 @@ public class OrderService
 
         // ToDo: use ErrorOr
         if (customer is null)
-            return Error.NotFound(description: $"Customer was not found"); ;
+            return Error.NotFound(code: ErrorCodes.CustomerNotFound); ;
 
         // Map the order and pass it to repository
         var order = new Order()
@@ -75,7 +76,7 @@ public class OrderService
         // Verify that the order exists
         var order = await _orderRepository.GetOrderIdAsync(id);
         if(order is null)
-            return Error.NotFound(description: $"Order was not found");
+            return Error.NotFound(code: ErrorCodes.OrderNotFound);
 
         // Design choice to have service own the mutation
         order.Status = status;
@@ -92,7 +93,7 @@ public class OrderService
         // Verify that the order exists
         var order = await _orderRepository.GetOrderIdAsync(id);
         if (order is null)
-            return Error.NotFound(description: $"Order was not found");
+            return Error.NotFound(code: ErrorCodes.OrderNotFound);
 
         await _orderRepository.DeleteAsync(id);
 
