@@ -214,4 +214,50 @@ public class OrderRepositoryTests : IAsyncLifetime
         Assert.True(result);
     }
     #endregion
+
+    #region Create
+    [Fact]
+    [Trait("Category", "Repository")]
+    public async Task Create_ReturnsOrder()
+    {
+        var order = new Order()
+        {
+            CustomerId = _customer.Id,
+            Items = [new() { ProductName = "Potato", Quantity = 1, UnitPrice = 0.99m }]
+        };
+
+        var result = await _repository.CreateAsync(order);
+
+        // Assert that order not null and keys assigned correctly
+        Assert.NotNull(result);
+        Assert.Equal(_customer.Id, result.CustomerId);
+        //Assert.True(result.Id > 0);
+    }
+
+    [Fact]
+    [Trait("Category", "Repository")]
+    public async Task Create_PersistsOrder()
+    {
+        var order = new Order()
+        {
+            CustomerId = _customer.Id,
+            Items = [new() { ProductName = "Potato", Quantity = 1, UnitPrice = 0.99m }]
+        };
+
+        var result = await _repository.CreateAsync(order);
+
+        // Clear the context, then try to get the persisted order
+        _context.ChangeTracker.Clear();
+
+        // 'FindAsync' won't return 'Items' relation. 'Include is required'
+        var persistedOrder = await _context.Orders
+            .Include(o => o.Items)
+            .FirstOrDefaultAsync(o => o.Id == result.Id);
+
+        // Assert that order and its items persisted
+        Assert.NotNull(persistedOrder);
+        Assert.Single(persistedOrder.Items);
+        Assert.True(persistedOrder.Items.First().Id > 0);
+    }
+    #endregion
 }
