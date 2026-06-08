@@ -83,7 +83,7 @@ public class OrderRepositoryTests : IAsyncLifetime
         var order = new Order()
         {
             CustomerId = customerId,
-            Items = [ new() { ProductName = "Potato", Quantity = 1, UnitPrice = 0.99m } ]
+            Items = [new() { ProductName = "Potato", Quantity = 1, UnitPrice = 0.99m }]
         };
 
         _context.Orders.Add(order);
@@ -166,6 +166,52 @@ public class OrderRepositoryTests : IAsyncLifetime
         var result = await _repository.GetByCustomerIdAsync(_customer.Id, pagination);
 
         Assert.Single(result);
+    }
+    #endregion
+
+    #region GetOrderId
+    [Fact]
+    [Trait("Category", "Repository")]
+    public async Task GetOrderId_ReturnsNull_WhenInvalidOrder()
+    {
+        var result = await _repository.GetOrderIdAsync(0);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    [Trait("Category", "Repository")]
+    public async Task GetOrderId_ReturnsOrder()
+    {
+        var seededOrder = await SeedOrderAsync();
+
+        var result = await _repository.GetOrderIdAsync(1);
+
+        // Assert that order returned isn't null with correct id
+        Assert.NotNull(result);
+        Assert.Equal(seededOrder.Id, result.Id);
+    }
+    #endregion
+
+    #region Exists
+    [Fact]
+    [Trait("Category", "Repository")]
+    public async Task Exists_ReturnsFalse_WhenInvalidOrder()
+    {
+        var result = await _repository.ExistsAsync(0);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    [Trait("Category", "Repository")]
+    public async Task Exists_ReturnsTrue_WhenValidOrder()
+    {
+        await SeedOrderAsync();
+
+        var result = await _repository.ExistsAsync(1);
+
+        Assert.True(result);
     }
     #endregion
 }
