@@ -71,11 +71,9 @@ public class OrderRepository : IOrderRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task DeleteAsync(int id)
+    public async Task DeleteAsync(Order order)
     {
-        // Expect service to validate exists already
-        // Therefore, just construct order for direct removal (skip DB read)
-        var order = new Order { Id = id };
+        // Expect a valid order from consumer
         _context.Orders.Remove(order);
         await _context.SaveChangesAsync();
     }

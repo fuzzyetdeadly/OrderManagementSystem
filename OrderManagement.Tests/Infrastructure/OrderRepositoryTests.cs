@@ -90,6 +90,10 @@ public class OrderRepositoryTests : IAsyncLifetime
         await _context.SaveChangesAsync();
         return order;
     }
+
+    // Certain tests require context to be cleared before assertion
+    // Because the results from acting may persist in cache, causing false positives
+    private void ClearContext() => _context.ChangeTracker.Clear();
     #endregion
 
     #region GetAll
@@ -247,7 +251,7 @@ public class OrderRepositoryTests : IAsyncLifetime
         var result = await _repository.CreateAsync(order);
 
         // Clear the context cache, then try to get the persisted order
-        _context.ChangeTracker.Clear();
+        ClearContext();
 
         // 'FindAsync' won't return 'Items' relation. 'Include is required'
         var persistedOrder = await _context.Orders
@@ -273,7 +277,7 @@ public class OrderRepositoryTests : IAsyncLifetime
         await _repository.UpdateAsync(seededOrder);
 
         // Clear the context cache, then try to get the persisted change
-        _context.ChangeTracker.Clear();
+        ClearContext();
 
         var persistedOrder = await _context.Orders.FindAsync(seededOrder.Id);
 
@@ -290,15 +294,10 @@ public class OrderRepositoryTests : IAsyncLifetime
     {
         var seededOrder = await SeedOrderAsync();
 
-        // Clear the context cache, then try to handle deletion
-        // This is required because seededOrder creates an Order ref
-        // in _context, which will cause a PK conflict with 'DeleteAsync'
-        _context.ChangeTracker.Clear();
-
-        await _repository.DeleteAsync(seededOrder.Id);
+        await _repository.DeleteAsync(seededOrder);
 
         // Clear the context cache, then try to get the persisted change
-        _context.ChangeTracker.Clear();
+        ClearContext();
 
         // Assert that order was removed
         var deletedOrder = await _context.Orders.FindAsync(seededOrder.Id);

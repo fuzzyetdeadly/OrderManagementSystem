@@ -18,5 +18,5 @@ public interface IOrderRepository
     Task<bool> ExistsAsync(int id);
     Task<Order> CreateAsync(Order order);
     Task UpdateAsync(Order order);
-    Task DeleteAsync(int id);
+    Task DeleteAsync(Order order);
 }
