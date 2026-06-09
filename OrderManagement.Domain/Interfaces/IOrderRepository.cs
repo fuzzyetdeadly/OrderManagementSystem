@@ -10,13 +10,7 @@ namespace OrderManagement.Domain.Interfaces;
  * Methods should always be async for scalability.
  * This ensures no process locking when DB actions take awhile
  */
-public interface IOrderRepository
+public interface IOrderRepository : IRepository<Order>
 {
-    Task<IReadOnlyList<Order>> GetAllAsync(Pagination pagination);
     Task<IReadOnlyList<Order>> GetByCustomerIdAsync(int customerId, Pagination pagination);
-    Task<Order?> GetByIdAsync(int id);
-    Task<bool> ExistsAsync(int id);
-    Task<Order> CreateAsync(Order order);
-    Task UpdateAsync(Order order);
-    Task DeleteAsync(Order order);
 }

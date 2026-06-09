@@ -1,8 +1,9 @@
-﻿using System.Text.Json.Serialization;
+﻿using OrderManagement.Domain.Interfaces;
+using System.Text.Json.Serialization;
 
 namespace OrderManagement.Domain.Entities;
 
-public class Order
+public class Order : IEntity
 {
     // Primary key
     public int Id { get; set; }
