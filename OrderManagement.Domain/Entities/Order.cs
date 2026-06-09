@@ -8,9 +8,12 @@ public class Order
     public int Id { get; set; }
 
     // Scalar properties
-    // Note: DateTime is configured to be set by EF Core at DB level
-    public OrderStatus Status { get; set; }
-    public DateTime Created { get; set; }
+    // Note:
+    // * Setting Created here makes it cross compatible with different DBs
+    // * PostgreSQL for backend, SQLite for tests
+    // * I chose not to complicate Status with private set and state transition methods.
+    public OrderStatus Status { get; set; } = OrderStatus.Pending;
+    public DateTime Created { get; set; } = DateTime.UtcNow;
     
     // Foreign keys
     public int CustomerId { get; set; }

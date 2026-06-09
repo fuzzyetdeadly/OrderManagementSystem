@@ -59,11 +59,9 @@ public class CustomerRepository : ICustomerRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task DeleteAsync(int id)
+    public async Task DeleteAsync(Customer customer)
     {
-        // Expect service to validate exists already
-        // Therefore, just construct order for direct removal (skip DB read)
-        var customer = new Customer { Id = id };
+        // Expect a valid customer from consumer
         _context.Customers.Remove(customer);
         await _context.SaveChangesAsync();
     }

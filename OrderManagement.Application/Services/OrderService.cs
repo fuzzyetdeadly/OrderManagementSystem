@@ -105,11 +105,11 @@ public class OrderService
     public async Task<ErrorOr<Deleted>> DeleteAsync(int id)
     {
         // Verify that the order exists
-        var exists = await _orderRepository.ExistsAsync(id);
-        if (!exists)
+        var order = await _orderRepository.GetOrderIdAsync(id);
+        if (order is null)
             return Error.NotFound(code: ErrorCodes.OrderNotFound);
 
-        await _orderRepository.DeleteAsync(id);
+        await _orderRepository.DeleteAsync(order);
 
         return Result.Deleted;
     }
