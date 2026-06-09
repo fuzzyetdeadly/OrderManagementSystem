@@ -1,6 +1,4 @@
-﻿using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
+﻿using Microsoft.EntityFrameworkCore;
 using OrderManagement.Domain.Common;
 using OrderManagement.Domain.Entities;
 using OrderManagement.Infrastructure.Persistence;
@@ -12,69 +10,22 @@ namespace OrderManagement.Tests.Infrastructure;
  * Repositories normally talk to databases
  * Instead of mocking, an SQLite DB is used (supports FK constraints).
  */
-public class OrderRepositoryTests : IAsyncLifetime
+public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
 {
-    // Constants
-    private readonly static Pagination _pagination = new(Page: 1, PageSize: 20);
-
-    // Trackers
-    private int _customerNo = 1;
-
-    // Expect these instances to be set by 'InitializeAsync'
-    private SqliteConnection _connection = null!;
-    private AppDbContext _context = null!;
-    private OrderRepository _repository = null!;
+    // Fields
+    // Customer is set by SeedInitialDataSync
     private Customer _customer = null!;
 
-    public async Task InitializeAsync()
+    #region overrides
+    protected override OrderRepository CreateRepository(AppDbContext context) => new(context);
+
+    protected override async Task SeedInitialDataAsync()
     {
-        // Remember: connections need to be disposed of too!
-        _connection = new SqliteConnection("DataSource=:memory:");
-        _connection.Open();
-
-        // Initialize repository with SQLite memory database
-        // A fresh instance is spun up per test
-        // This is required because InMemory database doesn't enforce FK constraints
-        // PendingModelChangesWarning is ignored, because it is incorrectly throwing
-        // when attempting to create data.
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlite(_connection)
-            .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning))
-            .Options;
-
-        // Migrate the database, then create the repository
-        _context = new AppDbContext(options);
-        await _context.Database.MigrateAsync();
-        _repository = new OrderRepository(_context);
-
-        // Always seed one customer
         _customer = await SeedCustomerAsync();
     }
-
-    // Dispose will be run after each test to clean up context and memoryy
-    public async Task DisposeAsync()
-    {
-        await _context.DisposeAsync();
-        await _connection.DisposeAsync();
-    }
+    #endregion
 
     #region helpers
-    private async Task<Customer> SeedCustomerAsync()
-    {
-        // Create a dummy customer and increment number
-        var customer = new Customer()
-        {
-            Name = $"Customer{_customerNo:D2}",
-            Email = $"Customer{_customerNo:D2}@noreply.com"
-        };
-
-        _customerNo++;
-
-        _context.Customers.Add(customer);
-        await _context.SaveChangesAsync();
-        return customer;
-    }
-
     /*
      * Creates a template order for a customer
      */
@@ -90,10 +41,6 @@ public class OrderRepositoryTests : IAsyncLifetime
         await _context.SaveChangesAsync();
         return order;
     }
-
-    // Certain tests require context to be cleared before assertion
-    // Because the results from acting may persist in cache, causing false positives
-    private void ClearContext() => _context.ChangeTracker.Clear();
     #endregion
 
     #region GetAll
