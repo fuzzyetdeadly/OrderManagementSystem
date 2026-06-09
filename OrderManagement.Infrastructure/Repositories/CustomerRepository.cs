@@ -27,7 +27,7 @@ public class CustomerRepository : ICustomerRepository
             .ToListAsync();
     }
 
-    public async Task<Customer?> GetCustomerIdAsync(int id)
+    public async Task<Customer?> GetByIdAsync(int id)
     {
         // Returns an Customer if found, with Customer/OrderItem navigations
         return await _context.Customers

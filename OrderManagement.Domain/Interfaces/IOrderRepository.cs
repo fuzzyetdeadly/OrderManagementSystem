@@ -14,7 +14,7 @@ public interface IOrderRepository
 {
     Task<IReadOnlyList<Order>> GetAllAsync(Pagination pagination);
     Task<IReadOnlyList<Order>> GetByCustomerIdAsync(int customerId, Pagination pagination);
-    Task<Order?> GetOrderIdAsync(int id);
+    Task<Order?> GetByIdAsync(int id);
     Task<bool> ExistsAsync(int id);
     Task<Order> CreateAsync(Order order);
     Task UpdateAsync(Order order);

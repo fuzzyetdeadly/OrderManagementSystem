@@ -178,7 +178,7 @@ public class OrderRepositoryTests : IAsyncLifetime
     [Trait("Category", "Repository")]
     public async Task GetOrderId_ReturnsNull_WhenInvalidOrder()
     {
-        var result = await _repository.GetOrderIdAsync(0);
+        var result = await _repository.GetByIdAsync(0);
 
         Assert.Null(result);
     }
@@ -189,7 +189,7 @@ public class OrderRepositoryTests : IAsyncLifetime
     {
         var seededOrder = await SeedOrderAsync();
 
-        var result = await _repository.GetOrderIdAsync(1);
+        var result = await _repository.GetByIdAsync(1);
 
         // Assert that order returned isn't null with correct id
         Assert.NotNull(result);

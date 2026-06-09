@@ -43,7 +43,7 @@ public class OrderRepository : IOrderRepository
             .ToListAsync();
     }
 
-    public async Task<Order?> GetOrderIdAsync(int id)
+    public async Task<Order?> GetByIdAsync(int id)
     {
         // Returns an order if found, with Customer/OrderItem navigations
         return await _context.Orders
