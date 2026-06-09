@@ -246,7 +246,7 @@ public class OrderRepositoryTests : IAsyncLifetime
 
         var result = await _repository.CreateAsync(order);
 
-        // Clear the context, then try to get the persisted order
+        // Clear the context cache, then try to get the persisted order
         _context.ChangeTracker.Clear();
 
         // 'FindAsync' won't return 'Items' relation. 'Include is required'
@@ -258,6 +258,52 @@ public class OrderRepositoryTests : IAsyncLifetime
         Assert.NotNull(persistedOrder);
         Assert.Single(persistedOrder.Items);
         Assert.True(persistedOrder.Items.First().Id > 0);
+    }
+    #endregion
+
+    #region Update
+    [Fact]
+    [Trait("Category", "Repository")]
+    public async Task Update_PersistsChanges()
+    {
+        var seededOrder = await SeedOrderAsync();
+
+        seededOrder.Status = OrderStatus.Scheduled;
+
+        await _repository.UpdateAsync(seededOrder);
+
+        // Clear the context cache, then try to get the persisted change
+        _context.ChangeTracker.Clear();
+
+        var persistedOrder = await _context.Orders.FindAsync(seededOrder.Id);
+
+        // Assert that order and its status updated correctly
+        Assert.NotNull(persistedOrder);
+        Assert.Equal(OrderStatus.Scheduled, persistedOrder.Status);
+    }
+    #endregion
+
+    #region Delete
+    [Fact]
+    [Trait("Category", "Repository")]
+    public async Task Delete_RemovesOrder()
+    {
+        var seededOrder = await SeedOrderAsync();
+
+        // Clear the context cache, then try to handle deletion
+        // This is required because seededOrder creates an Order ref
+        // in _context, which will cause a PK conflict with 'DeleteAsync'
+        _context.ChangeTracker.Clear();
+
+        await _repository.DeleteAsync(seededOrder.Id);
+
+        // Clear the context cache, then try to get the persisted change
+        _context.ChangeTracker.Clear();
+
+        // Assert that order was removed
+        var deletedOrder = await _context.Orders.FindAsync(seededOrder.Id);
+
+        Assert.Null(deletedOrder);
     }
     #endregion
 }
