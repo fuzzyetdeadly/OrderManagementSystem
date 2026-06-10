@@ -1,10 +1,9 @@
-﻿using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
+﻿using Microsoft.EntityFrameworkCore;
 using OrderManagement.Domain.Common;
 using OrderManagement.Domain.Entities;
 using OrderManagement.Infrastructure.Persistence;
 using OrderManagement.Infrastructure.Repositories;
+using OrderManagement.Tests.Common;
 
 namespace OrderManagement.Tests.Infrastructure;
 
@@ -12,69 +11,22 @@ namespace OrderManagement.Tests.Infrastructure;
  * Repositories normally talk to databases
  * Instead of mocking, an SQLite DB is used (supports FK constraints).
  */
-public class OrderRepositoryTests : IAsyncLifetime
+public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
 {
-    // Constants
-    private readonly static Pagination _pagination = new(Page: 1, PageSize: 20);
-
-    // Trackers
-    private int _customerNo = 1;
-
-    // Expect these instances to be set by 'InitializeAsync'
-    private SqliteConnection _connection = null!;
-    private AppDbContext _context = null!;
-    private OrderRepository _repository = null!;
+    // Fields
+    // Customer is set by SeedInitialDataSync
     private Customer _customer = null!;
 
-    public async Task InitializeAsync()
+    #region overrides
+    protected override OrderRepository CreateRepository(AppDbContext context) => new(context);
+
+    protected override async Task SeedInitialDataAsync()
     {
-        // Remember: connections need to be disposed of too!
-        _connection = new SqliteConnection("DataSource=:memory:");
-        _connection.Open();
-
-        // Initialize repository with SQLite memory database
-        // A fresh instance is spun up per test
-        // This is required because InMemory database doesn't enforce FK constraints
-        // PendingModelChangesWarning is ignored, because it is incorrectly throwing
-        // when attempting to create data.
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlite(_connection)
-            .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning))
-            .Options;
-
-        // Migrate the database, then create the repository
-        _context = new AppDbContext(options);
-        await _context.Database.MigrateAsync();
-        _repository = new OrderRepository(_context);
-
-        // Always seed one customer
         _customer = await SeedCustomerAsync();
     }
-
-    // Dispose will be run after each test to clean up context and memoryy
-    public async Task DisposeAsync()
-    {
-        await _context.DisposeAsync();
-        await _connection.DisposeAsync();
-    }
+    #endregion
 
     #region helpers
-    private async Task<Customer> SeedCustomerAsync()
-    {
-        // Create a dummy customer and increment number
-        var customer = new Customer()
-        {
-            Name = $"Customer{_customerNo:D2}",
-            Email = $"Customer{_customerNo:D2}@noreply.com"
-        };
-
-        _customerNo++;
-
-        _context.Customers.Add(customer);
-        await _context.SaveChangesAsync();
-        return customer;
-    }
-
     /*
      * Creates a template order for a customer
      */
@@ -90,16 +42,13 @@ public class OrderRepositoryTests : IAsyncLifetime
         await _context.SaveChangesAsync();
         return order;
     }
-
-    // Certain tests require context to be cleared before assertion
-    // Because the results from acting may persist in cache, causing false positives
-    private void ClearContext() => _context.ChangeTracker.Clear();
     #endregion
 
     #region GetAll
     [Fact]
-    [Trait("Category", "Repository")]
-    public async Task GetAllAsync_ReturnsEmpty_WhenNoOrders()
+    [Layer("Repository")]
+    [Scope("Order")]
+    public async Task GetAllAsync_ReturnsEmpty_WhenNoData()
     {
         var result = await _repository.GetAllAsync(_pagination);
 
@@ -107,8 +56,9 @@ public class OrderRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    [Trait("Category", "Repository")]
-    public async Task GetAllAsync_ReturnsPagedOrders()
+    [Layer("Repository")]
+    [Scope("Order")]
+    public async Task GetAllAsync_RespectsPagination()
     {
         await SeedOrderAsync();
         await SeedOrderAsync();
@@ -123,8 +73,9 @@ public class OrderRepositoryTests : IAsyncLifetime
 
     #region GetByCustomerId
     [Fact]
-    [Trait("Category", "Repository")]
-    public async Task GetByCustomerIdAsync_ReturnsEmpty_WhenInvalidCustomer()
+    [Layer("Repository")]
+    [Scope("Order")]
+    public async Task GetByCustomerIdAsync_ReturnsEmpty_WhenInvalidId()
     {
         var result = await _repository.GetByCustomerIdAsync(0, _pagination);
 
@@ -132,8 +83,9 @@ public class OrderRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    [Trait("Category", "Repository")]
-    public async Task GetByCustomerIdAsync_ReturnsEmpty_WhenNoOrders()
+    [Layer("Repository")]
+    [Scope("Order")]
+    public async Task GetByCustomerIdAsync_ReturnsEmpty_WhenNoData()
     {
         var result = await _repository.GetByCustomerIdAsync(_customer.Id, _pagination);
 
@@ -141,8 +93,9 @@ public class OrderRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    [Trait("Category", "Repository")]
-    public async Task GetByCustomerIdAsync_ReturnsMatchingOrders()
+    [Layer("Repository")]
+    [Scope("Order")]
+    public async Task GetByCustomerIdAsync_ReturnsOnlyMatchingOrders()
     {
         // An extra customer is needed for this test
         await SeedCustomerAsync();
@@ -157,8 +110,9 @@ public class OrderRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    [Trait("Category", "Repository")]
-    public async Task GetByCustomerIdAsync_ReturnsMatchingPagedOrders()
+    [Layer("Repository")]
+    [Scope("Order")]
+    public async Task GetByCustomerIdAsync_RespectsPagination()
     {
         // An extra customer is needed for this test
         await SeedCustomerAsync();
@@ -173,23 +127,25 @@ public class OrderRepositoryTests : IAsyncLifetime
     }
     #endregion
 
-    #region GetOrderId
+    #region GetById
     [Fact]
-    [Trait("Category", "Repository")]
-    public async Task GetOrderId_ReturnsNull_WhenInvalidOrder()
+    [Layer("Repository")]
+    [Scope("Order")]
+    public async Task GetById_ReturnsNull_WhenInvalidId()
     {
-        var result = await _repository.GetOrderIdAsync(0);
+        var result = await _repository.GetByIdAsync(0);
 
         Assert.Null(result);
     }
 
     [Fact]
-    [Trait("Category", "Repository")]
-    public async Task GetOrderId_ReturnsOrder()
+    [Layer("Repository")]
+    [Scope("Order")]
+    public async Task GetById_ReturnsOrder()
     {
         var seededOrder = await SeedOrderAsync();
 
-        var result = await _repository.GetOrderIdAsync(1);
+        var result = await _repository.GetByIdAsync(seededOrder.Id);
 
         // Assert that order returned isn't null with correct id
         Assert.NotNull(result);
@@ -199,7 +155,8 @@ public class OrderRepositoryTests : IAsyncLifetime
 
     #region Exists
     [Fact]
-    [Trait("Category", "Repository")]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task Exists_ReturnsFalse_WhenInvalidOrder()
     {
         var result = await _repository.ExistsAsync(0);
@@ -208,12 +165,13 @@ public class OrderRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    [Trait("Category", "Repository")]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task Exists_ReturnsTrue_WhenValidOrder()
     {
-        await SeedOrderAsync();
+        var seededOrder = await SeedOrderAsync();
 
-        var result = await _repository.ExistsAsync(1);
+        var result = await _repository.ExistsAsync(seededOrder.Id);
 
         Assert.True(result);
     }
@@ -221,7 +179,17 @@ public class OrderRepositoryTests : IAsyncLifetime
 
     #region Create
     [Fact]
-    [Trait("Category", "Repository")]
+    [Layer("Repository")]
+    [Scope("Order")]
+    public async Task Create_ThrowsWhenNull()
+    {
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            async () => await _repository.CreateAsync(null!));
+    }
+
+    [Fact]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task Create_ReturnsOrder()
     {
         var order = new Order()
@@ -235,11 +203,12 @@ public class OrderRepositoryTests : IAsyncLifetime
         // Assert that order not null and keys assigned correctly
         Assert.NotNull(result);
         Assert.Equal(_customer.Id, result.CustomerId);
-        //Assert.True(result.Id > 0);
+        Assert.True(result.Id > 0);
     }
 
     [Fact]
-    [Trait("Category", "Repository")]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task Create_PersistsOrder()
     {
         var order = new Order()
@@ -256,7 +225,7 @@ public class OrderRepositoryTests : IAsyncLifetime
         // 'FindAsync' won't return 'Items' relation. 'Include is required'
         var persistedOrder = await _context.Orders
             .Include(o => o.Items)
-            .FirstOrDefaultAsync(o => o.Id == result.Id);
+            .FirstOrDefaultAsync(o => o.Id == result.Id, TestContext.Current.CancellationToken);
 
         // Assert that order and its items persisted
         Assert.NotNull(persistedOrder);
@@ -267,7 +236,17 @@ public class OrderRepositoryTests : IAsyncLifetime
 
     #region Update
     [Fact]
-    [Trait("Category", "Repository")]
+    [Layer("Repository")]
+    [Scope("Order")]
+    public async Task Update_ThrowsWhenNull()
+    {
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            async () => await _repository.UpdateAsync(null!));
+    }
+
+    [Fact]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task Update_PersistsChanges()
     {
         var seededOrder = await SeedOrderAsync();
@@ -279,7 +258,11 @@ public class OrderRepositoryTests : IAsyncLifetime
         // Clear the context cache, then try to get the persisted change
         ClearContext();
 
-        var persistedOrder = await _context.Orders.FindAsync(seededOrder.Id);
+        // Cancellation token version of FindAsync requires seededOrder.Id to be in []
+        // This is because the param accepted is 'object[] keyValues, CancellationToken'
+        // Not wrapping [] causes other overload to be invoked with 'param object[] keyValues'
+        var persistedOrder = await _context.Orders
+            .FindAsync([seededOrder.Id], TestContext.Current.CancellationToken);
 
         // Assert that order and its status updated correctly
         Assert.NotNull(persistedOrder);
@@ -289,7 +272,17 @@ public class OrderRepositoryTests : IAsyncLifetime
 
     #region Delete
     [Fact]
-    [Trait("Category", "Repository")]
+    [Layer("Repository")]
+    [Scope("Order")]
+    public async Task Delete_ThrowsWhenNull()
+    {
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            async () => await _repository.DeleteAsync(null!));
+    }
+
+    [Fact]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task Delete_RemovesOrder()
     {
         var seededOrder = await SeedOrderAsync();
@@ -300,7 +293,8 @@ public class OrderRepositoryTests : IAsyncLifetime
         ClearContext();
 
         // Assert that order was removed
-        var deletedOrder = await _context.Orders.FindAsync(seededOrder.Id);
+        var deletedOrder = await _context.Orders
+            .FindAsync([seededOrder.Id], TestContext.Current.CancellationToken);
 
         Assert.Null(deletedOrder);
     }

@@ -1,7 +1,9 @@
-﻿namespace OrderManagement.Domain.Entities;
+﻿using OrderManagement.Domain.Interfaces;
+
+namespace OrderManagement.Domain.Entities;
 
 // Note: 'required' indicates ProductName must be set on construct
-public class OrderItem
+public class OrderItem : IEntity
 {
     public int Id { get; set; }
     public required string ProductName { get; set; }

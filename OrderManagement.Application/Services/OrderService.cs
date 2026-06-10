@@ -49,7 +49,7 @@ public class OrderService
 
     public async Task<ErrorOr<OrderResponse>> GetOrderIdAsync(int id)
     {
-        var order = await _orderRepository.GetOrderIdAsync(id);
+        var order = await _orderRepository.GetByIdAsync(id);
 
         // Prefer Result pattern with ErrorOr instead of returning 'null'
         // 'null' is ambiguous, and the controller shouldn't have to guess it's meaning
@@ -88,7 +88,7 @@ public class OrderService
     public async Task<ErrorOr<OrderResponse>> UpdateStatusAsync(int id, OrderStatus status)
     {
         // Verify that the order exists
-        var order = await _orderRepository.GetOrderIdAsync(id);
+        var order = await _orderRepository.GetByIdAsync(id);
         if(order is null)
             return Error.NotFound(code: ErrorCodes.OrderNotFound);
 
@@ -105,7 +105,7 @@ public class OrderService
     public async Task<ErrorOr<Deleted>> DeleteAsync(int id)
     {
         // Verify that the order exists
-        var order = await _orderRepository.GetOrderIdAsync(id);
+        var order = await _orderRepository.GetByIdAsync(id);
         if (order is null)
             return Error.NotFound(code: ErrorCodes.OrderNotFound);
 
