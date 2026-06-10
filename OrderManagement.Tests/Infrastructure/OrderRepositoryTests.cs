@@ -216,7 +216,7 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
         // 'FindAsync' won't return 'Items' relation. 'Include is required'
         var persistedOrder = await _context.Orders
             .Include(o => o.Items)
-            .FirstOrDefaultAsync(o => o.Id == result.Id);
+            .FirstOrDefaultAsync(o => o.Id == result.Id, TestContext.Current.CancellationToken);
 
         // Assert that order and its items persisted
         Assert.NotNull(persistedOrder);
@@ -240,7 +240,11 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
         // Clear the context cache, then try to get the persisted change
         ClearContext();
 
-        var persistedOrder = await _context.Orders.FindAsync(seededOrder.Id);
+        // Cancellation token version of FindAsync requires seededOrder.Id to be in []
+        // This is because the param accepted is 'object[] keyValues, CancellationToken'
+        // Not wrapping [] causes other overload to be invoked with 'param object[] keyValues'
+        var persistedOrder = await _context.Orders
+            .FindAsync([seededOrder.Id], TestContext.Current.CancellationToken);
 
         // Assert that order and its status updated correctly
         Assert.NotNull(persistedOrder);
@@ -262,7 +266,8 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
         ClearContext();
 
         // Assert that order was removed
-        var deletedOrder = await _context.Orders.FindAsync(seededOrder.Id);
+        var deletedOrder = await _context.Orders
+            .FindAsync([seededOrder.Id], TestContext.Current.CancellationToken);
 
         Assert.Null(deletedOrder);
     }
