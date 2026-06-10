@@ -3,6 +3,7 @@ using OrderManagement.Domain.Common;
 using OrderManagement.Domain.Entities;
 using OrderManagement.Infrastructure.Persistence;
 using OrderManagement.Infrastructure.Repositories;
+using OrderManagement.Tests.Common;
 
 namespace OrderManagement.Tests.Infrastructure;
 
@@ -45,7 +46,8 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
 
     #region GetAll
     [Fact]
-    [Trait("Category", "Repository")]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task GetAllAsync_ReturnsEmpty_WhenNoOrders()
     {
         var result = await _repository.GetAllAsync(_pagination);
@@ -54,7 +56,8 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     }
 
     [Fact]
-    [Trait("Category", "Repository")]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task GetAllAsync_ReturnsPagedOrders()
     {
         await SeedOrderAsync();
@@ -70,7 +73,8 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
 
     #region GetByCustomerId
     [Fact]
-    [Trait("Category", "Repository")]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task GetByCustomerIdAsync_ReturnsEmpty_WhenInvalidCustomer()
     {
         var result = await _repository.GetByCustomerIdAsync(0, _pagination);
@@ -79,7 +83,8 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     }
 
     [Fact]
-    [Trait("Category", "Repository")]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task GetByCustomerIdAsync_ReturnsEmpty_WhenNoOrders()
     {
         var result = await _repository.GetByCustomerIdAsync(_customer.Id, _pagination);
@@ -88,7 +93,8 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     }
 
     [Fact]
-    [Trait("Category", "Repository")]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task GetByCustomerIdAsync_ReturnsMatchingOrders()
     {
         // An extra customer is needed for this test
@@ -104,7 +110,8 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     }
 
     [Fact]
-    [Trait("Category", "Repository")]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task GetByCustomerIdAsync_ReturnsMatchingPagedOrders()
     {
         // An extra customer is needed for this test
@@ -122,7 +129,8 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
 
     #region GetOrderId
     [Fact]
-    [Trait("Category", "Repository")]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task GetOrderId_ReturnsNull_WhenInvalidOrder()
     {
         var result = await _repository.GetByIdAsync(0);
@@ -131,7 +139,8 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     }
 
     [Fact]
-    [Trait("Category", "Repository")]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task GetOrderId_ReturnsOrder()
     {
         var seededOrder = await SeedOrderAsync();
@@ -146,7 +155,8 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
 
     #region Exists
     [Fact]
-    [Trait("Category", "Repository")]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task Exists_ReturnsFalse_WhenInvalidOrder()
     {
         var result = await _repository.ExistsAsync(0);
@@ -155,7 +165,8 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     }
 
     [Fact]
-    [Trait("Category", "Repository")]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task Exists_ReturnsTrue_WhenValidOrder()
     {
         await SeedOrderAsync();
@@ -168,7 +179,8 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
 
     #region Create
     [Fact]
-    [Trait("Category", "Repository")]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task Create_ReturnsOrder()
     {
         var order = new Order()
@@ -186,7 +198,8 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     }
 
     [Fact]
-    [Trait("Category", "Repository")]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task Create_PersistsOrder()
     {
         var order = new Order()
@@ -214,7 +227,8 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
 
     #region Update
     [Fact]
-    [Trait("Category", "Repository")]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task Update_PersistsChanges()
     {
         var seededOrder = await SeedOrderAsync();
@@ -236,7 +250,8 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
 
     #region Delete
     [Fact]
-    [Trait("Category", "Repository")]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task Delete_RemovesOrder()
     {
         var seededOrder = await SeedOrderAsync();

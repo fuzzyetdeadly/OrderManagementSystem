@@ -33,7 +33,7 @@ public abstract class RepositoryTestsBase<TRepository, TEntity> : IAsyncLifetime
     protected TRepository _repository = default!;
 
     #region lifetime
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         // Remember: connections need to be disposed of too!
         _connection = new SqliteConnection(ConnectionString);
@@ -59,10 +59,14 @@ public abstract class RepositoryTestsBase<TRepository, TEntity> : IAsyncLifetime
     }
 
     // Dispose will be run after each test to clean up context and memoryy
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await _context.DisposeAsync();
         await _connection.DisposeAsync();
+
+        // IDE suggestion: tell garbage collector this is already cleaned up,
+        // no need to queue for finalization (wasted work).
+        GC.SuppressFinalize(this);
     }
     #endregion
 
