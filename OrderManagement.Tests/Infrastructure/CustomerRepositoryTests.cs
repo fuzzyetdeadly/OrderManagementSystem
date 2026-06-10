@@ -99,6 +99,15 @@ public class CustomerRepositoryTests : RepositoryTestsBase<CustomerRepository, C
     [Fact]
     [Layer("Repository")]
     [Scope("Customer")]
+    public async Task Create_ThrowsWhenNull()
+    {
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            async () => await _repository.CreateAsync(null!));
+    }
+
+    [Fact]
+    [Layer("Repository")]
+    [Scope("Customer")]
     public async Task Create_ReturnsCustomer()
     {
         var customer = new Customer()

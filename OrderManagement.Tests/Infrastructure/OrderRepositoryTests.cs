@@ -181,6 +181,15 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     [Fact]
     [Layer("Repository")]
     [Scope("Order")]
+    public async Task Create_ThrowsWhenNull()
+    {
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            async () => await _repository.CreateAsync(null!));
+    }
+
+    [Fact]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task Create_ReturnsOrder()
     {
         var order = new Order()
@@ -229,6 +238,15 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     [Fact]
     [Layer("Repository")]
     [Scope("Order")]
+    public async Task Update_ThrowsWhenNull()
+    {
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            async () => await _repository.UpdateAsync(null!));
+    }
+
+    [Fact]
+    [Layer("Repository")]
+    [Scope("Order")]
     public async Task Update_PersistsChanges()
     {
         var seededOrder = await SeedOrderAsync();
@@ -253,6 +271,15 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     #endregion
 
     #region Delete
+    [Fact]
+    [Layer("Repository")]
+    [Scope("Order")]
+    public async Task Delete_ThrowsWhenNull()
+    {
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            async () => await _repository.DeleteAsync(null!));
+    }
+
     [Fact]
     [Layer("Repository")]
     [Scope("Order")]
