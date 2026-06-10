@@ -57,6 +57,8 @@ public class OrderRepository : IOrderRepository
 
     public async Task<Order> CreateAsync(Order order)
     {
+        ArgumentNullException.ThrowIfNull(order);
+
         // Add the order, then save it
         // Note: DB is configured to set 'Created' time
         _context.Orders.Add(order);
@@ -68,12 +70,15 @@ public class OrderRepository : IOrderRepository
     // The order parameter is redundant, but kept to be explicit about what's updated
     public async Task UpdateAsync(Order order)
     {
+        ArgumentNullException.ThrowIfNull(order);
+
         await _context.SaveChangesAsync();
     }
 
     public async Task DeleteAsync(Order order)
     {
-        // Expect a valid order from consumer
+        ArgumentNullException.ThrowIfNull(order);
+
         _context.Orders.Remove(order);
         await _context.SaveChangesAsync();
     }

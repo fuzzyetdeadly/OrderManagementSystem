@@ -39,6 +39,8 @@ public class CustomerRepository : ICustomerRepository
 
     public async Task<Customer> CreateAsync(Customer customer)
     {
+        ArgumentNullException.ThrowIfNull(customer);
+
         // Add the customer, the save it
         // Note: DB is configured to set 'Created/Updated' times
         _context.Customers.Add(customer);
@@ -55,13 +57,14 @@ public class CustomerRepository : ICustomerRepository
     public async Task UpdateAsync(Customer customer)
     {
         ArgumentNullException.ThrowIfNull(customer);
-        customer.Updated = DateTime.UtcNow;
+
         await _context.SaveChangesAsync();
     }
 
     public async Task DeleteAsync(Customer customer)
     {
-        // Expect a valid customer from consumer
+        ArgumentNullException.ThrowIfNull(customer);
+
         _context.Customers.Remove(customer);
         await _context.SaveChangesAsync();
     }
