@@ -48,7 +48,7 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     [Fact]
     [Layer("Repository")]
     [Scope("Order")]
-    public async Task GetAllAsync_ReturnsEmpty_WhenNoOrders()
+    public async Task GetAllAsync_ReturnsEmpty_WhenNoData()
     {
         var result = await _repository.GetAllAsync(_pagination);
 
@@ -58,7 +58,7 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     [Fact]
     [Layer("Repository")]
     [Scope("Order")]
-    public async Task GetAllAsync_ReturnsPagedOrders()
+    public async Task GetAllAsync_RespectsPagination()
     {
         await SeedOrderAsync();
         await SeedOrderAsync();
@@ -75,7 +75,7 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     [Fact]
     [Layer("Repository")]
     [Scope("Order")]
-    public async Task GetByCustomerIdAsync_ReturnsEmpty_WhenInvalidCustomer()
+    public async Task GetByCustomerIdAsync_ReturnsEmpty_WhenInvalidId()
     {
         var result = await _repository.GetByCustomerIdAsync(0, _pagination);
 
@@ -85,7 +85,7 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     [Fact]
     [Layer("Repository")]
     [Scope("Order")]
-    public async Task GetByCustomerIdAsync_ReturnsEmpty_WhenNoOrders()
+    public async Task GetByCustomerIdAsync_ReturnsEmpty_WhenNoData()
     {
         var result = await _repository.GetByCustomerIdAsync(_customer.Id, _pagination);
 
@@ -95,7 +95,7 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     [Fact]
     [Layer("Repository")]
     [Scope("Order")]
-    public async Task GetByCustomerIdAsync_ReturnsMatchingOrders()
+    public async Task GetByCustomerIdAsync_ReturnsOnlyMatchingOrders()
     {
         // An extra customer is needed for this test
         await SeedCustomerAsync();
@@ -112,7 +112,7 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     [Fact]
     [Layer("Repository")]
     [Scope("Order")]
-    public async Task GetByCustomerIdAsync_ReturnsMatchingPagedOrders()
+    public async Task GetByCustomerIdAsync_RespectsPagination()
     {
         // An extra customer is needed for this test
         await SeedCustomerAsync();
@@ -127,11 +127,11 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     }
     #endregion
 
-    #region GetOrderId
+    #region GetById
     [Fact]
     [Layer("Repository")]
     [Scope("Order")]
-    public async Task GetOrderId_ReturnsNull_WhenInvalidOrder()
+    public async Task GetOrderId_ReturnsNull_WhenInvalidId()
     {
         var result = await _repository.GetByIdAsync(0);
 
