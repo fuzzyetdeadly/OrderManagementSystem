@@ -1,4 +1,5 @@
-﻿using OrderManagement.Domain.Common;
+﻿using Microsoft.EntityFrameworkCore;
+using OrderManagement.Domain.Common;
 using OrderManagement.Domain.Entities;
 using OrderManagement.Infrastructure.Persistence;
 using OrderManagement.Infrastructure.Repositories;
@@ -91,6 +92,52 @@ public class CustomerRepositoryTests : RepositoryTestsBase<CustomerRepository, C
         var result = await _repository.ExistsAsync(seededCustomer.Id);
 
         Assert.True(result);
+    }
+    #endregion
+
+    #region Create
+    [Fact]
+    [Layer("Repository")]
+    [Scope("Customer")]
+    public async Task Create_ReturnsCustomer()
+    {
+        var customer = new Customer()
+        {
+            Name = "Customer1",
+            Email = "Customer1@gmail.com"
+        };
+
+        var result = await _repository.CreateAsync(customer);
+
+        // Assert that customer not null and keys assigned correctly
+        // Also expect no assocaited orders for fresh customer
+        Assert.NotNull(result);
+        Assert.True(result.Id > 0);
+        Assert.Empty(result.Orders);
+    }
+
+    [Fact]
+    [Layer("Repository")]
+    [Scope("Customer")]
+    public async Task Create_PersistsOrder()
+    {
+        var customer = new Customer()
+        {
+            Name = "Customer1",
+            Email = "Customer1@gmail.com"
+        };
+
+        var result = await _repository.CreateAsync(customer);
+
+        // Clear the context cache, then try to get the persisted order
+        ClearContext();
+
+        // 'FindAsync' won't return 'Items' relation. 'Include is required'
+        var persistedOrder = await _context.Customers
+            .FirstOrDefaultAsync(c => c.Id == result.Id, TestContext.Current.CancellationToken);
+
+        // Assert that order and its items persisted
+        Assert.NotNull(persistedOrder);
     }
     #endregion
 }

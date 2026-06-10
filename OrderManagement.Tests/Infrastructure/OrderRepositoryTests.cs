@@ -194,7 +194,7 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
         // Assert that order not null and keys assigned correctly
         Assert.NotNull(result);
         Assert.Equal(_customer.Id, result.CustomerId);
-        //Assert.True(result.Id > 0);
+        Assert.True(result.Id > 0);
     }
 
     [Fact]

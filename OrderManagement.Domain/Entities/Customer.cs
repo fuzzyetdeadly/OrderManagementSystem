@@ -9,13 +9,15 @@ public class Customer : IEntity
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
-    public DateTime Created { get; set; }
-    public DateTime Updated { get; set; }
+    public DateTime Created { get; set; } = DateTime.UtcNow;
+    public DateTime Updated { get; set; } = DateTime.UtcNow;
     public ICollection<Order> Orders { get; set; } = [];
 
-    public void UpdateDetails(string name, string email)
+    public void Update(string name, string email)
     {
         Name = name;
         Email = email;
+
+        Updated = DateTime.UtcNow;
     }
 }
