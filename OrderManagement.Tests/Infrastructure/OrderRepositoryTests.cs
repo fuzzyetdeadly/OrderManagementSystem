@@ -131,7 +131,7 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     [Fact]
     [Layer("Repository")]
     [Scope("Order")]
-    public async Task GetOrderId_ReturnsNull_WhenInvalidId()
+    public async Task GetById_ReturnsNull_WhenInvalidId()
     {
         var result = await _repository.GetByIdAsync(0);
 
@@ -141,11 +141,11 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     [Fact]
     [Layer("Repository")]
     [Scope("Order")]
-    public async Task GetOrderId_ReturnsOrder()
+    public async Task GetById_ReturnsOrder()
     {
         var seededOrder = await SeedOrderAsync();
 
-        var result = await _repository.GetByIdAsync(1);
+        var result = await _repository.GetByIdAsync(seededOrder.Id);
 
         // Assert that order returned isn't null with correct id
         Assert.NotNull(result);

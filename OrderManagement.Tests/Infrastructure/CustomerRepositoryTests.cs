@@ -21,7 +21,7 @@ public class CustomerRepositoryTests : RepositoryTestsBase<CustomerRepository, C
     [Fact]
     [Layer("Repository")]
     [Scope("Customer")]
-    public async Task GetAllAsync_ReturnsEmpty_WhenNoCustomers()
+    public async Task GetAllAsync_ReturnsEmpty_WhenNoData()
     {
         var result = await _repository.GetAllAsync(_pagination);
 
@@ -31,7 +31,7 @@ public class CustomerRepositoryTests : RepositoryTestsBase<CustomerRepository, C
     [Fact]
     [Layer("Repository")]
     [Scope("Customer")]
-    public async Task GetAllAsync_ReturnsPagedCustomers()
+    public async Task GetAllAsync_RespectsPagination()
     {
         await SeedCustomerAsync();
         await SeedCustomerAsync();
@@ -41,6 +41,32 @@ public class CustomerRepositoryTests : RepositoryTestsBase<CustomerRepository, C
         var result = await _repository.GetAllAsync(pagination);
 
         Assert.Equal(2, result.Count);
+    }
+    #endregion
+
+    #region GetById
+    [Fact]
+    [Layer("Repository")]
+    [Scope("Customer")]
+    public async Task GetById_ReturnsNull_WhenInvalidId()
+    {
+        var result = await _repository.GetByIdAsync(0);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    [Layer("Repository")]
+    [Scope("Customer")]
+    public async Task GetById_ReturnsCustomer()
+    {
+        var seededCustomer = await SeedCustomerAsync();
+
+        var result = await _repository.GetByIdAsync(seededCustomer.Id);
+
+        // Assert that order returned isn't null with correct id
+        Assert.NotNull(result);
+        Assert.Equal(seededCustomer.Id, result.Id);
     }
     #endregion
 }
