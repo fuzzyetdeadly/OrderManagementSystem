@@ -169,9 +169,9 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     [Scope("Order")]
     public async Task Exists_ReturnsTrue_WhenValidOrder()
     {
-        await SeedOrderAsync();
+        var seededOrder = await SeedOrderAsync();
 
-        var result = await _repository.ExistsAsync(1);
+        var result = await _repository.ExistsAsync(seededOrder.Id);
 
         Assert.True(result);
     }

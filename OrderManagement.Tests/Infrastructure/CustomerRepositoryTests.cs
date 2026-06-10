@@ -69,4 +69,28 @@ public class CustomerRepositoryTests : RepositoryTestsBase<CustomerRepository, C
         Assert.Equal(seededCustomer.Id, result.Id);
     }
     #endregion
+
+    #region Exists
+    [Fact]
+    [Layer("Repository")]
+    [Scope("Customer")]
+    public async Task Exists_ReturnsFalse_WhenInvalidCustomer()
+    {
+        var result = await _repository.ExistsAsync(0);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    [Layer("Repository")]
+    [Scope("Customer")]
+    public async Task Exists_ReturnsTrue_WhenValidCustomer()
+    {
+        var seededCustomer = await SeedCustomerAsync();
+
+        var result = await _repository.ExistsAsync(seededCustomer.Id);
+
+        Assert.True(result);
+    }
+    #endregion
 }
