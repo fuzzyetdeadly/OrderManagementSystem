@@ -9,6 +9,10 @@ namespace OrderManagement.Tests.Infrastructure;
 
 public class CustomerRepositoryTests : RepositoryTestsBase<CustomerRepository, Customer>
 {
+    // Constants
+    private const string DummyName = "Jane Doe";
+    private const string DummyEmail = "jane.doe@dummy.com";
+
     #region overrides
     protected override CustomerRepository CreateRepository(AppDbContext context) => new(context);
 
@@ -147,6 +151,71 @@ public class CustomerRepositoryTests : RepositoryTestsBase<CustomerRepository, C
 
         // Assert that order and its items persisted
         Assert.NotNull(persistedOrder);
+    }
+    #endregion
+
+    #region Update
+    [Fact]
+    [Layer("Repository")]
+    [Scope("Customer")]
+    public async Task Update_ThrowsWhenNull()
+    {
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            async () => await _repository.UpdateAsync(null!));
+    }
+
+    [Fact]
+    [Layer("Repository")]
+    [Scope("Customer")]
+    public async Task Update_PersistsChanges()
+    {
+        var seededCustomer = await SeedCustomerAsync();
+
+        seededCustomer.Update(DummyName, DummyEmail);
+
+        await _repository.UpdateAsync(seededCustomer);
+
+        // Clear the context cache, then try to get the persisted change
+        ClearContext();
+
+        var persistedCustomer = await _context.Customers
+            .FindAsync([seededCustomer.Id], TestContext.Current.CancellationToken);
+
+        // Assert that customer updated correctly
+        // Timestamps not tested, domain concern
+        Assert.NotNull(persistedCustomer);
+        Assert.Equal(DummyName, persistedCustomer.Name);
+        Assert.Equal(DummyEmail, persistedCustomer.Email);
+    }
+    #endregion
+
+    #region Delete
+    [Fact]
+    [Layer("Repository")]
+    [Scope("Customer")]
+    public async Task Delete_ThrowsWhenNull()
+    {
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            async () => await _repository.DeleteAsync(null!));
+    }
+
+    [Fact]
+    [Layer("Repository")]
+    [Scope("Customer")]
+    public async Task Delete_RemovesOrder()
+    {
+        var seededCustomer = await SeedCustomerAsync();
+
+        await _repository.DeleteAsync(seededCustomer);
+
+        // Clear the context cache, then try to get the persisted change
+        ClearContext();
+
+        // Assert that order was removed
+        var deletedCustomer = await _context.Customers
+            .FindAsync([seededCustomer.Id], TestContext.Current.CancellationToken);
+
+        Assert.Null(deletedCustomer);
     }
     #endregion
 }
