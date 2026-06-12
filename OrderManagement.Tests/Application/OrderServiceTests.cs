@@ -62,6 +62,10 @@ public class OrderServiceTests
         // 1. Service correctly maps arguments to pagination record
         // 2. 'r.GetAllAsync' is called once
         _orderRepo.Verify(r => r.GetAllAsync(new Pagination(1, 20)), Times.Once());
+
+        // Sanity check that returns one mapped order (returned by spoof above)
+        // This is to cover any mistakes with the service method return mapping logic
+        Assert.Single(result);
     }
     #endregion
 }
