@@ -1,5 +1,6 @@
 ﻿using Moq;
 using OrderManagement.Application.Common;
+using OrderManagement.Application.Models;
 using OrderManagement.Application.Services;
 using OrderManagement.Domain.Common;
 using OrderManagement.Domain.Entities;
@@ -45,6 +46,11 @@ public class OrderServiceTests
                 }
             ]
         };
+    }
+
+    private static CreateOrderRequest CreatePostRequest()
+    {
+        return new(1, [new CreateOrderItemRequest("Potato", 1, 0.99m)]);
     }
 
     private void SetupCustomerExists(bool exists = true)
@@ -174,6 +180,57 @@ public class OrderServiceTests
         // Note: for ErrorOr, no need to assert result.Value not null
         // No error already implies it shouldn't be.
         Assert.False(result.IsError);
+    }
+    #endregion
+
+    #region Create
+    [Fact]
+    [Layer("Service")]
+    [Scope("Order")]
+    public async Task Create_ReturnsNotFound_WhenCustomerNotFound()
+    {
+        SetupCustomerExists(false);
+
+        var requestDto = CreatePostRequest();
+        var result = await _service.CreateAsync(requestDto);
+
+        // Verify that exists method was invoked, but create method was not
+        _customerRepo.Verify(r => r.ExistsAsync(requestDto.CustomerId), Times.Once());
+        _orderRepo.Verify(r => r.CreateAsync(It.IsAny<Order>()), Times.Never());
+
+        // Assert that errors returned correctly
+        Assert.True(result.IsError);
+        Assert.Equal(ErrorCodes.CustomerNotFound, result.FirstError.Code);
+    }
+
+    [Fact]
+    [Layer("Service")]
+    [Scope("Order")]
+    public async Task Create_CallsRepoCorrectly_WhenCustomerFound()
+    {
+        SetupCustomerExists();
+
+        var requestDto = CreatePostRequest();
+        Order? capturedOrder = null!;
+
+        // Setup create to capture the mapped order argument (reference)
+        _orderRepo
+            .Setup(r => r.CreateAsync(It.IsAny<Order>()))
+            .Callback<Order>(o => capturedOrder = o)
+            .ReturnsAsync(CreateOrder());
+
+        var result = await _service.CreateAsync(requestDto);
+
+        // Verify that exists and create methods were both invoked correctly
+        // Note that capturing order above implies that CreateAsync was called
+        // with capturedOrder as an argument. So no need to re-verify it here.
+        // Assertions are used below to ensure mapping was correct
+        _customerRepo.Verify(r => r.ExistsAsync(requestDto.CustomerId), Times.Once());
+
+        // Assert that no errors, and that request to order mapped correctly
+        Assert.False(result.IsError);
+        Assert.Equal(requestDto.CustomerId, capturedOrder?.CustomerId);
+        Assert.Equal(requestDto.Items.Count, capturedOrder?.Items.Count);
     }
     #endregion
 }
