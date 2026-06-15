@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using ErrorOr;
+using Moq;
 using OrderManagement.Application.Common;
 using OrderManagement.Application.Models;
 using OrderManagement.Application.Services;
@@ -271,7 +272,7 @@ public class OrderServiceTests
 
         SetupGetById(order);
 
-        // Capture the order passed into 'Update;
+        // Capture the order passed into 'Update';
         Order? capturedOrder = null!;
 
         _orderRepo
@@ -288,12 +289,61 @@ public class OrderServiceTests
         _orderRepo.Verify(r => r.UpdateAsync(capturedOrder), Times.Once());
 
         // Assert no error, and that status mutated successfully
+        // Note: 'Same' asserts that object returned by get is passed to update
         Assert.False(result.IsError);
+        Assert.Same(order, capturedOrder);
         Assert.Equal(targetStatus, capturedOrder?.Status);
     }
     #endregion
 
     #region Delete
+    [Fact]
+    [Layer("Service")]
+    [Scope("Order")]
+    public async Task Delete_ReturnsNotFound_WhenOrderNotFound()
+    {
+        // GetById is setup, because it is used by DeleteAsync for exists check
+        SetupGetById();
 
+        int orderId = 1;
+        var result = await _service.DeleteAsync(orderId);
+
+        // Verify that get method called, but delete is not
+        _orderRepo.Verify(r => r.GetByIdAsync(orderId), Times.Once());
+        _orderRepo.Verify(r => r.DeleteAsync(It.IsAny<Order>()), Times.Never());
+
+        Assert.True(result.IsError);
+        Assert.Equal(ErrorCodes.OrderNotFound, result.FirstError.Code);
+    }
+
+    [Fact]
+    [Layer("Service")]
+    [Scope("Order")]
+    public async Task Delete_CallsRepoCorrectly_WhenOrderFound()
+    {
+        int orderId = 1;
+        var order = CreateOrder(id: orderId);
+
+        SetupGetById(order);
+
+        // Capture the order passed into 'Delete';
+        Order? capturedOrder = null!;
+
+        _orderRepo
+            .Setup(r => r.DeleteAsync(It.IsAny<Order>()))
+            .Callback<Order>(o => capturedOrder = o)
+            .Returns(Task.CompletedTask);
+
+        var result = await _service.DeleteAsync(orderId);
+
+        // Verify that get and delete methods both called correcly
+        _orderRepo.Verify(r => r.GetByIdAsync(orderId), Times.Once());
+        _orderRepo.Verify(r => r.DeleteAsync(capturedOrder), Times.Once());
+
+        // Assert no error, and that order from get is passed to delete
+        Assert.False(result.IsError);
+        Assert.Equal(result.Value, Result.Deleted);
+        Assert.Same(order, capturedOrder);
+    }
     #endregion
 }
