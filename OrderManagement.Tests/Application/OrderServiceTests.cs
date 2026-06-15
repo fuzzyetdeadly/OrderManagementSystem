@@ -222,10 +222,9 @@ public class OrderServiceTests
         var result = await _service.CreateAsync(requestDto);
 
         // Verify that exists and create methods were both invoked correctly
-        // Note that capturing order above implies that CreateAsync was called
-        // with capturedOrder as an argument. So no need to re-verify it here.
-        // Assertions are used below to ensure mapping was correct
+        // Note: CreateAsync is redundant, but verify to make explicit it's expected call
         _customerRepo.Verify(r => r.ExistsAsync(requestDto.CustomerId), Times.Once());
+        _orderRepo.Verify(r => r.CreateAsync(capturedOrder), Times.Once());
 
         // Assert that no errors, and that request to order mapped correctly
         Assert.False(result.IsError);
@@ -240,5 +239,61 @@ public class OrderServiceTests
         Assert.Equal(expectedItem.Quantity, capturedItem?.Quantity);
         Assert.Equal(expectedItem.UnitPrice, capturedItem?.UnitPrice);
     }
+    #endregion
+
+    #region Update
+    [Fact]
+    [Layer("Service")]
+    [Scope("Order")]
+    public async Task Update_ReturnsNotFound_WhenOrderNotFound()
+    {
+        // GetById is setup, because it is used by UpdateStatusAsync for exists check
+        SetupGetById();
+
+        int orderId = 1;
+        var result = await _service.UpdateStatusAsync(orderId, OrderStatus.Scheduled);
+
+        // Verify that get method called, but update is not
+        _orderRepo.Verify(r => r.GetByIdAsync(orderId), Times.Once());
+        _orderRepo.Verify(r => r.UpdateAsync(It.IsAny<Order>()), Times.Never());
+
+        Assert.True(result.IsError);
+        Assert.Equal(ErrorCodes.OrderNotFound, result.FirstError.Code);
+    }
+
+    [Fact]
+    [Layer("Service")]
+    [Scope("Order")]
+    public async Task Update_CallsRepoCorrectly_WhenOrderFound()
+    {
+        int orderId = 1;
+        var order = CreateOrder(id: orderId);
+
+        SetupGetById(order);
+
+        // Capture the order passed into 'Update;
+        Order? capturedOrder = null!;
+
+        _orderRepo
+            .Setup(r => r.UpdateAsync(It.IsAny<Order>()))
+            .Callback<Order>(o => capturedOrder = o)
+            .Returns(Task.CompletedTask);
+
+        var targetStatus = OrderStatus.Scheduled;
+        var result = await _service.UpdateStatusAsync(orderId, targetStatus);
+
+        // Verify that get and update methods both called
+        // Note: UpdateAsync verify is redundant, but kept to be explicit that it's expected
+        _orderRepo.Verify(r => r.GetByIdAsync(orderId), Times.Once());
+        _orderRepo.Verify(r => r.UpdateAsync(capturedOrder), Times.Once());
+
+        // Assert no error, and that status mutated successfully
+        Assert.False(result.IsError);
+        Assert.Equal(targetStatus, capturedOrder?.Status);
+    }
+    #endregion
+
+    #region Delete
+
     #endregion
 }
