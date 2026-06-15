@@ -1,4 +1,5 @@
 ﻿using Moq;
+using OrderManagement.Application.Common;
 using OrderManagement.Application.Services;
 using OrderManagement.Domain.Common;
 using OrderManagement.Domain.Entities;
@@ -9,6 +10,9 @@ namespace OrderManagement.Tests.Application;
 
 public class OrderServiceTests
 {
+    // Constants
+    protected readonly static Pagination _pagination = new(Page: 1, PageSize: 20);
+
     // Fields
     private readonly Mock<ICustomerRepository> _customerRepo;
     private readonly Mock<IOrderRepository> _orderRepo;
@@ -31,16 +35,31 @@ public class OrderServiceTests
             Id = id,
             CustomerId = customerId,
             Status = status,
-            Items = 
+            Items =
             [
-                new OrderItem() 
-                { 
+                new OrderItem()
+                {
                     ProductName = "Potato",
                     Quantity = 1,
                     UnitPrice = 0.99m
                 }
             ]
         };
+    }
+
+    private void SetupCustomerExists(bool exists = true)
+    {
+        _customerRepo
+            .Setup(r => r.ExistsAsync(It.IsAny<int>()))
+            .ReturnsAsync(exists);
+    }
+
+    private void SetupGetByCustomerId(params Order[] orders)
+    {
+        // Returns one order by default
+        _orderRepo
+            .Setup(r => r.GetByCustomerIdAsync(It.IsAny<int>(), It.IsAny<Pagination>()))
+            .ReturnsAsync(orders.Length > 0 ? orders : [CreateOrder()]);
     }
     #endregion
 
@@ -56,6 +75,7 @@ public class OrderServiceTests
             .Setup(r => r.GetAllAsync(It.IsAny<Pagination>()))
             .ReturnsAsync([CreateOrder()]);
 
+        // Note: for tests, prefer magic numbers over constants
         var result = await _service.GetAllAsync(1, 20);
 
         // Assert that
@@ -66,6 +86,47 @@ public class OrderServiceTests
         // Sanity check that returns one mapped order (returned by spoof above)
         // This is to cover any mistakes with the service method return mapping logic
         Assert.Single(result);
+    }
+    #endregion
+
+    #region GetByCustomerId
+    [Fact]
+    [Layer("Service")]
+    [Scope("Order")]
+    public async Task GetByCustomerIdAsync_ReturnsNotFound_WhenCustomerNotFound()
+    {
+        SetupCustomerExists(false);
+
+        int customerId = 1;
+        var result = await _service.GetByCustomerIdAsync(customerId, 1, 20);
+
+        // Verify that exists method was invoked, but get method is not
+        _customerRepo.Verify(r => r.ExistsAsync(customerId), Times.Once());
+        _orderRepo.Verify(r => r.GetByCustomerIdAsync(It.IsAny<int>(), It.IsAny<Pagination>()), Times.Never());
+
+        Assert.True(result.IsError);
+        Assert.Equal(ErrorCodes.CustomerNotFound, result.FirstError.Code);
+    }
+
+    [Fact]
+    [Layer("Service")]
+    [Scope("Order")]
+    public async Task GetByCustomerIdAsync_ReturnsOrders_WhenCustomerFound()
+    {
+        SetupCustomerExists();
+        SetupGetByCustomerId();
+
+        int customerId = 1;
+        var result = await _service.GetByCustomerIdAsync(1, 1, 20);
+
+        // Verify that exists method and get methods are both invoked
+        _customerRepo.Verify(r => r.ExistsAsync(customerId), Times.Once());
+        _orderRepo.Verify(r => r.GetByCustomerIdAsync(customerId, new Pagination(1, 20)), Times.Once());
+
+        Assert.False(result.IsError);
+
+        // Sanity check one item was returned
+        Assert.Single(result.Value);
     }
     #endregion
 }
