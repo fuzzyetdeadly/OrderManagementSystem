@@ -47,7 +47,7 @@ public class OrderService
         return orders.Select(MapToDto).ToList();
     }
 
-    public async Task<ErrorOr<OrderResponse>> GetOrderIdAsync(int id)
+    public async Task<ErrorOr<OrderResponse>> GetByIdAsync(int id)
     {
         var order = await _orderRepository.GetByIdAsync(id);
 

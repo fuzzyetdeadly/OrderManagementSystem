@@ -61,6 +61,16 @@ public class OrderServiceTests
             .Setup(r => r.GetByCustomerIdAsync(It.IsAny<int>(), It.IsAny<Pagination>()))
             .ReturnsAsync(orders.Length > 0 ? orders : [CreateOrder()]);
     }
+
+    private void SetupGetById(Order order = null!)
+    {
+        // Returns order specified by argument
+        // If none is supplied uses a default order
+        // If 'null!' is supplied, returns null
+        _orderRepo
+            .Setup(r => r.GetByIdAsync(It.IsAny<int>()))
+            .ReturnsAsync(order);
+    }
     #endregion
 
     #region GetAll
@@ -127,6 +137,43 @@ public class OrderServiceTests
 
         // Sanity check one item was returned
         Assert.Single(result.Value);
+    }
+    #endregion
+
+    #region GetById
+    [Fact]
+    [Layer("Service")]
+    [Scope("Order")]
+    public async Task GetById_ReturnsNotFound_WhenOrderNotFound()
+    {
+        SetupGetById();
+
+        int orderId = 1;
+        var result = await _service.GetByIdAsync(orderId);
+
+        // Verify that expected method is called
+        _orderRepo.Verify(r => r.GetByIdAsync(orderId), Times.Once());
+
+        Assert.True(result.IsError);
+        Assert.Equal(ErrorCodes.OrderNotFound, result.FirstError.Code);
+    }
+
+    [Fact]
+    [Layer("Service")]
+    [Scope("Order")]
+    public async Task GetById_ReturnsOrder_WhenOrderFound()
+    {
+        SetupGetById(CreateOrder());
+
+        int orderId = 1;
+        var result = await _service.GetByIdAsync(orderId);
+
+        // Verify that expected method is called
+        _orderRepo.Verify(r => r.GetByIdAsync(orderId), Times.Once());
+
+        // Note: for ErrorOr, no need to assert result.Value not null
+        // No error already implies it shouldn't be.
+        Assert.False(result.IsError);
     }
     #endregion
 }
