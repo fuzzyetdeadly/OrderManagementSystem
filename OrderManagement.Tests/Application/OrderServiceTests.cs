@@ -231,6 +231,14 @@ public class OrderServiceTests
         Assert.False(result.IsError);
         Assert.Equal(requestDto.CustomerId, capturedOrder?.CustomerId);
         Assert.Equal(requestDto.Items.Count, capturedOrder?.Items.Count);
+
+        // Assert that item mapped correctly
+        var expectedItem = requestDto.Items.First();
+        var capturedItem = capturedOrder?.Items.First();
+
+        Assert.Equal(expectedItem.ProductName, capturedItem?.ProductName);
+        Assert.Equal(expectedItem.Quantity, capturedItem?.Quantity);
+        Assert.Equal(expectedItem.UnitPrice, capturedItem?.UnitPrice);
     }
     #endregion
 }
