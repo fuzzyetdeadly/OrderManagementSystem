@@ -67,7 +67,7 @@ public class OrderServiceTests
     [Fact]
     [Layer("Service")]
     [Scope("Order")]
-    public async Task GetAllAsync_CallsRepoCorrectly()
+    public async Task GetAll_CallsRepoCorrectly()
     {
         // Spoof 'GetAll' to always return exactly one fake order
         // Items returned don't matter. Pagination behavior is owned by the repository
@@ -93,7 +93,7 @@ public class OrderServiceTests
     [Fact]
     [Layer("Service")]
     [Scope("Order")]
-    public async Task GetByCustomerIdAsync_ReturnsNotFound_WhenCustomerNotFound()
+    public async Task GetByCustomerId_ReturnsNotFound_WhenCustomerNotFound()
     {
         SetupCustomerExists(false);
 
@@ -111,13 +111,13 @@ public class OrderServiceTests
     [Fact]
     [Layer("Service")]
     [Scope("Order")]
-    public async Task GetByCustomerIdAsync_ReturnsOrders_WhenCustomerFound()
+    public async Task GetByCustomerId_ReturnsOrders_WhenCustomerFound()
     {
         SetupCustomerExists();
         SetupGetByCustomerId();
 
         int customerId = 1;
-        var result = await _service.GetByCustomerIdAsync(1, 1, 20);
+        var result = await _service.GetByCustomerIdAsync(customerId, 1, 20);
 
         // Verify that exists method and get methods are both invoked
         _customerRepo.Verify(r => r.ExistsAsync(customerId), Times.Once());
