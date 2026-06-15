@@ -111,7 +111,7 @@ public class OrderServiceTests
     [Fact]
     [Layer("Service")]
     [Scope("Order")]
-    public async Task GetByCustomerId_ReturnsOrders_WhenCustomerFound()
+    public async Task GetByCustomerId_CallsRepoCorrectly_WhenCustomerFound()
     {
         SetupCustomerExists();
         SetupGetByCustomerId();
