@@ -73,7 +73,7 @@ public class OrdersController : ApiControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var result = await _orderService.GetOrderIdAsync(id);
+        var result = await _orderService.GetByIdAsync(id);
 
         // 'Match' accepts delegates that fire based on whether
         // the result returned a valid response object or error

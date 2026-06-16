@@ -47,7 +47,7 @@ public class OrderService
         return orders.Select(MapToDto).ToList();
     }
 
-    public async Task<ErrorOr<OrderResponse>> GetOrderIdAsync(int id)
+    public async Task<ErrorOr<OrderResponse>> GetByIdAsync(int id)
     {
         var order = await _orderRepository.GetByIdAsync(id);
 
@@ -114,7 +114,7 @@ public class OrderService
         return Result.Deleted;
     }
 
-    private static OrderResponse MapToDto(Order o) => new(
+    internal static OrderResponse MapToDto(Order o) => new(
         o.Id, o.Status.ToString(), o.Created, o.CustomerId,
         [.. o.Items.Select(oi =>
             new OrderItemResponse(oi.ProductName, oi.Quantity, oi.UnitPrice)

@@ -48,7 +48,7 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     [Fact]
     [Layer("Repository")]
     [Scope("Order")]
-    public async Task GetAllAsync_ReturnsEmpty_WhenNoData()
+    public async Task GetAll_ReturnsEmpty_WhenNoData()
     {
         var result = await _repository.GetAllAsync(_pagination);
 
@@ -58,7 +58,7 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     [Fact]
     [Layer("Repository")]
     [Scope("Order")]
-    public async Task GetAllAsync_RespectsPagination()
+    public async Task GetAll_RespectsPagination()
     {
         await SeedOrderAsync();
         await SeedOrderAsync();
@@ -75,7 +75,7 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     [Fact]
     [Layer("Repository")]
     [Scope("Order")]
-    public async Task GetByCustomerIdAsync_ReturnsEmpty_WhenInvalidId()
+    public async Task GetByCustomerId_ReturnsEmpty_WhenInvalidId()
     {
         var result = await _repository.GetByCustomerIdAsync(0, _pagination);
 
@@ -85,7 +85,7 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     [Fact]
     [Layer("Repository")]
     [Scope("Order")]
-    public async Task GetByCustomerIdAsync_ReturnsEmpty_WhenNoData()
+    public async Task GetByCustomerId_ReturnsEmpty_WhenNoData()
     {
         var result = await _repository.GetByCustomerIdAsync(_customer.Id, _pagination);
 
@@ -95,7 +95,7 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     [Fact]
     [Layer("Repository")]
     [Scope("Order")]
-    public async Task GetByCustomerIdAsync_ReturnsOnlyMatchingOrders()
+    public async Task GetByCustomerId_ReturnsOnlyMatchingOrders()
     {
         // An extra customer is needed for this test
         await SeedCustomerAsync();
@@ -112,7 +112,7 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     [Fact]
     [Layer("Repository")]
     [Scope("Order")]
-    public async Task GetByCustomerIdAsync_RespectsPagination()
+    public async Task GetByCustomerId_RespectsPagination()
     {
         // An extra customer is needed for this test
         await SeedCustomerAsync();
