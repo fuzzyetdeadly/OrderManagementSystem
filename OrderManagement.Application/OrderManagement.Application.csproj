@@ -8,6 +8,10 @@
     <PackageReference Include="ErrorOr" Version="2.1.1" />
   </ItemGroup>
 
+	<ItemGroup>
+		<InternalsVisibleTo Include="OrderManagement.Tests" />
+	</ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

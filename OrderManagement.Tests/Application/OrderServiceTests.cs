@@ -346,4 +346,29 @@ public class OrderServiceTests
         Assert.Same(order, capturedOrder);
     }
     #endregion
+
+    #region MapToDto
+    [Fact]
+    [Layer("Service")]
+    [Scope("Order")]
+    public async Task MapToDto_MapsCorrectly()
+    {
+        var order = CreateOrder();
+        var orderResponse = OrderService.MapToDto(order);
+
+        // Assert that values mapped correctly
+        Assert.Equal(order.Id, orderResponse.Id);
+        Assert.Equal(order.Status.ToString(), orderResponse.Status);
+        Assert.Equal(order.CustomerId, orderResponse.CustomerId);
+        Assert.Equal(order.Created, orderResponse.Created);
+        Assert.Equal(order.Items.Count, orderResponse.Items.Count);
+
+        var expectedItem = order.Items.First();
+        var mappedItem = orderResponse.Items.First();
+
+        Assert.Equal(expectedItem.ProductName, mappedItem.ProductName);
+        Assert.Equal(expectedItem.Quantity, mappedItem.Quantity);
+        Assert.Equal(expectedItem.UnitPrice, mappedItem.UnitPrice);
+    }
+    #endregion
 }
