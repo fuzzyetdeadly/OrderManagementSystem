@@ -114,9 +114,6 @@ public class OrderRepositoryTests : RepositoryTestsBase<OrderRepository, Order>
     [Scope("Order")]
     public async Task GetByCustomerId_RespectsPagination()
     {
-        // An extra customer is needed for this test
-        await SeedCustomerAsync();
-
         await SeedOrderAsync(customerId: 1);
         await SeedOrderAsync(customerId: 1);
 
