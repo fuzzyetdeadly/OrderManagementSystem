@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using OrderManagement.Infrastructure.Persistence;
 
@@ -35,11 +36,19 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IDisp
         builder.ConfigureServices(services =>
         {
             // Remove the real PostGreSQL DBContext registration
-            var descriptor = services.SingleOrDefault(
+            var optionsDescriptor = services.SingleOrDefault(
                 d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
 
-            if(descriptor != null)
-                services.Remove(descriptor);
+            if (optionsDescriptor != null)
+                services.Remove(optionsDescriptor);
+
+            // EF Core 9 - requires config descriptor to be removed as well
+            // When adding UseNpgSql in Program, there are option and config descriptors
+            var configDescriptor = services.SingleOrDefault(
+                d => d.ServiceType == typeof(IDbContextOptionsConfiguration<AppDbContext>));
+
+            if (configDescriptor != null)
+                services.Remove(configDescriptor);
 
             // Add context using SQLite, ignoring model changes warning
             // (Prevent incorrect throws while attempting to create data - copied from OrderRepoTest)
@@ -73,18 +82,24 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IDisp
             .Distinct()
             .Where(name => !string.IsNullOrEmpty(name));
 
-        // Discard records from each table, then reset table ID sequences
+        /* 
+         * Discard records from each table, then reset table ID sequences
+         * Note: apparently this is good enough to make IDs start at 1 again
+         * A table 'sqlite_sequence' doesn't exist for index reset purposes
+         * This was tested by only wiping table records, and assertions that would fail
+         * and expose the results that were returned. The wipe reset the ID
+         * e.g. Without reset: Test 1 and 2 create orders -> IDs were 1 and 2.
+         * With reset: IDs were 1 and 1
+         */
         foreach( var tableName in tableNames)
         {
             // Table names come from the EF model, not external input
             // So the warning is invalid in this context
             // Using 'ExecuteSql' also isn't valid here as identifiers can't be parameterized
-#pragma warning  disable EF1002
+#pragma warning disable EF1002
             context.Database.ExecuteSqlRaw($"DELETE FROM \"{tableName}\";");
 #pragma warning restore EF1002
         }
-
-        context.Database.ExecuteSql($"DELETE FROM sqlite_squence;");
     }
 
     protected override void Dispose(bool disposing)
