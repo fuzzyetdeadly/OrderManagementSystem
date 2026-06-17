@@ -83,9 +83,27 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         return (await response.Content.ReadFromJsonAsync<OrderResponse>())!;
     }
 
+
+    private async Task CreateOrdersViaApiAsync(int count)
+    {
+        for (var i = 0; i < count; i++)
+        {
+            await CreateOrderViaApiAsync();
+        }
+    }
+
     private static string GetOrdersRoute(string route = "api/orders", int page = 1, int pageSize = 20) 
     {
         return $"{route}?page={page}&pageSize={pageSize}";
+    }
+
+    private async static void AssertOk(HttpResponseMessage response)
+    {
+        // Ensure status ok before continue (prevent unhandled exception)
+        var uri = response.RequestMessage?.RequestUri;
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+
+        Assert.True(HttpStatusCode.OK == response.StatusCode, $"Uri: {uri}, Content = {content}");
     }
     #endregion
 
@@ -98,30 +116,87 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         var response = await _client
             .GetAsync(GetOrdersRoute(), TestContext.Current.CancellationToken);
 
+        AssertOk(response);
+
         var orders = await response.Content
             .ReadFromJsonAsync<List<OrderResponse>>(TestContext.Current.CancellationToken);
 
-        // Status should be OK, and orders should be empty
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        // Expect no orders
         Assert.Empty(orders!);
     }
 
-    [Fact]
+    [Theory]
     [Layer("Api")]
     [Scope("Order")]
-    public async Task GetAll_ReturnsCorrectly_WhenOrdersExist()
+    [InlineData(1, 2, 2)]
+    [InlineData(2, 2, 1)]
+    [InlineData(3, 2, 0)]
+    public async Task GetAll_ReturnsCorrectSlice_ForCompleteQuery(int page, int pageSize, int expectedCount)
     {
-        await CreateOrderViaApiAsync();
+        await CreateOrdersViaApiAsync(3);
 
+        // Note: page size 1 is NOT supported
         var response = await _client
-            .GetAsync(GetOrdersRoute(), TestContext.Current.CancellationToken);
+            .GetAsync(GetOrdersRoute(page: page, pageSize: pageSize), TestContext.Current.CancellationToken);
+
+        AssertOk(response);
 
         var orders = await response.Content
             .ReadFromJsonAsync<List<OrderResponse>>(TestContext.Current.CancellationToken);
 
-        // Status should be OK, and orders should be empty
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Single(orders!);
+        // Expect orders to match prescibed count
+        Assert.Equal(expectedCount, orders?.Count);
     }
+
+    [Theory]
+    [Layer("Api")]
+    [Scope("Order")]
+    [InlineData(10, 10)]
+    [InlineData(20, 20)]
+    [InlineData(30, 21)]
+    public async Task GetAll_ReturnsCorrectly_ForDefaultPage(int pageSize, int expectedCount)
+    {
+        await CreateOrdersViaApiAsync(21);
+
+        // Assumption: default page = 1
+        string route = $"api/orders?pageSize={pageSize}";
+        var response = await _client
+            .GetAsync(route, TestContext.Current.CancellationToken);
+
+        AssertOk(response);
+
+        var orders = await response.Content
+            .ReadFromJsonAsync<List<OrderResponse>>(TestContext.Current.CancellationToken);
+
+        // Expect single order
+        Assert.Equal(expectedCount, orders?.Count);
+    }
+
+    [Theory]
+    [Layer("Api")]
+    [Scope("Order")]
+    [InlineData(1, 20)]
+    [InlineData(2, 1)]
+    [InlineData(3, 0)]
+    public async Task GetAll_ReturnsCorrectly_ForDefaultPageSize(int page, int expectedCount)
+    {
+        await CreateOrdersViaApiAsync(21);
+
+        // Assumption: default pageSize = 20
+        string route = $"api/orders?page={page}";
+        var response = await _client
+            .GetAsync(route, TestContext.Current.CancellationToken);
+
+        AssertOk(response);
+
+        var orders = await response.Content
+            .ReadFromJsonAsync<List<OrderResponse>>(TestContext.Current.CancellationToken);
+
+        // Expect single order
+        Assert.Equal(expectedCount, orders?.Count);
+    }
+
+    // BadRequest cases (invalid page/pageSize)
+    // TO BE CONTINUED
     #endregion
 }
