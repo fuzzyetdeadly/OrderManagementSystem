@@ -14,7 +14,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IDisp
     private const string ConnectionString = "DataSource=:memory:";
 
     // Fields
-    private SqliteConnection _connection = null!;
+    private readonly SqliteConnection _connection = null!;
     protected AppDbContext _context = null!;
 
     public CustomWebApplicationFactory()
@@ -59,9 +59,38 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IDisp
         });
     }
 
+    public void ResetDatabase()
+    {
+        // Get DB context
+        using var scope = Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        // Get list of tables
+        // * Distinct needed because some entity types may share a table name (in real world scenarios)
+        // * Where needed as some Entities may not be backed by tables (in real world scenarios)
+        var tableNames = context.Model.GetEntityTypes()
+            .Select(t => t.GetTableName())
+            .Distinct()
+            .Where(name => !string.IsNullOrEmpty(name));
+
+        // Discard records from each table, then reset table ID sequences
+        foreach( var tableName in tableNames)
+        {
+            // Table names come from the EF model, not external input
+            // So the warning is invalid in this context
+            // Using 'ExecuteSql' also isn't valid here as identifiers can't be parameterized
+#pragma warning  disable EF1002
+            context.Database.ExecuteSqlRaw($"DELETE FROM \"{tableName}\";");
+#pragma warning restore EF1002
+        }
+
+        context.Database.ExecuteSql($"DELETE FROM sqlite_squence;");
+    }
+
     protected override void Dispose(bool disposing)
     {
         // No null check. Expect fail fast if connection null
+        // _connection.Dispose will also invoke *.Close()
         if(disposing)
             _connection.Dispose();
 
