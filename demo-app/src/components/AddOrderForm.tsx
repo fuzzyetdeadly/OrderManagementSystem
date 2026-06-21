@@ -42,7 +42,7 @@ export default function AddOrderForm({ onCreated }: AddOrderProps) {
 	};
 	
 	return (
-		<div>
+		<div className="add-order-form">
 			<input type="number" value={customerId} onChange={(e) => setCustomerId(+e.target.value)} placeholder="Customer ID" />
 			<input value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="Product name" />
 			<input type="number" value={quantity} onChange={(e) => setQuantity(+e.target.value)} placeholder="Quantity" />
