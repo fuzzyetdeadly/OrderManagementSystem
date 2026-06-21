@@ -42,11 +42,35 @@ export default function AddOrderForm({ onCreated }: AddOrderProps) {
 	};
 	
 	return (
-		<div className="add-order-form">
-			<input type="number" value={customerId} onChange={(e) => setCustomerId(+e.target.value)} placeholder="Customer ID" />
-			<input value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="Product name" />
-			<input type="number" value={quantity} onChange={(e) => setQuantity(+e.target.value)} placeholder="Quantity" />
-			<input type="number" value={unitPrice} onChange={(e) => setUnitPrice(+e.target.value)} placeholder="Unit price" />
+		<div className="order-form">
+			<div className="form-field">
+				<label htmlFor="customerId">Customer ID</label>
+				<input 
+					id="customerId" type="number" value={customerId} 
+					onChange={(e) => setCustomerId(+e.target.value)} />
+			</div>
+			
+			<div className="form-field">
+				<label htmlFor="productName">Product name</label>
+				<input 
+					id="productName" value={productName} placeholder="e.g. Potato"
+					onChange={(e) => setProductName(e.target.value)} />
+			</div>
+			
+			<div className="form-field">
+				<label htmlFor="quantity">Quantity</label>
+				<input 
+					id="quantity" type="number" value={quantity}
+					onChange={(e) => setQuantity(+e.target.value)} />
+			</div>
+			
+			<div className="form-field">
+				<label htmlFor="unitPrice">Unit price</label>
+				<input 
+					id="unitPrice" type="number" value={unitPrice}
+					onChange={(e) => setUnitPrice(+e.target.value)} />
+			</div>
+			
 			<button onClick={handleSubmit}>Add Order</button>
 			
 			{errors.length > 0 && (

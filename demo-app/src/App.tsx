@@ -3,7 +3,7 @@ import "./App.css";
 
 import { getOrders } from "./api/orders";
 import type { Order } from "./types/order";
-import AddOrderForm from "./components/AddOrderForm";
+import OrderForm from "./components/OrderForm";
 import OrderList from "./components/OrderList";
 
 function App() {
@@ -19,7 +19,7 @@ function App() {
   return (
     <>
 		  <h1>Order Management</h1>
-			<AddOrderForm onCreated={fetchOrders} />
+			<OrderForm onCreated={fetchOrders} />
 			<OrderList orders={orders} />
     </>
   )
