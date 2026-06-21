@@ -13,7 +13,7 @@ export default function AddOrderForm({ onCreated }: AddOrderProps) {
 	const [customerId, setCustomerId] = useState(1);
 	const [productName, setProductName] = useState("");
 	const [quantity, setQuantity] = useState(1);
-	const [unitPrice, setUnitPrice] = useState(0);
+	const [unitPrice, setUnitPrice] = useState(0.01);
 	const [errors, setErrors] = useState<string[]>([]);
 	
 	const handleSubmit = async () => {
@@ -46,12 +46,12 @@ export default function AddOrderForm({ onCreated }: AddOrderProps) {
 			<div className="form-field">
 				<label htmlFor="customerId">Customer ID</label>
 				<input 
-					id="customerId" type="number" value={customerId} 
+					id="customerId" type="number" min={1} value={customerId} 
 					onChange={(e) => setCustomerId(+e.target.value)} />
 			</div>
 			
 			<div className="form-field">
-				<label htmlFor="productName">Product name</label>
+				<label htmlFor="productName">Product name*</label>
 				<input 
 					id="productName" value={productName} placeholder="e.g. Potato"
 					onChange={(e) => setProductName(e.target.value)} />
@@ -60,14 +60,14 @@ export default function AddOrderForm({ onCreated }: AddOrderProps) {
 			<div className="form-field">
 				<label htmlFor="quantity">Quantity</label>
 				<input 
-					id="quantity" type="number" value={quantity}
+					id="quantity" type="number" min={1} value={quantity}
 					onChange={(e) => setQuantity(+e.target.value)} />
 			</div>
 			
 			<div className="form-field">
 				<label htmlFor="unitPrice">Unit price</label>
 				<input 
-					id="unitPrice" type="number" value={unitPrice}
+					id="unitPrice" type="number" min={0.01} step="0.01" value={unitPrice}
 					onChange={(e) => setUnitPrice(+e.target.value)} />
 			</div>
 			
