@@ -1,27 +1,39 @@
 import type { Order } from "../types/order";
 
-interface Props {
+interface OrderRowProps {
+	order: Order;
+}
+
+function OrderRow({ order }: OrderRowProps) {
+	return (
+		<tr>
+			<td>{order.id}</td>
+			<td>{order.customerId}</td>
+			<td>{order.status}</td>
+			<td>{order.items.map((i) => i.productName).join(", ")}</td>						
+		</tr>
+	);
+}
+
+interface OrderListProps {
 	orders: Order[];
 }
 
-export default function OrderList({ orders }: Props) {
+export default function OrderList({ orders }: OrderListProps) {
 	return (
-		<table>
-			<thead>
-				<tr>
-					<th>ID</th><th>Customer</th><th>Status</th><th>Items</th>
-				</tr>
-			</thead>
-			<tbody>
-				{orders.map((o) => (
-					<tr key={o.id}>
-						<td>{o.id}</td>
-						<td>{o.customerId}</td>
-						<td>{o.status}</td>
-						<td>{o.items.map((i) => i.productName).join(", ")}</td>						
+		<div className="order-list">
+			<table>
+				<thead>
+					<tr>
+						<th>ID</th><th>Customer</th><th>Status</th><th>Items</th>
 					</tr>
-				))}
-			</tbody>
-		</table>
+				</thead>
+				<tbody>
+					{orders.map(order => (
+						<OrderRow key={order.id} order={order} />
+					))}
+				</tbody>
+			</table>
+		</div>
 	);
 }
