@@ -32,6 +32,7 @@ export default function AddOrderForm({ onCreated }: AddOrderProps) {
 			// Invoke 'onCreated' callback
 			onCreated();
 		} catch(err) {
+			// Temporary error handling until proper front end input validation added
 			if(axios.isAxiosError<ValidationProblemDetails>(err) && err.response?.data?.errors) {
 				setErrors(Object.values(err.response.data.errors).flat());
 			} else {
