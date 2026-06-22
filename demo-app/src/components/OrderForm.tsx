@@ -75,7 +75,8 @@ export default function OrderForm({ onCreated }: OrderFormProps) {
 				<label htmlFor="customerId">Customer ID</label>
 				<input 
 					id="customerId" type="number" min={1}
-					{...register("customerId", { valueAsNumber: true, min: 1 })} />
+					{...register("customerId", { valueAsNumber: true, min: 1 })}
+					onChange={() => clearErrors("root")} />
 			</div>
 			
 			<div className="form-field">
