@@ -155,11 +155,6 @@ code {
   border-color: var(--accent-border);
 }
 
-.form-field .input-invalid,
-.form-field .input-invalid:focus {
-	border-color: red;
-}
-
 .order-form button {
   background: var(--accent);
   border: none;

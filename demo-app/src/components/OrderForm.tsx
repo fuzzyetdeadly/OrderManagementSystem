@@ -1,64 +1,64 @@
-import { useRef, useState } from "react";
+import { useForm } from "react-hook-form";
 import axios from "axios";
 import { createOrder } from "../api/orders";
 import type { CreateOrderPayload } from "../types/order";
 import type { ValidationProblemDetails } from "../types/common";
 
-interface AddOrderProps {
+type OrderFormProps = {
 	onCreated: () => void;
+}
+
+// Data shape for RHF useForm
+type OrderFormValues = {
+	customerId: number;
+	productName: string;
+	quantity: number;
+	unitPrice: number;
 }
 
 const PRODUCT_OPTIONS = ["Carrot", "Eggplant", "Garlic", "Potato", "Spinach"];
 const UNSELECTED = "";
+const UNSELECTED_ERROR = "Please select a product";
+const UNKNOWN_ERROR = "Something went wrong. Please try again.";
 
-export default function OrderForm({ onCreated }: AddOrderProps) {
-	// Set default values (used for initial render)
-	const [customerId, setCustomerId] = useState(1);
-	const [productName, setProductName] = useState(UNSELECTED);
-	const [quantity, setQuantity] = useState(1);
-	const [unitPrice, setUnitPrice] = useState(0.01);
-	const [errors, setErrors] = useState<string[]>([]);
-	const [productInvalid, setProductInvalid] = useState(false);
-	
-	// Reference to productName element
-	const productNameRef = useRef<HTMLSelectElement>(null);
-	
-	const handleSubmit = async () => {
-		// Reset errors
-		setErrors([]);
-		
-		// Validate product selection
-		// Note: always update 'productInvalid' here
-		// If form is reset programatically, onChange won't fire, 
-		// and the invalid state won't reset.
-		const isProductInvalid = productName === UNSELECTED;
-		
-		setProductInvalid(isProductInvalid);
-		
-		if(isProductInvalid) {
-			productNameRef.current?.focus();
-			setErrors(["Please select a product"]);
-			return;
+export default function OrderForm({ onCreated }: OrderFormProps) {
+	// UseForm returns functions/states that can be used
+	// For server-side errors from the catch block, use setError
+	// to update the internal state of RHF.
+	const { register, handleSubmit, setError, clearErrors, formState: { errors }} = useForm<OrderFormValues>({
+		defaultValues: {
+				customerId: 1,
+				productName: UNSELECTED,
+				quantity: 1,
+				unitPrice: 0.01,
 		}
+	});
+	
+	// RHF's handleSubmit will wrap this method,
+	// injecting validated values and blocking invalid submissions
+	const onSubmit = async (data: OrderFormValues) => {
+		// Clear any errors in root
+		clearErrors("root");
 		
-		// Post the order
 		const payload: CreateOrderPayload = {
-			customerId,
-			items: [{ productName, quantity, unitPrice }],
+			customerId: data.customerId,
+			items: [{ 
+				productName: data.productName, 
+				quantity: data.quantity, 
+				unitPrice: data.unitPrice }],
 		};
 		
 		try {
+			// Create order, then invoke callback
 			await createOrder(payload);
-
-			// Invoke 'onCreated' callback
 			onCreated();
 		} catch(err) {
-			// Handle errors if any were returned
-			// Note: ideally, this shouldn't happen if everything validated right
 			if(axios.isAxiosError<ValidationProblemDetails>(err) && err.response?.data?.errors) {
-				setErrors(Object.values(err.response.data.errors).flat());
+				Object.values(err.response.data.errors).flat().forEach(msg => {
+					setError("root", { message: msg });					
+				});
 			} else {
-				setErrors(["Something went wrong. Please try again"]);
+				setError("root", { message: UNKNOWN_ERROR });
 			}
 		}
 	};
@@ -68,22 +68,16 @@ export default function OrderForm({ onCreated }: AddOrderProps) {
 			<div className="form-field">
 				<label htmlFor="customerId">Customer ID</label>
 				<input 
-					id="customerId" type="number" min={1} value={customerId} 
-					onChange={(e) => setCustomerId(+e.target.value)} />
+					id="customerId" type="number" min={1}
+					{...register("customerId", { valueAsNumber: true, min: 1 })} />
 			</div>
 			
 			<div className="form-field">
 				<label htmlFor="productName">Product name*</label>
 				<select 
-					id="productName" ref={productNameRef} value={productName}
-					className={productInvalid ? "input-invalid" : ""}
-					onChange={(e) => {
-						setProductName(e.target.value);
-						if(e.target.value !== UNSELECTED)
-						{
-							setProductInvalid(false);
-						}	
-					}}>
+					id="productName"
+					{...register("productName", 
+						{ validate: v => v !== UNSELECTED || UNSELECTED_ERROR })} >
 					<option value={UNSELECTED}>Select</option>
 					{PRODUCT_OPTIONS.map(option => (
 						<option key={option} value={option}>{option}</option>		
@@ -94,23 +88,29 @@ export default function OrderForm({ onCreated }: AddOrderProps) {
 			<div className="form-field">
 				<label htmlFor="quantity">Quantity</label>
 				<input 
-					id="quantity" type="number" min={1} value={quantity}
-					onChange={(e) => setQuantity(+e.target.value)} />
+					id="quantity" type="number" min={1}
+					{...register("quantity", { 
+							valueAsNumber: true, 
+							min: { value: 1, message: "Quantity must be at least 1"}
+						})} />
 			</div>
 			
 			<div className="form-field">
 				<label htmlFor="unitPrice">Unit price</label>
 				<input 
-					id="unitPrice" type="number" min={0.01} step="0.01" value={unitPrice}
-					onChange={(e) => setUnitPrice(+e.target.value)} />
+					id="unitPrice" type="number" min={0.01} step="0.01"
+					{...register("unitPrice", { 
+							valueAsNumber: true, 
+							min: { value: 0.01, message: "Unit price must be at least 0.01"}
+						})}					/>
 			</div>
 			
-			<button onClick={handleSubmit}>Add Order</button>
+			<button onClick={handleSubmit(onSubmit)}>Add Order</button>
 			
-			{errors.length > 0 && (
+			{Object.values(errors).length > 0 && (
 				<ul className="form-errors">
-					{errors.map((msg, i) => (
-						<li key={i}>{msg}</li>
+					{Object.values(errors).map((err, i) => (
+						<li key={i}>{err?.message}</li>
 					))}
 				</ul>
 			)}

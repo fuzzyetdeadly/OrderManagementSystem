@@ -1,6 +1,6 @@
 import type { Order } from "../types/order";
 
-interface OrderRowProps {
+type OrderRowProps = {
 	order: Order;
 }
 
@@ -15,7 +15,7 @@ function OrderRow({ order }: OrderRowProps) {
 	);
 }
 
-interface OrderListProps {
+type OrderListProps = {
 	orders: Order[];
 }
 
