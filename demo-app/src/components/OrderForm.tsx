@@ -27,9 +27,15 @@ export default function OrderForm({ onCreated }: AddOrderProps) {
 		// Reset errors
 		setErrors([]);
 		
-		// Validate product selection		
-		if(productName === UNSELECTED) {
-			setProductInvalid(true);
+		// Validate product selection
+		// Note: always update 'productInvalid' here
+		// If form is reset programatically, onChange won't fire, 
+		// and the invalid state won't reset.
+		const isProductInvalid = productName === UNSELECTED;
+		
+		setProductInvalid(isProductInvalid);
+		
+		if(isProductInvalid) {
 			productNameRef.current?.focus();
 			setErrors(["Please select a product"]);
 			return;
