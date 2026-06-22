@@ -21,7 +21,7 @@ export default function OrderForm({ onCreated }: AddOrderProps) {
 	const [productInvalid, setProductInvalid] = useState(false);
 	
 	// Reference to productName element
-	const productNameRef = useRef<HTMLSelectELement>(null);
+	const productNameRef = useRef<HTMLSelectElement>(null);
 	
 	const handleSubmit = async () => {
 		// Reset errors
@@ -53,7 +53,8 @@ export default function OrderForm({ onCreated }: AddOrderProps) {
 			// Invoke 'onCreated' callback
 			onCreated();
 		} catch(err) {
-			// Temporary error handling until proper front end input validation added
+			// Handle errors if any were returned
+			// Note: ideally, this shouldn't happen if everything validated right
 			if(axios.isAxiosError<ValidationProblemDetails>(err) && err.response?.data?.errors) {
 				setErrors(Object.values(err.response.data.errors).flat());
 			} else {
