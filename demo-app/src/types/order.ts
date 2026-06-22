@@ -1,4 +1,4 @@
-export interface Order {
+export type Order = {
 	id: number;
 	status: string;
 	created: string;
@@ -6,13 +6,13 @@ export interface Order {
 	items: OrderItem[];
 }
 
-export interface OrderItem {
+export type OrderItem = {
 	productName: string;
 	quantity: number;
 	unitPrice: number;
 }
 
-export interface CreateOrderPayload {
+export type CreateOrderPayload = {
 	customerId: number;
 	items: OrderItem[];
 }

@@ -3,8 +3,9 @@ export const PaginationOptions{
 	pageSize?: number
 }
 
-export interface ValidationProblemDetails {
+export type ValidationProblemDetails = {
 	title: string;
 	status: number;
-	errors: Record<string, string[]>;
+	details?: string;
+	errors?: Record<string, string[]>;
 }

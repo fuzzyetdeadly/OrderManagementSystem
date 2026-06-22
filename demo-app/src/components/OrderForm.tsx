@@ -53,12 +53,18 @@ export default function OrderForm({ onCreated }: OrderFormProps) {
 			await createOrder(payload);
 			onCreated();
 		} catch(err) {
-			if(axios.isAxiosError<ValidationProblemDetails>(err) && err.response?.data?.errors) {
-				Object.values(err.response.data.errors).flat().forEach(msg => {
-					setError("root", { message: msg });					
-				});
-			} else {
-				setError("root", { message: UNKNOWN_ERROR });
+			// 400 status usually returns *.errors, while 404 returns *.detail
+			if(axios.isAxiosError<ValidationProblemDetails>(err) && err.response?.data) {
+				const data = err.response.data;
+				if(data.errors) {
+					Object.values(err.response.data.errors).flat().forEach(err => {
+						setError("root", { message: err });
+					});
+				} else if (data.detail)	{
+					setError("root", {message: data.detail});
+				} else {
+					setError("root", { message: UNKNOWN_ERROR });
+				}
 			}
 		}
 	};
