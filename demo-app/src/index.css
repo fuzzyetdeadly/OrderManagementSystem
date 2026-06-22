@@ -137,7 +137,8 @@ code {
 	line-height: 1.2;
 }
 
-.form-field input {
+.form-field input,
+.form-field select {
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 4px;
@@ -145,12 +146,18 @@ code {
   font-family: var(--sans);
   padding: 0.5rem 0.75rem;
   font-size: 0.9rem;
-  width: 100px;
+  width: 120px;
 }
 
-.form-field input:focus {
+.form-field input:focus,
+.form-field select:focus {
   outline: none;
   border-color: var(--accent-border);
+}
+
+.form-field .input-invalid,
+.form-field .input-invalid:focus {
+	border-color: red;
 }
 
 .order-form button {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import axios from "axios";
 import { createOrder } from "../api/orders";
 import type { CreateOrderPayload } from "../types/order";
@@ -8,17 +8,32 @@ interface AddOrderProps {
 	onCreated: () => void;
 }
 
-export default function AddOrderForm({ onCreated }: AddOrderProps) {
+const PRODUCT_OPTIONS = ["Carrot", "Eggplant", "Garlic", "Potato", "Spinach"];
+const UNSELECTED = "";
+
+export default function OrderForm({ onCreated }: AddOrderProps) {
 	// Set default values (used for initial render)
 	const [customerId, setCustomerId] = useState(1);
-	const [productName, setProductName] = useState("");
+	const [productName, setProductName] = useState(UNSELECTED);
 	const [quantity, setQuantity] = useState(1);
 	const [unitPrice, setUnitPrice] = useState(0.01);
 	const [errors, setErrors] = useState<string[]>([]);
+	const [productInvalid, setProductInvalid] = useState(false);
+	
+	// Reference to productName element
+	const productNameRef = useRef<HTMLSelectELement>(null);
 	
 	const handleSubmit = async () => {
 		// Reset errors
 		setErrors([]);
+		
+		// Validate product selection		
+		if(productName === UNSELECTED) {
+			setProductInvalid(true);
+			productNameRef.current?.focus();
+			setErrors(["Please select a product"]);
+			return;
+		}
 		
 		// Post the order
 		const payload: CreateOrderPayload = {
@@ -52,9 +67,21 @@ export default function AddOrderForm({ onCreated }: AddOrderProps) {
 			
 			<div className="form-field">
 				<label htmlFor="productName">Product name*</label>
-				<input 
-					id="productName" value={productName} placeholder="e.g. Potato"
-					onChange={(e) => setProductName(e.target.value)} />
+				<select 
+					id="productName" ref={productNameRef} value={productName}
+					className={productInvalid ? "input-invalid" : ""}
+					onChange={(e) => {
+						setProductName(e.target.value);
+						if(e.target.value !== UNSELECTED)
+						{
+							setProductInvalid(false);
+						}	
+					}}>
+					<option value={UNSELECTED}>Select</option>
+					{PRODUCT_OPTIONS.map(option => (
+						<option key={option} value={option}>{option}</option>		
+					))}
+				</select>
 			</div>
 			
 			<div className="form-field">
