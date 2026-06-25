@@ -214,8 +214,9 @@ code {
 
 /* --- Order rows --- */
 .order-row td {
-  padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--border);
+  padding: 0.5rem 1rem;
+  line-height: 2.5rem;
   font-size: 0.9rem;
   color: var(--text-h);
 }
@@ -282,8 +283,9 @@ code {
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 0.5rem 0.75rem;	
+  padding: 0.5rem 0.75rem;
   margin-left: -1rem;	/*make combo box align with label*/
+  line-height: 1rem;
   color: var(--text-h);
   font-family: var(--sans);
   font-size: 0.9rem;
