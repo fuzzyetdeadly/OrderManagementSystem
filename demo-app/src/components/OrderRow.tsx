@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { Order } from "../types/order";
 import { updateOrderStatus, deleteOrder } from "../api/orders";
 
-const ORDER_STATUSES = ["Pending", "Processing", "Completed", "Cancelled"];
+const ORDER_STATUSES = ["Pending", "Processing", "Scheduled", "Completed", "Cancelled"];
 
 // Prefer union type over enum, as it is more idiomatic for TS (26/06/dd)
 type RowMode = "view" | "edit" | "confirmDelete";
@@ -130,7 +130,7 @@ export default function OrderRow({ order, onUpdated, onDeleted }: OrderRowProps)
 									className="btn-icon"
 									onClick={() => setMode("view")}
 									disabled={loading}
-									title="Go back"
+									title="Cancel"
 								>❌</button>
 							</>
 						)}
