@@ -65,7 +65,7 @@ export default function OrderRow({ order, onUpdated, onDeleted }: OrderRowProps)
 	
 	return (
 		<>
-			<tr>
+			<tr className="order-row">
 				<td>{order.id}</td>
 				<td>{order.customerId}</td>
 				<td>
@@ -124,7 +124,7 @@ export default function OrderRow({ order, onUpdated, onDeleted }: OrderRowProps)
 								onClick={() => setMode("edit")}
 								disabled={loading}
 								title="Go back"
-							>↩️</button>
+							>❌</button>
 						</>
 					)}
 				</td>

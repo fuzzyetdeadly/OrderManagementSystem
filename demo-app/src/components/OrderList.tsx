@@ -11,13 +11,21 @@ export default function OrderList({ orders, onUpdated, onDeleted }: OrderListPro
 	return (
 		<div className="order-list">
 			<table>
+				{/*colgroup used to control column widths*/}
+				<colgroup>
+					<col style={{ width: "5%"}} />
+					<col style={{ width: "15%"}} />
+					<col style={{ width: "20%"}} />
+					<col style={{ width: "40%"}} />
+					<col style={{ width: "20%"}} />
+				</colgroup>
 				<thead>
 					<tr>
 						<th>ID</th>
 						<th>Customer</th>
 						<th>Status</th>
 						<th>Items</th>
-						<th></th>
+						<th>Actions</th>
 					</tr>
 				</thead>
 				<tbody>
