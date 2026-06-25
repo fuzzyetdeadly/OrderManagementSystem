@@ -11,12 +11,18 @@ export default function OrderList({ orders }: OrderListProps) {
 			<table>
 				<thead>
 					<tr>
-						<th>ID</th><th>Customer</th><th>Status</th><th>Items</th>
+						<th>ID</th>
+						<th>Customer</th>
+						<th>Status</th>
+						<th>Items</th>
+						<th></th>
 					</tr>
 				</thead>
 				<tbody>
 					{orders.map(order => (
-						<OrderRow key={order.id} order={order} />
+						<OrderRow 
+							key={order.id} 
+							order={order} />
 					))}
 				</tbody>
 			</table>
