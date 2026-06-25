@@ -64,25 +64,75 @@ export default function OrderRow({ order, onUpdated, onDeleted }: OrderRowProps)
 	}
 	
 	return (
-		<tr>
-			<td>{order.id}</td>
-			<td>{order.customerId}</td>
-			<td>
-				{mode == "edit" ? (
-					<select
-						className="status-select"
-						value={selectedStatus}
-						onChange={(e) => setSelectedStatus(e.target.value)}
-					>
-						{ORDER_STATUSES.map((status) => (
-							<option key={status} value={status}>{s}</option>
-						))}
-					</select>
-				) : (
-					order.status
-				)}
-			</td>
-			<td>{order.items.map((i) => i.productName).join(", ")}</td>
-		</tr>
+		<>
+			<tr>
+				<td>{order.id}</td>
+				<td>{order.customerId}</td>
+				<td>
+					{mode == "edit" ? (
+						<select
+							className="status-select"
+							value={selectedStatus}
+							onChange={(e) => setSelectedStatus(e.target.value)}
+						>
+							{ORDER_STATUSES.map((status) => (
+								<option key={status} value={status}>{status}</option>
+							))}
+						</select>
+					) : (
+						order.status
+					)}
+				</td>
+				<td>{order.items.map((i) => i.productName).join(", ")}</td>
+				<td className="row-actions">
+					{mode === "view" && (
+						<button className="btn-icon" onClick={() => setMode("edit")}>✏️</button>
+					)}
+					{mode === "edit" && (
+						<>
+							<button 
+								className="btn-icon" 
+								onClick={handleSave}
+								disabled={!hasChanges || loading}
+								title="Save"
+							>✔️</button>
+							<button 
+								className="btn-icon"
+								onClick={handleCancel}
+								disabled={loading}
+								title="Cancel"
+							>❌</button>
+							<button 
+								className="btn-icon btn-delete"
+								onClick={() => setMode("confirmDelete")}
+								disabled={loading}
+								title="Delete"
+							>🗑️</button>
+						</>
+					)}
+					{mode === "confirmDelete" && (
+						<>
+							<button 
+								className="btn-icon" 
+								onClick={handleDelete}
+								disabled={loading}
+								title="Confirm delete"
+							>✔️</button>
+							<button 
+								className="btn-icon"
+								onClick={() => setMode("edit")}
+								disabled={loading}
+								title="Go back"
+							>↩️</button>
+						</>
+					)}
+				</td>
+			</tr>
+			{error && (
+				<tr>
+					<td colSpan={5} className="row-error">{error}</td>
+				</tr>
+			)}
+		</>
 	);
 }
