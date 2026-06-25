@@ -16,3 +16,7 @@ export type CreateOrderPayload = {
 	customerId: number;
 	items: OrderItem[];
 }
+
+export type UpdateOrderStatusPayload = {
+	status: string;
+}
