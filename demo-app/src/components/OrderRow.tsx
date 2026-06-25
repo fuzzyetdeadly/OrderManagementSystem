@@ -86,9 +86,20 @@ export default function OrderRow({ order, onUpdated, onDeleted }: OrderRowProps)
 				<td>{order.items.map((i) => i.productName).join(", ")}</td>
 				<td>
 					<div className="row-actions">
-						{/*Used 'div' wrapper because 'td' doesn't align well with flex*/}
+						{/*Require 'div' wrapper. 'td' line-height doesn't work correctly with flex*/}
 						{mode === "view" && (
-							<button className="btn-icon" onClick={() => setMode("edit")}>✏️</button>
+							<>
+								<button 
+									className="btn-icon"
+									onClick={() => setMode("edit")}
+									title="Edit"
+								>✏️</button>
+								<button 
+									className="btn-icon"
+									onClick={() => setMode("confirmDelete")}
+									title="Delete"
+								>🗑️</button>
+							</>
 						)}
 						{mode === "edit" && (
 							<>
@@ -104,12 +115,6 @@ export default function OrderRow({ order, onUpdated, onDeleted }: OrderRowProps)
 									disabled={loading}
 									title="Cancel"
 								>❌</button>
-								<button 
-									className="btn-icon btn-delete"
-									onClick={() => setMode("confirmDelete")}
-									disabled={loading}
-									title="Delete"
-								>🗑️</button>
 							</>
 						)}
 						{mode === "confirmDelete" && (
@@ -123,7 +128,7 @@ export default function OrderRow({ order, onUpdated, onDeleted }: OrderRowProps)
 								>✔️</button>
 								<button 
 									className="btn-icon"
-									onClick={() => setMode("edit")}
+									onClick={() => setMode("view")}
 									disabled={loading}
 									title="Go back"
 								>❌</button>
