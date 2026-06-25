@@ -8,20 +8,20 @@ export const getOrders = async(
 	const response = await api.get<Order[]>("/orders", { params });
 	
 	return response.data
-}
+};
 
 export const createOrder = async (payload: CreateOrderPayload): Promise<Order> => {
 	const response = await api.post<Order>("/orders", payload);
 	
 	return response.data;
-}
+};
 
 export const updateOrderStatus = async (id: number, payload: UpdateOrderStatusPayload): Promise<Order> => {
-	const response = await api.patch<Order>("/orders/${id}/status", payload);
+	const response = await api.patch<Order>(`/orders/${id}/status`, payload);
 	
 	return response.data;
-}
+};
 
-export const deleteOrder = async(id: number): Promise<void> => {
-	await api.delete("/orders/${id}");
-}
+export const deleteOrder = async (id: number): Promise<void> => {
+	await api.delete(`/orders/${id}`);
+};
