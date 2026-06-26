@@ -2,29 +2,32 @@
 ---
 
 This repository contains a demo order management system.
-It was built to get a better understanding of the .NET/ASP.NET Core, EF Core technologies.
-It is intended to use PostgreSQL as a back-end, and React for it's front end.
+It was built to showcase my coding practice in full-stack development with .NET/ASP.NET Core, EF Core technologies, and React with a PostgreSQL database.
+
+SQLite is used as an in memory database for testing, prioritizing speed and simplicity. Docker support may be considered in future.
 
 ## Features
 
-* In developer mode, will seed a test customer if there is none on startup
+### Back-end
+
 * A simple RESTful Order Web API built on ASP.NET Core
 * Swagger UI for testing the API
 * Contains built in validation logic for existing scenarios
+* In developer mode, will seed a test customer if there is none on startup
 
-## Next steps
+### Front-end
 
-* Fix invalid `Order.CustomerId` exception not being handled correctly
-* Tests for Repository, Service and Controller (Integration tests) layers
+* A simple React web app, to add a basic order and manage orders
 
 ## How to run
 
 Required installs:
 
 * PostgreSQL
-* Visual Studio or Visual Studio Code
+* Visual Studio (for .NET) and Visual Studio Code (for React)
 * .NET SDK for .NET 10.0
 * `dotnet ef` with `dotnet tool install --global dotnet-ef`
+* Node.js for React
 
 Run steps:
 
@@ -39,7 +42,15 @@ Note: If you see the logs creating tables, it should have succeeded, but you can
 5\. (Optional) Connect to the DB with `pgAdmin`  
 (run as admin, because Windows Smart control sometimes blocks `libpq.dll`,  
 which requires a re-install to fix.)  
-6\. (Optional) Inspect the DB to verify that tables were created correctly.
+6\. (Optional) Inspect the DB to verify that tables were created correctly.  
+7\. Click the `run` button in `Visual Studio` to start the back-end  
+8\. `cd Frontend.React`, then `npm run dev` to run in development mode
+
+## Accessing the API and Web app
+
+* Localhost only for now
+* SwaggerUI (development mode only): `https://localhost:7000/swagger/index.html`
+* POC React web app: `http://localhost:5173/`
 
 ## Resetting migrations 
 
@@ -54,12 +65,25 @@ This can be done by running `ResetMigrations.bat` from the solution folder.
 
 Warning: Must be done from the solution folder, or the script will fail!
 
+## Future work
+
+Planned additions, updated as time and priorities allow.
+
+### Features
+
+* Better order submission form (add/remove items)
+
+### Tests
+
+* Front end tests for web app
+* End-to-end controller tests (halfway done, needed to re-prioritize React learning)
+
 ## Author's professional summary
 
 Timothy Guan is a Software Engineering Manager with 14 years of experience across the full SDLC, delivering enterprise-grade applications and tools in a global multinational environment. 
 
 His experience covers working within distributed international teams spanning multiple continents and time zones, with a strong background in Agile/Scrum including the Scrum Master role.
 
-For the past few years, he has been growing into a senior C#/.NET/ASP.NET Core engineering role, with a passion for specializing his career towards full stack development.
+For the past few years, he has been growing into a senior C#/.NET/ASP.NET Core and React engineering role, with a passion for specializing his career towards full stack development.
 
 In his free time, he develops and maintains a C# application for a niche community. Open to remote, hybrid, or on-site roles in Australia, or fully remote roles globally.
