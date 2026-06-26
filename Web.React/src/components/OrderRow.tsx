@@ -1,6 +1,6 @@
 import { useState } from "react";
+import { useOrders } from "../hooks/useOrders";
 import type { Order } from "../types/order";
-import { updateOrderStatus, deleteOrder } from "../api/orders";
 
 const ORDER_STATUSES = ["Pending", "Processing", "Scheduled", "Completed", "Cancelled"];
 
@@ -9,11 +9,11 @@ type RowMode = "view" | "edit" | "confirmDelete";
 
 type OrderRowProps = {
 	order: Order;
-	onUpdated: (updated: Order) => void;
-	onDeleted: (id: number) => void;
 }
 
-export default function OrderRow({ order, onUpdated, onDeleted }: OrderRowProps) {
+export default function OrderRow({ order }: OrderRowProps) {
+	const { updateOrderStatus, deleteOrder } = useOrders();
+	
 	const [mode, setMode] = useState<RowMode>("view");
 	const [selectedStatus, setSelectedStatus] = useState(order.status);
 	const [loading, setLoading] = useState(false);
@@ -28,12 +28,9 @@ export default function OrderRow({ order, onUpdated, onDeleted }: OrderRowProps)
 		
 		try {
 			// Construct payload with selected status
-			const payload: UpdateOrderStatusPayload = {
-				status: selectedStatus
-			}
+			const payload: UpdateOrderStatusPayload = { status: selectedStatus };
 			
-			const updated = await updateOrderStatus(order.id, payload);
-			onUpdated(updated);
+			await updateOrderStatus(order.id, payload);
 			setMode("view");
 		} catch {
 			setError("Failed to save.");
@@ -55,7 +52,6 @@ export default function OrderRow({ order, onUpdated, onDeleted }: OrderRowProps)
 		
 		try {
 			await deleteOrder(order.id);
-			onDeleted(order.id);
 		} catch {
 			setError("Failed to delete.");
 		} finally {

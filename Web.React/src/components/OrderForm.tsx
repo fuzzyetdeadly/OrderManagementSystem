@@ -1,12 +1,8 @@
 import { useForm } from "react-hook-form";
 import axios from "axios";
-import { createOrder } from "../api/orders";
+import { useOrders } from "../hooks/useOrders";
 import type { CreateOrderPayload } from "../types/order";
 import type { ValidationProblemDetails } from "../types/common";
-
-type OrderFormProps = {
-	onCreated: () => void;
-}
 
 // Data shape for RHF useForm
 type OrderFormValues = {
@@ -21,11 +17,15 @@ const UNSELECTED = "";
 const UNSELECTED_ERROR = "Please select a product";
 const UNKNOWN_ERROR = "Something went wrong. Please try again.";
 
-export default function OrderForm({ onCreated }: OrderFormProps) {
+// Note: no props because queries handled by 'useOrders' hook
+export default function OrderForm() {
+	const { createOrder } = useOrders();
+	
 	// UseForm returns functions/states that can be used
 	// For server-side errors from the catch block, use setError
 	// to update the internal state of RHF.
 	const { register, handleSubmit, setError, clearErrors, formState: { errors }} = useForm<OrderFormValues>({
+		mode: "onChange",
 		defaultValues: {
 				customerId: 1,
 				productName: UNSELECTED,
@@ -37,7 +37,7 @@ export default function OrderForm({ onCreated }: OrderFormProps) {
 	// RHF's handleSubmit will wrap this method,
 	// injecting validated values and blocking invalid submissions
 	const onSubmit = async (data: OrderFormValues) => {
-		// Clear any errors in root
+		// Clear all errors on "root" node
 		clearErrors("root");
 		
 		const payload: CreateOrderPayload = {
@@ -51,17 +51,19 @@ export default function OrderForm({ onCreated }: OrderFormProps) {
 		try {
 			// Create order, then invoke callback
 			await createOrder(payload);
-			onCreated();
 		} catch(err) {
 			// 400 status usually returns *.errors, while 404 returns *.detail
 			if(axios.isAxiosError<ValidationProblemDetails>(err) && err.response?.data) {
-				const data = err.response.data;
-				if(data.errors) {
-					Object.values(err.response.data.errors).flat().forEach(err => {
-						setError("root", { message: err });
+				// Cannot use 'data', because it is used by onSubmit's anon function
+				const responseData = err.response.data;
+				if(responseData.errors) {
+					Object.values(responseData.errors).flat().forEach((msg, i) => {
+						// Note: if there are multiple errors, use only the last
+						// Unlikely to reach here unless form isn't validating everything it should.
+						setError("root", { message: msg });
 					});
-				} else if (data.detail)	{
-					setError("root", {message: data.detail});
+				} else if (responseData.detail) {
+					setError("root", { message: responseData.detail });
 				} else {
 					setError("root", { message: UNKNOWN_ERROR });
 				}
@@ -83,8 +85,7 @@ export default function OrderForm({ onCreated }: OrderFormProps) {
 				<label htmlFor="productName">Product name*</label>
 				<select 
 					id="productName"
-					{...register("productName", 
-						{ validate: v => v !== UNSELECTED || UNSELECTED_ERROR })} >
+					{...register("productName", { validate: v => v !== UNSELECTED || UNSELECTED_ERROR })} >
 					<option value={UNSELECTED}>Select</option>
 					{PRODUCT_OPTIONS.map(option => (
 						<option key={option} value={option}>{option}</option>		
@@ -97,7 +98,8 @@ export default function OrderForm({ onCreated }: OrderFormProps) {
 				<input 
 					id="quantity" type="number" min={1}
 					{...register("quantity", { 
-							valueAsNumber: true, 
+							valueAsNumber: true,
+							required: "Quantity is required",
 							min: { value: 1, message: "Quantity must be at least 1"}
 						})} />
 			</div>
@@ -107,7 +109,8 @@ export default function OrderForm({ onCreated }: OrderFormProps) {
 				<input 
 					id="unitPrice" type="number" min={0.01} step="0.01"
 					{...register("unitPrice", { 
-							valueAsNumber: true, 
+							valueAsNumber: true,
+							required: "Unit price is required",
 							min: { value: 0.01, message: "Unit price must be at least 0.01"}
 						})}					/>
 			</div>

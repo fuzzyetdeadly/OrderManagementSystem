@@ -3,11 +3,9 @@ import OrderRow from "./OrderRow";
 
 type OrderListProps = {
 	orders: Order[];
-	onUpdated: (updated: Order) => void;
-	onDeleted: (id: number) => void;
 }
 
-export default function OrderList({ orders, onUpdated, onDeleted }: OrderListProps) {
+export default function OrderList({ orders }: OrderListProps) {
 	return (
 		<div className="order-list">
 			<table>
@@ -29,14 +27,9 @@ export default function OrderList({ orders, onUpdated, onDeleted }: OrderListPro
 					</tr>
 				</thead>
 				<tbody>
-					{orders.map(order => (
-						<OrderRow 
-							key={order.id} 
-							order={order}
-							onUpdated={onUpdated}
-							onDeleted={onDeleted}
-						/>
-					))}
+					{orders.map(order =>
+						<OrderRow key={order.id} order={order} />
+					)}
 				</tbody>
 			</table>
 		</div>
