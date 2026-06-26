@@ -44,16 +44,10 @@ export function useOrders() {
 	
 	return {
 		ordersQuery,
-		
 		createOrder: (order: CreateOrderPayload) =>
 			createMutation.mutateAsync(order),
-		createMutation,
-		
 		updateOrderStatus: (id: number, payload: UpdateOrderStatusPayload) =>
 			updateStatusMutation.mutateAsync({id, payload}),
-		updateStatusMutation,
-		
-		deleteOrder: (id: number) => deleteMutation.mutateAsync(id),
-		deleteMutation
+		deleteOrder: (id: number) => deleteMutation.mutateAsync(id)
 	};
 }
