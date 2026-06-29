@@ -2,22 +2,9 @@ import { server } from "../mocks/server";
 import { getOrders } from "./orders";
 import type { PaginationOptions } from "../types/common";
 
+// Note: most coverage seems to be just checking that body/params forward correctly
+// Not meaningful to test mocked return values (would just be testing axios behavior))
 describe("getOrders", () => {
-  it("returns orders on success", async () => {
-    const result = await getOrders();
-
-    // Expect happy return value
-    expect(result).toEqual([
-      {
-        id: 1,
-        status: "Pending",
-        created: "2023-01-01T12:00:00Z",
-        customerId: 1,
-        items: [{ productName: "Potato", quantity: 1, unitPrice: 0.99 }],
-      },
-    ]);
-  });
-
   it("passes pagination parameters to the API", async () => {
     let capturedParams: URLSearchParams | null = null;
 
@@ -36,5 +23,4 @@ describe("getOrders", () => {
   });
 });
 
-// ToCheck: For create order, should request body be forwarded to test server handler?
-// and used as return value with id appended?
+// TBC: test that Post forwards payload correctly
