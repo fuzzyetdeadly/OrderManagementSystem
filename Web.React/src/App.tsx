@@ -1,39 +1,24 @@
-import { useEffect, useState } from "react";
-import "./App.css";
-
-import { getOrders } from "./api/orders";
+import { useOrders } from "./hooks/useOrders";
 import type { Order } from "./types/order";
 import OrderForm from "./components/OrderForm";
 import OrderList from "./components/OrderList";
+import "./App.css";
 
 function App() {
-	const [orders, setOrders] = useState<Order[]>([]);
-	
-	// Note: default pagination params is '{}' for 'getOrders'
-	const fetchOrders = async () => setOrders(await getOrders());
-	
-	// For updates replace the updated order with the new one
-	const handleUpdated = (updated: Order) =>
-		setOrders((prev) => prev.map((order) => (order.id === updated.id) ? updated : order));
-	
-	// For delete filter out deleted order
-	const handleDeleted = (id: number) =>
-		setOrders((prev) => prev.filter((order) => order.id !== id));
-	
-	useEffect(() => {
-		fetchOrders();
-	}, []);
+  // Note: decided to keep orders passed as prop to OrderList
+  // May move into OrderList in future
+  // Orders is destructured from ordersQuery and guarded with []
+  // It is inferred to have type Order[] by TS.
+  const { ordersQuery } = useOrders();
+  const orders: Order[] = ordersQuery.data ?? [];
 
   return (
     <>
-		  <h1>Order Management</h1>
-			<OrderForm onCreated={fetchOrders} />
-			<OrderList 
-				orders={orders}
-				onUpdated={handleUpdated}
-				onDeleted={handleDeleted} />
+      <h1>Order Management</h1>
+      <OrderForm />
+      <OrderList orders={orders} />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
