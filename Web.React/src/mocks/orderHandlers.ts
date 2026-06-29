@@ -6,7 +6,7 @@ import { makeOrder } from "./factories/orderFactory";
 const baseURL = import.meta.env.VITE_API_URL;
 
 // Handlers contain happy behaviors for API calls
-// These may be overridden in test files to simulate error conditions, etc.
+// Behaviors may be overridden in test files to simulate error conditions, etc.
 export const orderHandlers = [
   http.get(`${baseURL}/orders`, () => {
     return HttpResponse.json<Order[]>([makeOrder()]);
