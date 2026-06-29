@@ -1,14 +1,11 @@
 import { useState } from "react";
 import { useOrders } from "../hooks/useOrders";
-import type { Order, UpdateOrderStatusPayload } from "../types/order";
-
-const ORDER_STATUSES = [
-  "Pending",
-  "Processing",
-  "Scheduled",
-  "Completed",
-  "Cancelled",
-];
+import { ORDER_STATUSES } from "../types/order";
+import type {
+  OrderStatus,
+  Order,
+  UpdateOrderStatusPayload,
+} from "../types/order";
 
 // Prefer union type over enum, as it is more idiomatic for TS (26/06/dd)
 type RowMode = "view" | "edit" | "confirmDelete";
@@ -21,7 +18,9 @@ export default function OrderRow({ order }: OrderRowProps) {
   const { updateOrderStatus, deleteOrder } = useOrders();
 
   const [mode, setMode] = useState<RowMode>("view");
-  const [selectedStatus, setSelectedStatus] = useState(order.status);
+  const [selectedStatus, setSelectedStatus] = useState<OrderStatus>(
+    order.status,
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -75,7 +74,7 @@ export default function OrderRow({ order }: OrderRowProps) {
             <select
               className="status-select"
               value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
+              onChange={(e) => setSelectedStatus(e.target.value as OrderStatus)}
             >
               {ORDER_STATUSES.map((status) => (
                 <option key={status} value={status}>
