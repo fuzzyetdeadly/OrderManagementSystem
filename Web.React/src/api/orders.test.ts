@@ -1,15 +1,15 @@
 import { server } from "../mocks/server";
+import type { PaginationOptions } from "../types/common";
+import type {
+  CreateOrderPayload,
+  UpdateOrderStatusPayload,
+} from "../types/order";
 import {
   getOrders,
   createOrder,
   updateOrderStatus,
   deleteOrder,
 } from "./orders";
-import type { PaginationOptions } from "../types/common";
-import type {
-  CreateOrderPayload,
-  UpdateOrderStatusPayload,
-} from "../types/order";
 import { makeOrder } from "../mocks/factories/orderFactory";
 
 // Note: most coverage seems to be just checking that body/params forward correctly
@@ -152,10 +152,15 @@ describe("createOrder", () => {
   });
 
   it("returns expected data shape", async () => {
-    // Payload is a don't care
     const payload: CreateOrderPayload = {
       customerId: 1,
-      items: [],
+      items: [
+        {
+          productName: "Potato",
+          quantity: 1,
+          unitPrice: 0.99,
+        },
+      ],
     };
 
     const order = await createOrder(payload);
