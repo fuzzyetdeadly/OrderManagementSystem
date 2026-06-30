@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from "@testing-library/react";
-import { useOrders } from "./useOrders";
 import { createQueryWrapper } from "../test-utils";
+import { useOrders } from "./useOrders";
 import { makeOrder } from "../mocks/factories/orderFactory";
 import type {
   Order,
@@ -29,7 +29,7 @@ describe("useOrders", () => {
       expect(result.current.ordersQuery.isSuccess).toBe(true);
     });
 
-    // Create a new order
+    // Create a new order, items are don't care for this test
     const payload: CreateOrderPayload = {
       customerId: 1,
       items: [],
@@ -58,7 +58,7 @@ describe("useOrders", () => {
     // Update an existing order's status
     // Note: happy flow always returns updated order as "Processing"
     const id = 1;
-    const payload: UpdateOrderStatusPayload = { status: "Processing" };
+    const payload: UpdateOrderStatusPayload = { status: "Completed" };
 
     await result.current.updateOrderStatus(id, payload);
 
