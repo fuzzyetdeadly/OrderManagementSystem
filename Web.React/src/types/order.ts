@@ -29,5 +29,5 @@ export type CreateOrderPayload = {
 };
 
 export type UpdateOrderStatusPayload = {
-  status: string;
+  status: OrderStatus;
 };
