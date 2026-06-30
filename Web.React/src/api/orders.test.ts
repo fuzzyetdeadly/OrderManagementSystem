@@ -96,7 +96,27 @@ describe("getOrders", () => {
 });
 
 describe("createOrder", () => {
-  it("passes request body to the API", async () => {
+  it("uses the orders route", async () => {
+    let capturedRoute: string | null = null;
+
+    // Make server listerner capture request route
+    server.events.on("request:start", ({ request }) => {
+      capturedRoute = new URL(request.url).pathname;
+    });
+
+    // Payload is a don't care
+    const payload: CreateOrderPayload = {
+      customerId: 1,
+      items: [],
+    };
+
+    await createOrder(payload);
+
+    // Expect route to end with "/orders" (regex)
+    expect(capturedRoute).toMatch(/\/orders$/);
+  });
+
+  it("sends the request payload", async () => {
     let capturedBody: CreateOrderPayload | null = null;
 
     server.events.on("request:start", async ({ request }) => {
@@ -121,5 +141,18 @@ describe("createOrder", () => {
 
     // Expect captured body to match payload (deep equality)
     expect(capturedBody).toEqual(payload);
+  });
+
+  it("returns expected data shape", async () => {
+    // Payload is a don't care
+    const payload: CreateOrderPayload = {
+      customerId: 1,
+      items: [],
+    };
+
+    const orders = await createOrder(payload);
+
+    // Expect return to match mocked order
+    expect(orders).toEqual(makeOrder());
   });
 });
