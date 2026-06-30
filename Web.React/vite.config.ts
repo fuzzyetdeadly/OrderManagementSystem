@@ -9,5 +9,9 @@ export default defineConfig({
     environment: "jsdom",
     globals: true /* Use global test APIs like 'describe', 'it', 'expect', etc. */,
     setupFiles: ["./src/setupTests.ts"] /* Setup before each test suite */,
+    coverage: {
+      provider: "v8",
+      exclude: ["src/test-utils.tsx", "src/api/client.ts", "src/mocks/**"],
+    },
   },
 });

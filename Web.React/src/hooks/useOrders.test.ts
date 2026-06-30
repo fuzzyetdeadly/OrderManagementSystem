@@ -20,7 +20,7 @@ describe("useOrders", () => {
     expect(result.current.ordersQuery.data).toEqual([makeOrder()]);
   });
 
-  it("caches created order on success", async () => {
+  it("creates order in cache", async () => {
     const { wrapper, queryClient } = createQueryWrapper();
     const { result } = renderHook(() => useOrders(), { wrapper });
 
@@ -46,7 +46,7 @@ describe("useOrders", () => {
     });
   });
 
-  it("caches updated order status on success", async () => {
+  it("updates only matching order in cache", async () => {
     const { wrapper, queryClient } = createQueryWrapper();
     const { result } = renderHook(() => useOrders(), { wrapper });
 
@@ -54,6 +54,12 @@ describe("useOrders", () => {
     await waitFor(() => {
       expect(result.current.ordersQuery.isSuccess).toBe(true);
     });
+
+    // Seed additional order to allow no match test
+    queryClient.setQueryData<Order[]>(["orders"], (prev: Order[] = []) => [
+      ...prev,
+      makeOrder({ id: 2 }),
+    ]);
 
     // Update an existing order's status
     // Note: happy flow always returns updated order as "Processing"
@@ -67,12 +73,15 @@ describe("useOrders", () => {
       const cached = queryClient.getQueryData<Order[]>(["orders"]);
 
       expect(cached).toBeDefined(); // defensive check
-      expect(cached).toHaveLength(1);
-      expect(cached![0].status).toBe(payload.status);
+      expect(cached).toHaveLength(2);
+
+      // Only order with matching id should have changed status
+      expect(cached!.find((o) => o.id === id)?.status).toBe(payload.status);
+      expect(cached!.find((o) => o.id === 2)?.status).not.toBe(payload.status);
     });
   });
 
-  it("deletes order from cache on success", async () => {
+  it("deletes only matching order in cache", async () => {
     const { wrapper, queryClient } = createQueryWrapper();
     const { result } = renderHook(() => useOrders(), { wrapper });
 
@@ -80,6 +89,12 @@ describe("useOrders", () => {
     await waitFor(() => {
       expect(result.current.ordersQuery.isSuccess).toBe(true);
     });
+
+    // Seed additional order to allow no match test
+    queryClient.setQueryData<Order[]>(["orders"], (prev: Order[] = []) => [
+      ...prev,
+      makeOrder({ id: 2 }),
+    ]);
 
     // Delete an existing order
     const id = 1;
@@ -91,7 +106,11 @@ describe("useOrders", () => {
       const cached = queryClient.getQueryData<Order[]>(["orders"]);
 
       expect(cached).toBeDefined(); // defensive check
-      expect(cached).toHaveLength(0);
+      expect(cached).toHaveLength(1);
+
+      // Only order with matching id should have been removed
+      expect(cached!.find((o) => o.id === id)).toBeUndefined();
+      expect(cached!.find((o) => o.id === 2)).toBeDefined();
     });
   });
 });
