@@ -1,5 +1,10 @@
 import { server } from "../mocks/server";
-import { getOrders, createOrder, updateOrderStatus } from "./orders";
+import {
+  getOrders,
+  createOrder,
+  updateOrderStatus,
+  deleteOrder,
+} from "./orders";
 import type { PaginationOptions } from "../types/common";
 import type {
   CreateOrderPayload,
@@ -13,7 +18,7 @@ describe("getOrders", () => {
   it("uses the correct route", async () => {
     let capturedRoute: string | null = null;
 
-    // Make server listerner capture request route
+    // Make server listener capture request route
     server.events.on("request:start", ({ request }) => {
       capturedRoute = new URL(request.url).pathname;
     });
@@ -102,7 +107,7 @@ describe("createOrder", () => {
   it("uses the correct route", async () => {
     let capturedRoute: string | null = null;
 
-    // Make server listerner capture request route
+    // Make server listener capture request route
     server.events.on("request:start", ({ request }) => {
       capturedRoute = new URL(request.url).pathname;
     });
@@ -164,7 +169,7 @@ describe("updateOrderStatus", () => {
   it("uses the correct route", async () => {
     let capturedRoute: string | null = null;
 
-    // Make server listerner capture request route
+    // Make server listener capture request route
     server.events.on("request:start", ({ request }) => {
       capturedRoute = new URL(request.url).pathname;
     });
@@ -208,5 +213,23 @@ describe("updateOrderStatus", () => {
 
     // Expect return to match mocked order with "Processing" status
     expect(order).toEqual(makeOrder({ status: "Processing" }));
+  });
+});
+
+describe("deleteOrder", () => {
+  it("uses the correct route", async () => {
+    let capturedRoute: string | null = null;
+
+    // Make server listener capture request route
+    server.events.on("request:start", ({ request }) => {
+      capturedRoute = new URL(request.url).pathname;
+    });
+
+    // Delete order 1
+    const id = 1;
+
+    await deleteOrder(id);
+
+    expect(capturedRoute).toMatch(new RegExp(`\\/orders\\/${id}$`));
   });
 });

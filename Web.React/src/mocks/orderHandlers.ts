@@ -21,6 +21,7 @@ export const orderHandlers = [
   }),
 
   http.delete(`${baseURL}/orders/:id`, () => {
+    // Note: null return here = empty body
     return HttpResponse.text(null, { status: 204 });
   }),
 ];
