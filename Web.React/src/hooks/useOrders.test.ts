@@ -71,4 +71,27 @@ describe("useOrders", () => {
       expect(cached![0].status).toBe(payload.status);
     });
   });
+
+  it("deletes order from cache on success", async () => {
+    const { wrapper, queryClient } = createQueryWrapper();
+    const { result } = renderHook(() => useOrders(), { wrapper });
+
+    // Wait for initial fetch to complete
+    await waitFor(() => {
+      expect(result.current.ordersQuery.isSuccess).toBe(true);
+    });
+
+    // Delete an existing order
+    const id = 1;
+
+    await result.current.deleteOrder(id);
+
+    // Wait cache to be updated, then assert
+    await waitFor(() => {
+      const cached = queryClient.getQueryData<Order[]>(["orders"]);
+
+      expect(cached).toBeDefined(); // defensive check
+      expect(cached).toHaveLength(0);
+    });
+  });
 });
