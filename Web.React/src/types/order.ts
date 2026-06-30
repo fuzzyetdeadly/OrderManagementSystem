@@ -1,6 +1,17 @@
+// 'as const' fixes values in array, prevents widening to string[]
+export const ORDER_STATUSES = [
+  "Pending",
+  "Processing",
+  "Delivered",
+  "Completed",
+  "Cancelled",
+] as const;
+
+export type OrderStatus = (typeof ORDER_STATUSES)[number];
+
 export type Order = {
   id: number;
-  status: string;
+  status: OrderStatus;
   created: string;
   customerId: number;
   items: OrderItem[];
@@ -18,5 +29,5 @@ export type CreateOrderPayload = {
 };
 
 export type UpdateOrderStatusPayload = {
-  status: string;
+  status: OrderStatus;
 };
