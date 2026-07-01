@@ -1,5 +1,5 @@
 import { renderHook, waitFor } from "@testing-library/react";
-import { createQueryWrapper } from "../test-utils";
+import { createQueryWrapper } from "../test/queryWrapper";
 import { useOrders } from "./useOrders";
 import { makeOrder } from "../mocks/factories/orderFactory";
 import type {
