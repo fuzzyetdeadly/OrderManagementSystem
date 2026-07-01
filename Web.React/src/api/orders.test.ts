@@ -1,4 +1,4 @@
-import { server } from "../mocks/server";
+import { server } from "../test/mocks/server";
 import type { PaginationOptions } from "../types/common";
 import type {
   CreateOrderPayload,
@@ -10,7 +10,7 @@ import {
   updateOrderStatus,
   deleteOrder,
 } from "./orders";
-import { makeOrder } from "../mocks/factories/orderFactory";
+import { makeOrder } from "../test/factories/orderFactory";
 
 // Note: most coverage seems to be just checking that body/params forward correctly
 // Not meaningful to test mocked return values (would just be testing axios behavior))

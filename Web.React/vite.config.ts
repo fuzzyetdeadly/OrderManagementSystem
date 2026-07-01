@@ -11,7 +11,7 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"] /* Setup before each test suite */,
     coverage: {
       provider: "v8",
-      exclude: ["src/test-utils.tsx", "src/api/client.ts", "src/mocks/**"],
+      exclude: ["src/test-utils.tsx", "src/api/client.ts", "src/test/**"],
     },
   },
 });

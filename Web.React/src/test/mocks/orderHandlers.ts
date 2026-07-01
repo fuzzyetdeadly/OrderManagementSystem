@@ -4,8 +4,8 @@ import type {
   Order,
   CreateOrderPayload,
   UpdateOrderStatusPayload,
-} from "../types/order";
-import { makeOrder } from "./factories/orderFactory";
+} from "../../types/order";
+import { makeOrder } from "../factories/orderFactory";
 
 const baseURL = import.meta.env.VITE_API_URL;
 
