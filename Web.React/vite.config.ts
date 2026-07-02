@@ -7,11 +7,17 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: "jsdom",
+    clearMocks: true /* Reset mocks before each test */,
     globals: true /* Use global test APIs like 'describe', 'it', 'expect', etc. */,
     setupFiles: ["./src/test/setup.ts"] /* Setup before each test suite */,
     coverage: {
       provider: "v8",
-      exclude: ["src/test-utils.tsx", "src/api/client.ts", "src/test/**"],
+      exclude: [
+        "src/test-utils.tsx",
+        "src/api/client.ts",
+        "src/test/**",
+        "*.css",
+      ],
     },
   },
 });

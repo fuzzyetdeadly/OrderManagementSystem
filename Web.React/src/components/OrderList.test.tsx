@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import type { Order } from "../types/order";
 import { makeOrder } from "../test/factories/orderFactory";
+import type { Order } from "../types/order";
 import OrderList from "./OrderList";
 import OrderRow from "./OrderRow";
 
