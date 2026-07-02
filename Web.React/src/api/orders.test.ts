@@ -10,7 +10,7 @@ import {
   updateOrderStatus,
   deleteOrder,
 } from "./orders";
-import { makeOrder } from "../test/factories/orderFactory";
+import { makeOrder, makeOrderItem } from "../test/factories/orderFactory";
 
 // Note: most coverage seems to be just checking that body/params forward correctly
 // Not meaningful to test mocked return values (would just be testing axios behavior))
@@ -136,13 +136,7 @@ describe("createOrder", () => {
     // Post a dummy payload to the API
     const payload: CreateOrderPayload = {
       customerId: 1,
-      items: [
-        {
-          productName: "Potato",
-          quantity: 1,
-          unitPrice: 0.99,
-        },
-      ],
+      items: [makeOrderItem()],
     };
 
     await createOrder(payload);
@@ -154,13 +148,7 @@ describe("createOrder", () => {
   it("returns expected data shape", async () => {
     const payload: CreateOrderPayload = {
       customerId: 1,
-      items: [
-        {
-          productName: "Potato",
-          quantity: 1,
-          unitPrice: 0.99,
-        },
-      ],
+      items: [makeOrderItem()],
     };
 
     const order = await createOrder(payload);
