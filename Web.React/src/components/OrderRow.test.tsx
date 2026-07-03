@@ -14,7 +14,7 @@ vi.mock("../hooks/useOrders");
 const updateOrderStatus = vi.fn();
 const deleteOrder = vi.fn();
 
-const user = userEvent.setup();
+let user: ReturnType<typeof userEvent.setup>;
 
 // Default order for testing
 const defaultOrder: Order = makeOrder({
@@ -41,6 +41,9 @@ function renderRow(order: Order = defaultOrder) {
 
 // --- Tests ---
 beforeEach(() => {
+  // Re-initializer user per test to ensure user has fresh state
+  user = userEvent.setup();
+
   // Reset 'useOrders' mock before each test to ensure clean state
   vi.mocked(useOrders).mockReturnValue(
     createUseOrdersMock({ updateOrderStatus, deleteOrder }),
