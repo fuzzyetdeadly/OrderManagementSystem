@@ -159,7 +159,7 @@ export default function OrderRow({ order }: OrderRowProps) {
         </td>
       </tr>
       {error && (
-        <tr>
+        <tr aria-label="Error message">
           <td colSpan={5} className="row-error">
             {error}
           </td>

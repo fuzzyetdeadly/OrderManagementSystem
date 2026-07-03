@@ -177,4 +177,27 @@ describe("OrderRow", () => {
       status: "Processing",
     });
   });
+
+  it("edit mode displays error when save failed", async () => {
+    // Mock network error
+    updateOrderStatus.mockRejectedValueOnce(new Error("Network error"));
+
+    renderRow();
+
+    const row = getRow(`Order ${defaultOrder.id}`);
+
+    // Switch to edit mode, change status and save
+    const editButton = getButton(row, /edit/i);
+    await user.click(editButton);
+
+    const statusSelect = within(row).getByRole("combobox");
+    await user.selectOptions(statusSelect, "Processing");
+
+    const saveButton = getButton(row, /save/i);
+    await user.click(saveButton);
+
+    // Assert that error row appeared with expected error
+    const errorRow = getRow("Error message");
+    expect(errorRow).toHaveTextContent("Failed to save");
+  });
 });
