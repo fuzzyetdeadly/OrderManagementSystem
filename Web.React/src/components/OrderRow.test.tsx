@@ -47,7 +47,7 @@ beforeEach(() => {
   );
 });
 
-describe("OrderRow", () => {
+describe("OrderRow.ViewMode", () => {
   it("renders view mode rows correctly", () => {
     renderRow();
 
@@ -92,7 +92,9 @@ describe("OrderRow", () => {
     expect(editButton).toBeEnabled();
     expect(deleteButton).toBeEnabled();
   });
+});
 
+describe("OrderRow.EditMode", () => {
   it("renders edit mode elements correctly", async () => {
     renderRow();
 
@@ -200,7 +202,9 @@ describe("OrderRow", () => {
     const errorRow = getRow("Error message");
     expect(errorRow).toHaveTextContent("Failed to save");
   });
+});
 
+describe("OrderRow.DeleteMode", () => {
   it("renders delete mode buttons correctly", async () => {
     renderRow();
 
