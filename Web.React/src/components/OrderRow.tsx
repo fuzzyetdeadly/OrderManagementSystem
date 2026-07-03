@@ -66,7 +66,7 @@ export default function OrderRow({ order }: OrderRowProps) {
 
   return (
     <>
-      <tr className="order-row">
+      <tr className="order-row" aria-label={`Order ${order.id}`}>
         <td>{order.id}</td>
         <td>{order.customerId}</td>
         <td>

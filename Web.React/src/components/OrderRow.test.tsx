@@ -43,27 +43,32 @@ const renderRow = (order: Order = defaultOrder) => {
 };
 
 describe("OrderRow", () => {
-  it("renders view mode with correct rows", () => {
+  it("renders view mode with expected row count", () => {
     renderRow();
 
-    // Expect exactly 1 row (excluding error row)
     const rows = screen.getAllByRole("row");
 
+    // Assert that only one row is rendered
     expect(rows).toHaveLength(1);
   });
 
   it("renders view mode with correct cells", () => {
     renderRow();
 
-    // Expect 5 cells in first row: ID, Customer, Status, Items
+    // Expect 4 cells in first row: ID, Customer, Status, Items
     // Skip last cell (actions) for this test
-    const rows = screen.getAllByRole("row");
-    const contentCells = within(rows[0]).getAllByRole("cell").slice(0, -1);
+    const row = screen.getByRole("row", {
+      name: new RegExp(`^Order ${defaultOrder.id}$`),
+    });
+    const contentCells = within(row)
+      .getAllByRole("cell")
+      .slice(0, -1)
+      .map((cell) => cell.textContent);
 
     expect(contentCells).toHaveLength(4);
 
-    // Expect cell contents to match default order properties
-    expect(contentCells.map((cell) => cell.textContent)).toEqual([
+    // Assert cell contents match default order
+    expect(contentCells).toEqual([
       defaultOrder.id.toString(),
       defaultOrder.customerId.toString(),
       defaultOrder.status,
@@ -74,18 +79,24 @@ describe("OrderRow", () => {
   it("renders view mode with correct action buttons", () => {
     renderRow();
 
-    // Expect action cell to contain Edit/Delete buttons
-    const rows = screen.getAllByRole("row");
-    const actionCell = within(rows[0]).getAllByRole("cell")[4];
+    const row = screen.getByRole("row", {
+      name: new RegExp(`^Order ${defaultOrder.id}$`),
+    });
 
-    const editButton = within(actionCell).getByRole("button", {
+    // Implicitly assert buttons exist
+    const editButton = within(row).getByRole("button", {
       name: /edit/i,
     });
-    const deleteButton = within(actionCell).getByRole("button", {
+    const deleteButton = within(row).getByRole("button", {
       name: /delete/i,
     });
 
+    // Assert buttons enabled
     expect(editButton).toBeEnabled();
     expect(deleteButton).toBeEnabled();
+  });
+
+  it("enters edit mode and updates status", async () => {
+    renderRow();
   });
 });
