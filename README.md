@@ -71,11 +71,12 @@ Planned additions, updated as time and priorities allow.
 
 ### Features
 
+* Translations for user facing text 
+* Implement react router
 * Better order submission form (add/remove items)
 
 ### Tests
 
-* Front end tests for web app
 * End-to-end controller tests (halfway done, needed to re-prioritize React learning)
 
 ## Author's professional summary
