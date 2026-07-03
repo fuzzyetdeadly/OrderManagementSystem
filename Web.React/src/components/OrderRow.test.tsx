@@ -1,4 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
+import { getRow, getButton } from "../test/testUtils";
 import { makeOrder, makeOrderItem } from "../test/factories/orderFactory";
 import { createUseOrdersMock } from "../test/factories/useOrdersFactory";
 import type { Order } from "../types/order";
@@ -12,12 +14,7 @@ vi.mock("../hooks/useOrders");
 const updateOrderStatus = vi.fn();
 const deleteOrder = vi.fn();
 
-beforeEach(() => {
-  // Reset 'useOrders' mock before each test to ensure clean state
-  vi.mocked(useOrders).mockReturnValue(
-    createUseOrdersMock({ updateOrderStatus, deleteOrder }),
-  );
-});
+const user = userEvent.setup();
 
 // Default order for testing
 const defaultOrder: Order = makeOrder({
@@ -32,7 +29,7 @@ const defaultOrder: Order = makeOrder({
 
 // Row should be rendered with table/body context
 // To allow proper semantics for table-related ARIA roles
-const renderRow = (order: Order = defaultOrder) => {
+function renderRow(order: Order = defaultOrder) {
   return render(
     <table>
       <tbody>
@@ -40,7 +37,15 @@ const renderRow = (order: Order = defaultOrder) => {
       </tbody>
     </table>,
   );
-};
+}
+
+// --- Tests ---
+beforeEach(() => {
+  // Reset 'useOrders' mock before each test to ensure clean state
+  vi.mocked(useOrders).mockReturnValue(
+    createUseOrdersMock({ updateOrderStatus, deleteOrder }),
+  );
+});
 
 describe("OrderRow", () => {
   it("renders view mode with expected row count", () => {
@@ -57,9 +62,7 @@ describe("OrderRow", () => {
 
     // Expect 4 cells in first row: ID, Customer, Status, Items
     // Skip last cell (actions) for this test
-    const row = screen.getByRole("row", {
-      name: new RegExp(`^Order ${defaultOrder.id}$`),
-    });
+    const row = getRow(`Order ${defaultOrder.id}`);
     const contentCells = within(row)
       .getAllByRole("cell")
       .slice(0, -1)
@@ -76,27 +79,65 @@ describe("OrderRow", () => {
     ]);
   });
 
-  it("renders view mode with correct action buttons", () => {
+  it("renders view mode buttons with correct states", () => {
     renderRow();
 
-    const row = screen.getByRole("row", {
-      name: new RegExp(`^Order ${defaultOrder.id}$`),
-    });
+    const row = getRow(`Order ${defaultOrder.id}`);
 
     // Implicitly assert buttons exist
-    const editButton = within(row).getByRole("button", {
-      name: /edit/i,
-    });
-    const deleteButton = within(row).getByRole("button", {
-      name: /delete/i,
-    });
+    const editButton = getButton(row, /edit/i);
+    const deleteButton = getButton(row, /delete/i);
 
-    // Assert buttons enabled
+    // Assert button states as expected
     expect(editButton).toBeEnabled();
     expect(deleteButton).toBeEnabled();
   });
 
-  it("enters edit mode and updates status", async () => {
+  it("renders edit mode buttons with correct states", async () => {
     renderRow();
+
+    const row = getRow(`Order ${defaultOrder.id}`);
+
+    // Locate edit button and enable edit mode
+    const editButton = getButton(row, /edit/i);
+
+    await user.click(editButton);
+
+    // Assert buttons exist
+    const saveButton = getButton(row, /save/i);
+    const cancelButton = getButton(row, /cancel/i);
+
+    // Assert button states as expected
+    // Asserting on pre-click reference is intentional, expect stale element
+    expect(saveButton).toBeDisabled();
+    expect(cancelButton).toBeEnabled();
+    expect(editButton).not.toBeInTheDocument();
+  });
+
+  it("reverts to view mode when edit mode is canceled", async () => {
+    renderRow();
+
+    const row = getRow(`Order ${defaultOrder.id}`);
+
+    // Switch to edit mode
+    const editButtonBefore = getButton(row, /edit/i);
+    await user.click(editButtonBefore);
+
+    // Locate edit buttons and cancel edit mode
+    const saveButton = getButton(row, /save/i);
+    const cancelButton = getButton(row, /cancel/i);
+
+    await user.click(cancelButton);
+
+    // Locate buttons for assertions
+    const editButtonAfter = getButton(row, /edit/i);
+    const deleteButton = getButton(row, /delete/i);
+
+    // Assert that view buttons visible, and edit buttons removed
+    // Asserting on pre-click reference is intentional, expect stale element
+    expect(editButtonAfter).toBeEnabled();
+    expect(deleteButton).toBeEnabled();
+    expect(saveButton).not.toBeInTheDocument();
+    expect(cancelButton).not.toBeInTheDocument();
   });
 });
