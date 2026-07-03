@@ -1,0 +1,45 @@
+{
+  "app": {
+    "title": "Order Management"
+  },
+  "orderForm": {
+    "customerId": "Customer ID",
+    "productName": "Product name",
+    "quantity": "Quantity",
+    "unitPrice": "Unit price",
+    "submit": "Add Order"
+  },
+  "orderList": {
+    "columns": {
+      "id": "ID",
+      "customer": "Customer",
+      "status": "Status",
+      "items": "Items",
+      "action": "Actions"
+    }
+  },
+  "orderRow": {
+    "buttons": {
+      "edit": "Edit",
+      "save": "Save",
+      "delete": "Delete",
+      "deletePrompt": "Delete?",
+      "confirmDelete": "Confirm delete",
+      "cancel": "Cancel"
+    },
+    "status": {
+      "Pending": "Pending",
+      "Processing": "Processing",
+      "Delivered": "Delivered",
+      "Completed": "Completed",
+      "Cancelled": "Cancelled"
+    }
+  },
+  "errors": {
+    "errorMessage": "Error message",
+    "unselectedProduct": "Please select a product",
+    "unknown": "Something went wrong. Please try again.",
+    "failedSave": "Failed to save.",
+    "failedDelete": "Failed to delete."
+  }
+}
