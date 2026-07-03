@@ -79,7 +79,7 @@ describe("OrderRow", () => {
     ]);
   });
 
-  it("renders view mode exclusive buttons correctly", () => {
+  it("renders view mode buttons correctly", () => {
     renderRow();
 
     const row = getRow(`Order ${defaultOrder.id}`);
@@ -93,13 +93,14 @@ describe("OrderRow", () => {
     expect(deleteButton).toBeEnabled();
   });
 
-  it("renders edit mode exclusive elements correctly", async () => {
+  it("renders edit mode elements correctly", async () => {
     renderRow();
 
     const row = getRow(`Order ${defaultOrder.id}`);
 
-    // Locate edit button and enable edit mode
+    // Locate view buttons and enable edit mode
     const editButton = getButton(row, /edit/i);
+    const deleteButton = getButton(row, /delete/i);
 
     await user.click(editButton);
 
@@ -114,6 +115,7 @@ describe("OrderRow", () => {
     expect(saveButton).toBeDisabled();
     expect(cancelButton).toBeEnabled();
     expect(editButton).not.toBeInTheDocument();
+    expect(deleteButton).not.toBeInTheDocument();
   });
 
   it("reverts to view mode when edit mode is canceled", async () => {
@@ -134,7 +136,7 @@ describe("OrderRow", () => {
     await user.selectOptions(statusSelect, "Processing");
     await user.click(cancelButton);
 
-    // Locate buttons for assertions
+    // Locate view mode buttons
     const editButtonAfter = getButton(row, /edit/i);
     const deleteButton = getButton(row, /delete/i);
 
@@ -155,19 +157,17 @@ describe("OrderRow", () => {
 
     const row = getRow(`Order ${defaultOrder.id}`);
 
-    // Switch to edit mode
+    // Switch to edit mode and change status
     const editButton = getButton(row, /edit/i);
     await user.click(editButton);
 
-    // Assert that status select exists, then change it
     const statusSelect = within(row).getByRole("combobox");
     await user.selectOptions(statusSelect, "Processing");
 
-    // Assert that save button now enabled
+    // Assert that save button is enabled and save
     const saveButton = getButton(row, /save/i);
     expect(saveButton).toBeEnabled();
 
-    // Save the change
     await user.click(saveButton);
 
     // Assert that save was processed as expected
@@ -199,5 +199,100 @@ describe("OrderRow", () => {
     // Assert that error row appeared with expected error
     const errorRow = getRow("Error message");
     expect(errorRow).toHaveTextContent("Failed to save");
+  });
+
+  it("renders delete mode buttons correctly", async () => {
+    renderRow();
+
+    const row = getRow(`Order ${defaultOrder.id}`);
+
+    // Locate view buttons and enable delete mode
+    const editButton = getButton(row, /edit/i);
+    const deleteButton = getButton(row, /delete/i);
+
+    await user.click(deleteButton);
+
+    // Assert elements exist
+    const confirmText = within(row).getByText("Delete?");
+    const confirmButton = getButton(row, /confirm delete/i);
+    const cancelButton = getButton(row, /cancel/i);
+
+    // Assert button states as expected
+    // Asserting on pre-click reference is intentional, expect stale element
+    expect(confirmText).toBeInTheDocument();
+    expect(confirmButton).toBeEnabled();
+    expect(cancelButton).toBeEnabled();
+    expect(editButton).not.toBeInTheDocument();
+    expect(deleteButton).not.toBeInTheDocument();
+  });
+
+  it("reverts to view mode when delete mode is canceled", async () => {
+    renderRow();
+
+    const row = getRow(`Order ${defaultOrder.id}`);
+
+    // Switch to edit mode
+    const deleteButtonBefore = getButton(row, /delete/i);
+    await user.click(deleteButtonBefore);
+
+    // Locate delete buttons
+    const confirmButton = getButton(row, /confirm delete/i);
+    const cancelButton = getButton(row, /cancel/i);
+
+    // Cancel delete mode
+    await user.click(cancelButton);
+
+    // Locate view mode buttons
+    const editButton = getButton(row, /edit/i);
+    const deleteButtonAfter = getButton(row, /delete/i);
+
+    // Assert that view buttons visible, and edit buttons removed
+    // Asserting on pre-click reference is intentional, expect stale element
+    expect(editButton).toBeEnabled();
+    expect(deleteButtonAfter).toBeEnabled();
+    expect(confirmButton).not.toBeInTheDocument();
+    expect(cancelButton).not.toBeInTheDocument();
+
+    // Assert that update hook wasn't called
+    expect(deleteOrder).not.toHaveBeenCalled();
+  });
+
+  it("delete mode behaviors work correctly", async () => {
+    renderRow();
+
+    const row = getRow(`Order ${defaultOrder.id}`);
+
+    // Switch to delete mode
+    const deleteButton = getButton(row, /delete/i);
+    await user.click(deleteButton);
+
+    // Confirm deletion
+    const confirmButton = getButton(row, /confirm delete/i);
+    await user.click(confirmButton);
+
+    // Assert that save was processed as expected
+    // Note: no check for updated order status.
+    // On cache update, mutated orders are passed down from App.tsx
+    expect(deleteOrder).toHaveBeenCalledWith(defaultOrder.id);
+  });
+
+  it("delete mode displays error when delete failed", async () => {
+    // Mock network error
+    deleteOrder.mockRejectedValueOnce(new Error("Network error"));
+
+    renderRow();
+
+    const row = getRow(`Order ${defaultOrder.id}`);
+
+    // Switch to edit mode, change status and save
+    const deleteButton = getButton(row, /delete/i);
+    await user.click(deleteButton);
+
+    const confirmButton = getButton(row, /confirm delete/i);
+    await user.click(confirmButton);
+
+    // Assert that error row appeared with expected error
+    const errorRow = getRow("Error message");
+    expect(errorRow).toHaveTextContent("Failed to delete");
   });
 });
