@@ -66,7 +66,7 @@ export default function OrderRow({ order }: OrderRowProps) {
 
   return (
     <>
-      <tr className="order-row">
+      <tr className="order-row" aria-label={`Order ${order.id}`}>
         <td>{order.id}</td>
         <td>{order.customerId}</td>
         <td>
@@ -96,6 +96,7 @@ export default function OrderRow({ order }: OrderRowProps) {
                   className="btn-icon"
                   onClick={() => setMode("edit")}
                   title="Edit"
+                  aria-label="Edit"
                 >
                   ✏️
                 </button>
@@ -103,6 +104,7 @@ export default function OrderRow({ order }: OrderRowProps) {
                   className="btn-icon"
                   onClick={() => setMode("confirmDelete")}
                   title="Delete"
+                  aria-label="Delete"
                 >
                   🗑️
                 </button>
@@ -115,6 +117,7 @@ export default function OrderRow({ order }: OrderRowProps) {
                   onClick={handleSave}
                   disabled={!hasChanges || loading}
                   title="Save"
+                  aria-label="Save"
                 >
                   ✔️
                 </button>
@@ -123,6 +126,7 @@ export default function OrderRow({ order }: OrderRowProps) {
                   onClick={handleCancel}
                   disabled={loading}
                   title="Cancel"
+                  aria-label="Cancel"
                 >
                   ❌
                 </button>
@@ -136,6 +140,7 @@ export default function OrderRow({ order }: OrderRowProps) {
                   onClick={handleDelete}
                   disabled={loading}
                   title="Confirm delete"
+                  aria-label="Confirm delete"
                 >
                   ✔️
                 </button>
@@ -144,6 +149,7 @@ export default function OrderRow({ order }: OrderRowProps) {
                   onClick={() => setMode("view")}
                   disabled={loading}
                   title="Cancel"
+                  aria-label="Cancel"
                 >
                   ❌
                 </button>
@@ -153,7 +159,7 @@ export default function OrderRow({ order }: OrderRowProps) {
         </td>
       </tr>
       {error && (
-        <tr>
+        <tr aria-label="Error message">
           <td colSpan={5} className="row-error">
             {error}
           </td>
