@@ -48,7 +48,7 @@ beforeEach(() => {
 });
 
 describe("OrderRow", () => {
-  it("renders view mode with expected row count", () => {
+  it("renders view mode rows correctly", () => {
     renderRow();
 
     const rows = screen.getAllByRole("row");
@@ -57,7 +57,7 @@ describe("OrderRow", () => {
     expect(rows).toHaveLength(1);
   });
 
-  it("renders view mode with correct cells", () => {
+  it("renders view mode cells correctly", () => {
     renderRow();
 
     // Expect 4 cells in first row: ID, Customer, Status, Items
@@ -79,7 +79,7 @@ describe("OrderRow", () => {
     ]);
   });
 
-  it("renders view mode buttons with correct states", () => {
+  it("renders view mode exclusive buttons correctly", () => {
     renderRow();
 
     const row = getRow(`Order ${defaultOrder.id}`);
@@ -93,7 +93,7 @@ describe("OrderRow", () => {
     expect(deleteButton).toBeEnabled();
   });
 
-  it("renders edit mode buttons with correct states", async () => {
+  it("renders edit mode exclusive elements correctly", async () => {
     renderRow();
 
     const row = getRow(`Order ${defaultOrder.id}`);
@@ -103,12 +103,14 @@ describe("OrderRow", () => {
 
     await user.click(editButton);
 
-    // Assert buttons exist
+    // Assert elements exist
+    const statusSelect = within(row).getByRole("combobox");
     const saveButton = getButton(row, /save/i);
     const cancelButton = getButton(row, /cancel/i);
 
     // Assert button states as expected
     // Asserting on pre-click reference is intentional, expect stale element
+    expect(statusSelect).toBeEnabled();
     expect(saveButton).toBeDisabled();
     expect(cancelButton).toBeEnabled();
     expect(editButton).not.toBeInTheDocument();
@@ -123,10 +125,13 @@ describe("OrderRow", () => {
     const editButtonBefore = getButton(row, /edit/i);
     await user.click(editButtonBefore);
 
-    // Locate edit buttons and cancel edit mode
+    // Locate edit elements
+    const statusSelect = within(row).getByRole("combobox");
     const saveButton = getButton(row, /save/i);
     const cancelButton = getButton(row, /cancel/i);
 
+    // Change status, then cancel
+    await user.selectOptions(statusSelect, "Processing");
     await user.click(cancelButton);
 
     // Locate buttons for assertions
@@ -137,7 +142,39 @@ describe("OrderRow", () => {
     // Asserting on pre-click reference is intentional, expect stale element
     expect(editButtonAfter).toBeEnabled();
     expect(deleteButton).toBeEnabled();
+    expect(statusSelect).not.toBeInTheDocument();
     expect(saveButton).not.toBeInTheDocument();
     expect(cancelButton).not.toBeInTheDocument();
+
+    // Assert that update hook wasn't called
+    expect(updateOrderStatus).not.toHaveBeenCalled();
+  });
+
+  it("edit mode behaviors work correctly", async () => {
+    renderRow();
+
+    const row = getRow(`Order ${defaultOrder.id}`);
+
+    // Switch to edit mode
+    const editButton = getButton(row, /edit/i);
+    await user.click(editButton);
+
+    // Assert that status select exists, then change it
+    const statusSelect = within(row).getByRole("combobox");
+    await user.selectOptions(statusSelect, "Processing");
+
+    // Assert that save button now enabled
+    const saveButton = getButton(row, /save/i);
+    expect(saveButton).toBeEnabled();
+
+    // Save the change
+    await user.click(saveButton);
+
+    // Assert that save was processed as expected
+    // Note: no check for updated order status.
+    // On cache update, mutated orders are passed down from App.tsx
+    expect(updateOrderStatus).toHaveBeenCalledWith(defaultOrder.id, {
+      status: "Processing",
+    });
   });
 });
