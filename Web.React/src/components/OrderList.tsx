@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { Order } from "../types/order";
 import OrderRow from "./OrderRow";
 
@@ -6,6 +7,8 @@ type OrderListProps = {
 };
 
 export default function OrderList({ orders }: OrderListProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="order-list">
       <table>
@@ -19,11 +22,11 @@ export default function OrderList({ orders }: OrderListProps) {
         </colgroup>
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Customer</th>
-            <th>Status</th>
-            <th>Items</th>
-            <th>Actions</th>
+            <th>{t("orderList.columns.id")}</th>
+            <th>{t("orderList.columns.customer")}</th>
+            <th>{t("orderList.columns.status")}</th>
+            <th>{t("orderList.columns.items")}</th>
+            <th>{t("orderList.columns.action")}</th>
           </tr>
         </thead>
         <tbody>

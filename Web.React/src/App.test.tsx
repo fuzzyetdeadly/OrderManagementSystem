@@ -41,7 +41,7 @@ describe("App", () => {
     // Visuals
     const heading = screen.getByRole("heading", {
       level: 1,
-      name: "Order Management",
+      name: "app.title",
     });
 
     expect(heading).toBeInTheDocument();

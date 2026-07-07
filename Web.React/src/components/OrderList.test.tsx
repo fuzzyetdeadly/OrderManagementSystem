@@ -26,7 +26,13 @@ describe("OrderList", () => {
       .getAllByRole("columnheader")
       .map((header) => header.textContent);
 
-    expect(headers).toEqual(["ID", "Customer", "Status", "Items", "Actions"]);
+    expect(headers).toEqual([
+      "orderList.columns.id",
+      "orderList.columns.customer",
+      "orderList.columns.status",
+      "orderList.columns.items",
+      "orderList.columns.action",
+    ]);
   });
 
   it("passes props correctly to each OrderRow", () => {

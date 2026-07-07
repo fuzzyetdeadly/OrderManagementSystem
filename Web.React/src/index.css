@@ -146,7 +146,7 @@ code {
   font-family: var(--sans);
   padding: 0.5rem 0.75rem;
   font-size: 0.9rem;
-  width: 120px;
+  width: 160px;
 }
 
 .form-field input:focus,

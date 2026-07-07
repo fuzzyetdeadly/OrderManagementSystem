@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useOrders } from "./hooks/useOrders";
 import type { Order } from "./types/order";
 import OrderForm from "./components/OrderForm";
@@ -5,6 +6,8 @@ import OrderList from "./components/OrderList";
 import "./App.css";
 
 function App() {
+  const { t } = useTranslation();
+
   // Note: decided to keep orders passed as prop to OrderList
   // May move into OrderList in future
   // Orders is destructured from ordersQuery and guarded with []
@@ -14,7 +17,7 @@ function App() {
 
   return (
     <>
-      <h1>Order Management</h1>
+      <h1>{t("app.title")}</h1>
       <OrderForm />
       <OrderList orders={orders} />
     </>

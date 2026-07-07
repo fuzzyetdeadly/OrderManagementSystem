@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import { useOrders } from "../hooks/useOrders";
@@ -14,11 +15,10 @@ type OrderFormValues = {
 
 const PRODUCT_OPTIONS = ["Carrot", "Eggplant", "Garlic", "Potato", "Spinach"];
 const UNSELECTED = "";
-const UNSELECTED_ERROR = "Please select a product";
-const UNKNOWN_ERROR = "Something went wrong. Please try again.";
 
 // Note: no props because queries handled by 'useOrders' hook
 export default function OrderForm() {
+  const { t } = useTranslation();
   const { createOrder } = useOrders();
 
   // UseForm returns functions/states that can be used
@@ -79,7 +79,7 @@ export default function OrderForm() {
         } else if (responseData.details) {
           setError("root", { message: responseData.details });
         } else {
-          setError("root", { message: UNKNOWN_ERROR });
+          setError("root", { message: t("errors.unknown") });
         }
       }
     }
@@ -88,7 +88,7 @@ export default function OrderForm() {
   return (
     <div className="order-form">
       <div className="form-field">
-        <label htmlFor="customerId">Customer ID</label>
+        <label htmlFor="customerId">{t("orderForm.labels.customerId")}</label>
         <input
           id="customerId"
           type="number"
@@ -99,14 +99,16 @@ export default function OrderForm() {
       </div>
 
       <div className="form-field">
-        <label htmlFor="productName">Product name*</label>
+        <label htmlFor="productName">
+          {t("orderForm.labels.productName")}*
+        </label>
         <select
           id="productName"
           {...register("productName", {
-            validate: (v) => v !== UNSELECTED || UNSELECTED_ERROR,
+            validate: (v) => v !== UNSELECTED || t("errors.unselectedProduct"),
           })}
         >
-          <option value={UNSELECTED}>Select</option>
+          <option value={UNSELECTED}>{t("orderForm.labels.select")}</option>
           {PRODUCT_OPTIONS.map((option) => (
             <option key={option} value={option}>
               {option}
@@ -116,21 +118,24 @@ export default function OrderForm() {
       </div>
 
       <div className="form-field">
-        <label htmlFor="quantity">Quantity</label>
+        <label htmlFor="quantity">{t("orderForm.labels.quantity")}</label>
         <input
           id="quantity"
           type="number"
           min={1}
           {...register("quantity", {
             valueAsNumber: true,
-            required: "Quantity is required",
-            min: { value: 1, message: "Quantity must be at least 1" },
+            required: t("orderForm.validation.quantityRequired"),
+            min: {
+              value: 1,
+              message: t("orderForm.validation.quantityInvalid"),
+            },
           })}
         />
       </div>
 
       <div className="form-field">
-        <label htmlFor="unitPrice">Unit price</label>
+        <label htmlFor="unitPrice">{t("orderForm.labels.unitPrice")}</label>
         <input
           id="unitPrice"
           type="number"
@@ -138,13 +143,18 @@ export default function OrderForm() {
           step="0.01"
           {...register("unitPrice", {
             valueAsNumber: true,
-            required: "Unit price is required",
-            min: { value: 0.01, message: "Unit price must be at least 0.01" },
+            required: t("orderForm.validation.unitPriceRequired"),
+            min: {
+              value: 0.01,
+              message: t("orderForm.validation.unitPriceInvalid"),
+            },
           })}
         />
       </div>
 
-      <button onClick={handleSubmit(onSubmit)}>Add Order</button>
+      <button onClick={handleSubmit(onSubmit)}>
+        {t("orderForm.labels.addOrder")}
+      </button>
 
       {Object.values(errors).length > 0 && (
         <ul className="form-errors">
