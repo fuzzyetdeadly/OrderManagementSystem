@@ -136,7 +136,9 @@ export default function OrderRow({ order }: OrderRowProps) {
             )}
             {mode === "confirmDelete" && (
               <>
-                <span className="delete-prompt">Delete?</span>
+                <span className="delete-prompt">
+                  {t("orderRow.buttons.deletePrompt")}
+                </span>
                 <button
                   className="btn-icon"
                   onClick={handleDelete}

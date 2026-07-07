@@ -220,7 +220,7 @@ describe("OrderRow.DeleteMode", () => {
     await user.click(deleteButton);
 
     // Assert elements exist
-    const confirmText = within(row).getByText("Delete?");
+    const confirmText = within(row).getByText("orderRow.buttons.deletePrompt");
     const confirmButton = getButton(row, "orderRow.buttons.confirmDelete");
     const cancelButton = getButton(row, "orderRow.buttons.cancel");
 

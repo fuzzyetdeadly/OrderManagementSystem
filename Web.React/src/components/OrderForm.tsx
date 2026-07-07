@@ -15,8 +15,6 @@ type OrderFormValues = {
 
 const PRODUCT_OPTIONS = ["Carrot", "Eggplant", "Garlic", "Potato", "Spinach"];
 const UNSELECTED = "";
-const UNSELECTED_ERROR = "Please select a product";
-const UNKNOWN_ERROR = "Something went wrong. Please try again.";
 
 // Note: no props because queries handled by 'useOrders' hook
 export default function OrderForm() {
@@ -81,7 +79,7 @@ export default function OrderForm() {
         } else if (responseData.details) {
           setError("root", { message: responseData.details });
         } else {
-          setError("root", { message: UNKNOWN_ERROR });
+          setError("root", { message: t("errors.unknown") });
         }
       }
     }
@@ -105,7 +103,7 @@ export default function OrderForm() {
         <select
           id="productName"
           {...register("productName", {
-            validate: (v) => v !== UNSELECTED || UNSELECTED_ERROR,
+            validate: (v) => v !== UNSELECTED || t("errors.unselectedProduct"),
           })}
         >
           <option value={UNSELECTED}>{t("orderForm.select")}</option>
