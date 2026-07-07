@@ -77,7 +77,7 @@ describe("OrderRow.ViewMode", () => {
     expect(contentCells).toEqual([
       defaultOrder.id.toString(),
       defaultOrder.customerId.toString(),
-      defaultOrder.status,
+      `orderRow.status.${defaultOrder.status.toLowerCase()}`,
       defaultOrder.items.map((item) => item.productName).join(", "),
     ]);
   });
@@ -137,7 +137,7 @@ describe("OrderRow.EditMode", () => {
     const saveButton = getButton(row, "orderRow.buttons.save");
     const cancelButton = getButton(row, "orderRow.buttons.cancel");
 
-    // Change status, then cancel
+    // Change status by value, then cancel
     await user.selectOptions(statusSelect, "Processing");
     await user.click(cancelButton);
 
@@ -162,7 +162,7 @@ describe("OrderRow.EditMode", () => {
 
     const row = getRow(`Order ${defaultOrder.id}`);
 
-    // Switch to edit mode and change status
+    // Switch to edit mode and change status by value
     const editButton = getButton(row, /edit/i);
     await user.click(editButton);
 
@@ -191,7 +191,7 @@ describe("OrderRow.EditMode", () => {
 
     const row = getRow(`Order ${defaultOrder.id}`);
 
-    // Switch to edit mode, change status and save
+    // Switch to edit mode, change status by value and save
     const editButton = getButton(row, "orderRow.buttons.edit");
     await user.click(editButton);
 

@@ -80,12 +80,12 @@ export default function OrderRow({ order }: OrderRowProps) {
             >
               {ORDER_STATUSES.map((status) => (
                 <option key={status} value={status}>
-                  {status}
+                  {t(`orderRow.status.${status.toLowerCase()}`)}
                 </option>
               ))}
             </select>
           ) : (
-            order.status
+            t(`orderRow.status.${order.status.toLowerCase()}`)
           )}
         </td>
         <td>{order.items.map((i) => i.productName).join(", ")}</td>

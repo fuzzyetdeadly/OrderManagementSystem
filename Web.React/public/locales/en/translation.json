@@ -29,11 +29,11 @@
       "cancel": "Cancel"
     },
     "status": {
-      "Pending": "Pending",
-      "Processing": "Processing",
-      "Delivered": "Delivered",
-      "Completed": "Completed",
-      "Cancelled": "Cancelled"
+      "pending": "Pending",
+      "processing": "Processing",
+      "delivered": "Delivered",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
     }
   },
   "errors": {
