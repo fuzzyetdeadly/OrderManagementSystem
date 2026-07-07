@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useOrders } from "../hooks/useOrders";
 import { ORDER_STATUSES } from "../types/order";
@@ -15,6 +16,7 @@ type OrderRowProps = {
 };
 
 export default function OrderRow({ order }: OrderRowProps) {
+  const { t } = useTranslation();
   const { updateOrderStatus, deleteOrder } = useOrders();
 
   const [mode, setMode] = useState<RowMode>("view");
@@ -38,7 +40,7 @@ export default function OrderRow({ order }: OrderRowProps) {
       await updateOrderStatus(order.id, payload);
       setMode("view");
     } catch {
-      setError("Failed to save.");
+      setError(t("errors.failedSave"));
     } finally {
       setLoading(false);
     }
@@ -58,7 +60,7 @@ export default function OrderRow({ order }: OrderRowProps) {
     try {
       await deleteOrder(order.id);
     } catch {
-      setError("Failed to delete.");
+      setError(t("errors.failedDelete"));
     } finally {
       setLoading(false);
     }
@@ -95,16 +97,16 @@ export default function OrderRow({ order }: OrderRowProps) {
                 <button
                   className="btn-icon"
                   onClick={() => setMode("edit")}
-                  title="Edit"
-                  aria-label="Edit"
+                  title={t("orderRow.buttons.edit")}
+                  aria-label={t("orderRow.buttons.edit")}
                 >
                   ✏️
                 </button>
                 <button
                   className="btn-icon"
                   onClick={() => setMode("confirmDelete")}
-                  title="Delete"
-                  aria-label="Delete"
+                  title={t("orderRow.buttons.delete")}
+                  aria-label={t("orderRow.buttons.delete")}
                 >
                   🗑️
                 </button>
@@ -116,8 +118,8 @@ export default function OrderRow({ order }: OrderRowProps) {
                   className="btn-icon"
                   onClick={handleSave}
                   disabled={!hasChanges || loading}
-                  title="Save"
-                  aria-label="Save"
+                  title={t("orderRow.buttons.save")}
+                  aria-label={t("orderRow.buttons.save")}
                 >
                   ✔️
                 </button>
@@ -125,8 +127,8 @@ export default function OrderRow({ order }: OrderRowProps) {
                   className="btn-icon"
                   onClick={handleCancel}
                   disabled={loading}
-                  title="Cancel"
-                  aria-label="Cancel"
+                  title={t("orderRow.buttons.cancel")}
+                  aria-label={t("orderRow.buttons.cancel")}
                 >
                   ❌
                 </button>
@@ -139,8 +141,8 @@ export default function OrderRow({ order }: OrderRowProps) {
                   className="btn-icon"
                   onClick={handleDelete}
                   disabled={loading}
-                  title="Confirm delete"
-                  aria-label="Confirm delete"
+                  title={t("orderRow.buttons.confirmDelete")}
+                  aria-label={t("orderRow.buttons.confirmDelete")}
                 >
                   ✔️
                 </button>
@@ -148,8 +150,8 @@ export default function OrderRow({ order }: OrderRowProps) {
                   className="btn-icon"
                   onClick={() => setMode("view")}
                   disabled={loading}
-                  title="Cancel"
-                  aria-label="Cancel"
+                  title={t("orderRow.buttons.cancel")}
+                  aria-label={t("orderRow.buttons.cancel")}
                 >
                   ❌
                 </button>
@@ -159,7 +161,7 @@ export default function OrderRow({ order }: OrderRowProps) {
         </td>
       </tr>
       {error && (
-        <tr aria-label="Error message">
+        <tr aria-label={t("errors.errorMessage")}>
           <td colSpan={5} className="row-error">
             {error}
           </td>

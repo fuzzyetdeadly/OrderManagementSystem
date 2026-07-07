@@ -88,8 +88,8 @@ describe("OrderRow.ViewMode", () => {
     const row = getRow(`Order ${defaultOrder.id}`);
 
     // Implicitly assert buttons exist
-    const editButton = getButton(row, /edit/i);
-    const deleteButton = getButton(row, /delete/i);
+    const editButton = getButton(row, "orderRow.buttons.edit");
+    const deleteButton = getButton(row, "orderRow.buttons.delete");
 
     // Assert button states as expected
     expect(editButton).toBeEnabled();
@@ -104,15 +104,15 @@ describe("OrderRow.EditMode", () => {
     const row = getRow(`Order ${defaultOrder.id}`);
 
     // Locate view buttons and enable edit mode
-    const editButton = getButton(row, /edit/i);
-    const deleteButton = getButton(row, /delete/i);
+    const editButton = getButton(row, "orderRow.buttons.edit");
+    const deleteButton = getButton(row, "orderRow.buttons.delete");
 
     await user.click(editButton);
 
     // Assert elements exist
     const statusSelect = within(row).getByRole("combobox");
-    const saveButton = getButton(row, /save/i);
-    const cancelButton = getButton(row, /cancel/i);
+    const saveButton = getButton(row, "orderRow.buttons.save");
+    const cancelButton = getButton(row, "orderRow.buttons.cancel");
 
     // Assert button states as expected
     // Asserting on pre-click reference is intentional, expect stale element
@@ -129,21 +129,21 @@ describe("OrderRow.EditMode", () => {
     const row = getRow(`Order ${defaultOrder.id}`);
 
     // Switch to edit mode
-    const editButtonBefore = getButton(row, /edit/i);
+    const editButtonBefore = getButton(row, "orderRow.buttons.edit");
     await user.click(editButtonBefore);
 
     // Locate edit elements
     const statusSelect = within(row).getByRole("combobox");
-    const saveButton = getButton(row, /save/i);
-    const cancelButton = getButton(row, /cancel/i);
+    const saveButton = getButton(row, "orderRow.buttons.save");
+    const cancelButton = getButton(row, "orderRow.buttons.cancel");
 
     // Change status, then cancel
     await user.selectOptions(statusSelect, "Processing");
     await user.click(cancelButton);
 
     // Locate view mode buttons
-    const editButtonAfter = getButton(row, /edit/i);
-    const deleteButton = getButton(row, /delete/i);
+    const editButtonAfter = getButton(row, "orderRow.buttons.edit");
+    const deleteButton = getButton(row, "orderRow.buttons.delete");
 
     // Assert that view buttons visible, and edit buttons removed
     // Asserting on pre-click reference is intentional, expect stale element
@@ -170,7 +170,7 @@ describe("OrderRow.EditMode", () => {
     await user.selectOptions(statusSelect, "Processing");
 
     // Assert that save button is enabled and save
-    const saveButton = getButton(row, /save/i);
+    const saveButton = getButton(row, "orderRow.buttons.save");
     expect(saveButton).toBeEnabled();
 
     await user.click(saveButton);
@@ -192,18 +192,18 @@ describe("OrderRow.EditMode", () => {
     const row = getRow(`Order ${defaultOrder.id}`);
 
     // Switch to edit mode, change status and save
-    const editButton = getButton(row, /edit/i);
+    const editButton = getButton(row, "orderRow.buttons.edit");
     await user.click(editButton);
 
     const statusSelect = within(row).getByRole("combobox");
     await user.selectOptions(statusSelect, "Processing");
 
-    const saveButton = getButton(row, /save/i);
+    const saveButton = getButton(row, "orderRow.buttons.save");
     await user.click(saveButton);
 
     // Assert that error row appeared with expected error
-    const errorRow = getRow("Error message");
-    expect(errorRow).toHaveTextContent("Failed to save");
+    const errorRow = getRow("errors.errorMessage");
+    expect(errorRow).toHaveTextContent("errors.failedSave");
   });
 });
 
@@ -214,15 +214,15 @@ describe("OrderRow.DeleteMode", () => {
     const row = getRow(`Order ${defaultOrder.id}`);
 
     // Locate view buttons and enable delete mode
-    const editButton = getButton(row, /edit/i);
-    const deleteButton = getButton(row, /delete/i);
+    const editButton = getButton(row, "orderRow.buttons.edit");
+    const deleteButton = getButton(row, "orderRow.buttons.delete");
 
     await user.click(deleteButton);
 
     // Assert elements exist
     const confirmText = within(row).getByText("Delete?");
-    const confirmButton = getButton(row, /confirm delete/i);
-    const cancelButton = getButton(row, /cancel/i);
+    const confirmButton = getButton(row, "orderRow.buttons.confirmDelete");
+    const cancelButton = getButton(row, "orderRow.buttons.cancel");
 
     // Assert button states as expected
     // Asserting on pre-click reference is intentional, expect stale element
@@ -239,19 +239,19 @@ describe("OrderRow.DeleteMode", () => {
     const row = getRow(`Order ${defaultOrder.id}`);
 
     // Switch to edit mode
-    const deleteButtonBefore = getButton(row, /delete/i);
+    const deleteButtonBefore = getButton(row, "orderRow.buttons.delete");
     await user.click(deleteButtonBefore);
 
     // Locate delete buttons
-    const confirmButton = getButton(row, /confirm delete/i);
-    const cancelButton = getButton(row, /cancel/i);
+    const confirmButton = getButton(row, "orderRow.buttons.confirmDelete");
+    const cancelButton = getButton(row, "orderRow.buttons.cancel");
 
     // Cancel delete mode
     await user.click(cancelButton);
 
     // Locate view mode buttons
-    const editButton = getButton(row, /edit/i);
-    const deleteButtonAfter = getButton(row, /delete/i);
+    const editButton = getButton(row, "orderRow.buttons.edit");
+    const deleteButtonAfter = getButton(row, "orderRow.buttons.delete");
 
     // Assert that view buttons visible, and edit buttons removed
     // Asserting on pre-click reference is intentional, expect stale element
@@ -270,11 +270,11 @@ describe("OrderRow.DeleteMode", () => {
     const row = getRow(`Order ${defaultOrder.id}`);
 
     // Switch to delete mode
-    const deleteButton = getButton(row, /delete/i);
+    const deleteButton = getButton(row, "orderRow.buttons.delete");
     await user.click(deleteButton);
 
     // Confirm deletion
-    const confirmButton = getButton(row, /confirm delete/i);
+    const confirmButton = getButton(row, "orderRow.buttons.confirmDelete");
     await user.click(confirmButton);
 
     // Assert that save was processed as expected
@@ -292,14 +292,14 @@ describe("OrderRow.DeleteMode", () => {
     const row = getRow(`Order ${defaultOrder.id}`);
 
     // Switch to edit mode, change status and save
-    const deleteButton = getButton(row, /delete/i);
+    const deleteButton = getButton(row, "orderRow.buttons.delete");
     await user.click(deleteButton);
 
-    const confirmButton = getButton(row, /confirm delete/i);
+    const confirmButton = getButton(row, "orderRow.buttons.confirmDelete");
     await user.click(confirmButton);
 
     // Assert that error row appeared with expected error
-    const errorRow = getRow("Error message");
-    expect(errorRow).toHaveTextContent("Failed to delete");
+    const errorRow = getRow("errors.errorMessage");
+    expect(errorRow).toHaveTextContent("errors.failedDelete");
   });
 });
