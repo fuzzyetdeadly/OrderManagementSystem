@@ -88,7 +88,7 @@ export default function OrderForm() {
   return (
     <div className="order-form">
       <div className="form-field">
-        <label htmlFor="customerId">{t("orderForm.customerId")}</label>
+        <label htmlFor="customerId">{t("orderForm.labels.customerId")}</label>
         <input
           id="customerId"
           type="number"
@@ -99,14 +99,16 @@ export default function OrderForm() {
       </div>
 
       <div className="form-field">
-        <label htmlFor="productName">{t("orderForm.productName")}*</label>
+        <label htmlFor="productName">
+          {t("orderForm.labels.productName")}*
+        </label>
         <select
           id="productName"
           {...register("productName", {
             validate: (v) => v !== UNSELECTED || t("errors.unselectedProduct"),
           })}
         >
-          <option value={UNSELECTED}>{t("orderForm.select")}</option>
+          <option value={UNSELECTED}>{t("orderForm.labels.select")}</option>
           {PRODUCT_OPTIONS.map((option) => (
             <option key={option} value={option}>
               {option}
@@ -116,21 +118,24 @@ export default function OrderForm() {
       </div>
 
       <div className="form-field">
-        <label htmlFor="quantity">{t("orderForm.quantity")}</label>
+        <label htmlFor="quantity">{t("orderForm.labels.quantity")}</label>
         <input
           id="quantity"
           type="number"
           min={1}
           {...register("quantity", {
             valueAsNumber: true,
-            required: "Quantity is required",
-            min: { value: 1, message: "Quantity must be at least 1" },
+            required: t("orderForm.validation.quantityRequired"),
+            min: {
+              value: 1,
+              message: t("orderForm.validation.quantityInvalid"),
+            },
           })}
         />
       </div>
 
       <div className="form-field">
-        <label htmlFor="unitPrice">{t("orderForm.unitPrice")}</label>
+        <label htmlFor="unitPrice">{t("orderForm.labels.unitPrice")}</label>
         <input
           id="unitPrice"
           type="number"
@@ -138,14 +143,17 @@ export default function OrderForm() {
           step="0.01"
           {...register("unitPrice", {
             valueAsNumber: true,
-            required: "Unit price is required",
-            min: { value: 0.01, message: "Unit price must be at least 0.01" },
+            required: t("orderForm.validation.unitPriceRequired"),
+            min: {
+              value: 0.01,
+              message: t("orderForm.validation.unitPriceInvalid"),
+            },
           })}
         />
       </div>
 
       <button onClick={handleSubmit(onSubmit)}>
-        {t("orderForm.addOrder")}
+        {t("orderForm.labels.addOrder")}
       </button>
 
       {Object.values(errors).length > 0 && (

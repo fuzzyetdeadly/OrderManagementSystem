@@ -3,12 +3,20 @@
     "title": "注文管理"
   },
   "orderForm": {
-    "customerId": "顧客ID",
-    "productName": "商品名",
-    "quantity": "数量",
-    "unitPrice": "単価",
-    "select": "選択してください",
-    "addOrder": "注文を追加"
+    "labels": {
+      "customerId": "顧客ID",
+      "productName": "商品名",
+      "quantity": "数量",
+      "unitPrice": "単価",
+      "select": "選択してください",
+      "addOrder": "注文を追加"
+    },
+    "validation": {
+      "quantityRequired": "数量は必須です",
+      "quantityInvalid": "数量は1以上である必要があります",
+      "unitPriceRequired": "単価は必須です",
+      "unitPriceInvalid": "単価は0.01以上である必要があります"
+    }
   },
   "orderList": {
     "columns": {

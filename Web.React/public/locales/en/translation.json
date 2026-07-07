@@ -3,12 +3,20 @@
     "title": "Order Management"
   },
   "orderForm": {
-    "customerId": "Customer ID",
-    "productName": "Product name",
-    "quantity": "Quantity",
-    "unitPrice": "Unit price",
-    "select": "Select",
-    "addOrder": "Add Order"
+    "labels": {
+      "customerId": "Customer ID",
+      "productName": "Product name",
+      "quantity": "Quantity",
+      "unitPrice": "Unit price",
+      "select": "Select",
+      "addOrder": "Add Order"
+    },
+    "validation": {
+      "quantityRequired": "Quantity is required",
+      "quantityInvalid": "Quantity must be at least 1",
+      "unitPriceRequired": "Unit price is required",
+      "unitPriceInvalid": "Unit price must be at least 0.01"
+    }
   },
   "orderList": {
     "columns": {
