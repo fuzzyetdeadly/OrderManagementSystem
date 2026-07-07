@@ -8,7 +8,7 @@
     "quantity": "Quantity",
     "unitPrice": "Unit price",
     "select": "Select",
-    "submit": "Add Order"
+    "addOrder": "Add Order"
   },
   "orderList": {
     "columns": {

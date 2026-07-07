@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import { useOrders } from "../hooks/useOrders";
@@ -19,6 +20,7 @@ const UNKNOWN_ERROR = "Something went wrong. Please try again.";
 
 // Note: no props because queries handled by 'useOrders' hook
 export default function OrderForm() {
+  const { t } = useTranslation();
   const { createOrder } = useOrders();
 
   // UseForm returns functions/states that can be used
@@ -88,7 +90,7 @@ export default function OrderForm() {
   return (
     <div className="order-form">
       <div className="form-field">
-        <label htmlFor="customerId">Customer ID</label>
+        <label htmlFor="customerId">{t("orderForm.customerId")}</label>
         <input
           id="customerId"
           type="number"
@@ -99,14 +101,14 @@ export default function OrderForm() {
       </div>
 
       <div className="form-field">
-        <label htmlFor="productName">Product name*</label>
+        <label htmlFor="productName">{t("orderForm.productName")}*</label>
         <select
           id="productName"
           {...register("productName", {
             validate: (v) => v !== UNSELECTED || UNSELECTED_ERROR,
           })}
         >
-          <option value={UNSELECTED}>Select</option>
+          <option value={UNSELECTED}>{t("orderForm.select")}</option>
           {PRODUCT_OPTIONS.map((option) => (
             <option key={option} value={option}>
               {option}
@@ -116,7 +118,7 @@ export default function OrderForm() {
       </div>
 
       <div className="form-field">
-        <label htmlFor="quantity">Quantity</label>
+        <label htmlFor="quantity">{t("orderForm.quantity")}</label>
         <input
           id="quantity"
           type="number"
@@ -130,7 +132,7 @@ export default function OrderForm() {
       </div>
 
       <div className="form-field">
-        <label htmlFor="unitPrice">Unit price</label>
+        <label htmlFor="unitPrice">{t("orderForm.unitPrice")}</label>
         <input
           id="unitPrice"
           type="number"
@@ -144,7 +146,9 @@ export default function OrderForm() {
         />
       </div>
 
-      <button onClick={handleSubmit(onSubmit)}>Add Order</button>
+      <button onClick={handleSubmit(onSubmit)}>
+        {t("orderForm.addOrder")}
+      </button>
 
       {Object.values(errors).length > 0 && (
         <ul className="form-errors">
