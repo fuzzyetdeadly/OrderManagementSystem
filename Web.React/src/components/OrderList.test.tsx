@@ -41,9 +41,16 @@ describe("OrderList", () => {
     // Collect passed props
     const orderRowProps = vi
       .mocked(OrderRow)
-      .mock.calls.map(([prop]) => prop.order);
+      .mock.calls.map(([props]) => props);
 
-    // Assert that props matches the orders passed to OrderList
-    expect(orderRowProps).toEqual(orders);
+    // Assert that row orders match the orders passed to OrderList
+    expect(orderRowProps.map((prop) => prop.order)).toEqual(orders);
+
+    // Assert that 'isMobile' properly drilled to order row
+    // Note: prefer this over check 'every', to make it easier
+    // to see what didn't match
+    expect(orderRowProps.map((props) => props.isMobile)).toEqual(
+      orders.map(() => false),
+    );
   });
 });
