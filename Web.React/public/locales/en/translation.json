@@ -1,6 +1,7 @@
 {
   "app": {
-    "title": "Order Management"
+    "title": "Order Management",
+    "toggleTheme": "Toggle theme"
   },
   "orderForm": {
     "labels": {

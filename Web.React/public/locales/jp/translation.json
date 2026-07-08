@@ -1,6 +1,7 @@
 {
   "app": {
-    "title": "注文管理"
+    "title": "注文管理",
+    "toggleTheme": "テーマ切替"
   },
   "orderForm": {
     "labels": {
