@@ -13,6 +13,7 @@ type RowMode = "view" | "edit" | "confirmDelete";
 
 type OrderRowProps = {
   order: Order;
+  isMobile?: boolean;
 };
 
 export default function OrderRow({ order }: OrderRowProps) {

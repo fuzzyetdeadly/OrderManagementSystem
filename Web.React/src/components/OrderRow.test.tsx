@@ -29,11 +29,11 @@ const defaultOrder: Order = makeOrder({
 
 // Row should be rendered with table/body context
 // To allow proper semantics for table-related ARIA roles
-function renderRow(order: Order = defaultOrder) {
+function renderRow(order: Order = defaultOrder, isMobile: boolean = false) {
   return render(
     <table>
       <tbody>
-        <OrderRow order={order} />
+        <OrderRow order={order} isMobile={isMobile} />
       </tbody>
     </table>,
   );
