@@ -1,6 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { getRow, getButton } from "../test/testUtils";
+import { getRow, getButton, selectListOption } from "../test/testUtils";
 import { makeOrder, makeOrderItem } from "../test/factories/orderFactory";
 import { createUseOrdersMock } from "../test/factories/useOrdersFactory";
 import type { Order } from "../types/order";
@@ -133,12 +133,12 @@ describe("OrderRow.EditMode", () => {
     await user.click(editButtonBefore);
 
     // Locate edit elements
-    const statusSelect = within(row).getByRole("combobox");
+    const muiStatusSelect = within(row).getByRole("combobox");
     const saveButton = getButton(row, "orderRow.buttons.save");
     const cancelButton = getButton(row, "orderRow.buttons.cancel");
 
-    // Change status by value, then cancel
-    await user.selectOptions(statusSelect, "Processing");
+    // Change status, then cancel
+    await selectListOption(user, muiStatusSelect, "orderRow.status.pending");
     await user.click(cancelButton);
 
     // Locate view mode buttons
@@ -149,7 +149,7 @@ describe("OrderRow.EditMode", () => {
     // Asserting on pre-click reference is intentional, expect stale element
     expect(editButtonAfter).toBeEnabled();
     expect(deleteButton).toBeEnabled();
-    expect(statusSelect).not.toBeInTheDocument();
+    expect(muiStatusSelect).not.toBeInTheDocument();
     expect(saveButton).not.toBeInTheDocument();
     expect(cancelButton).not.toBeInTheDocument();
 
@@ -166,8 +166,8 @@ describe("OrderRow.EditMode", () => {
     const editButton = getButton(row, /edit/i);
     await user.click(editButton);
 
-    const statusSelect = within(row).getByRole("combobox");
-    await user.selectOptions(statusSelect, "Processing");
+    const muiStatusSelect = within(row).getByRole("combobox");
+    await selectListOption(user, muiStatusSelect, "orderRow.status.processing");
 
     // Assert that save button is enabled and save
     const saveButton = getButton(row, "orderRow.buttons.save");
@@ -195,8 +195,8 @@ describe("OrderRow.EditMode", () => {
     const editButton = getButton(row, "orderRow.buttons.edit");
     await user.click(editButton);
 
-    const statusSelect = within(row).getByRole("combobox");
-    await user.selectOptions(statusSelect, "Processing");
+    const muiStatusSelect = within(row).getByRole("combobox");
+    await selectListOption(user, muiStatusSelect, "orderRow.status.processing");
 
     const saveButton = getButton(row, "orderRow.buttons.save");
     await user.click(saveButton);
