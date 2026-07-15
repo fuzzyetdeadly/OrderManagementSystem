@@ -21,6 +21,9 @@ describe("useOrders", () => {
   });
 
   it("creates order in cache", async () => {
+    // Note: in TypeScript, desconstruction is matched by name
+    // i.e. even if 'createQueryWrapper' returns { 'queryClient, wrapper' }
+    // the deconstruction below will work
     const { wrapper, queryClient } = createQueryWrapper();
     const { result } = renderHook(() => useOrders(), { wrapper });
 

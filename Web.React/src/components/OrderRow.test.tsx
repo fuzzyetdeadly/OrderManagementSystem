@@ -39,18 +39,17 @@ function renderRow(order: Order = defaultOrder, isMobile: boolean = false) {
   );
 }
 
-// --- Tests ---
-beforeEach(() => {
-  // Re-initializer user per test to ensure user has fresh state
-  user = userEvent.setup();
-
-  // Reset 'useOrders' mock before each test to ensure clean state
-  vi.mocked(useOrders).mockReturnValue(
-    createUseOrdersMock({ updateOrderStatus, deleteOrder }),
-  );
-});
-
 describe("OrderRow.ViewMode", () => {
+  beforeEach(() => {
+    // Re-initialize user per test to ensure user has fresh state
+    user = userEvent.setup();
+
+    // Reset 'useOrders' mock before each test to ensure clean state
+    vi.mocked(useOrders).mockReturnValue(
+      createUseOrdersMock({ updateOrderStatus, deleteOrder }),
+    );
+  });
+
   it("renders view mode rows correctly", () => {
     renderRow();
 
