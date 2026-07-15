@@ -22,23 +22,44 @@ export default function OrderList({ orders }: OrderListProps) {
 
   return (
     <TableContainer component={Paper} variant="outlined">
-      <Table size={isMobile ? "small" : "medium"}></Table>
-      <TableHead>
-        <TableRow>
-          <TableCell>{t("orderList.columns.id")}</TableCell>
-          {!isMobile && (
-            <TableCell>{t("orderList.columns.customer")}</TableCell>
+      <Table
+        size={isMobile ? "small" : "medium"}
+        sx={{ tableLayout: "fixed", width: 1 }}
+      >
+        <colgroup>
+          {isMobile ? (
+            <>
+              <col style={{ width: "10%" }} />
+              <col style={{ width: "45%" }} />
+              <col style={{ width: "45%" }} />
+            </>
+          ) : (
+            <>
+              <col style={{ width: "5%" }} />
+              <col style={{ width: "15%" }} />
+              <col style={{ width: "25%" }} />
+              <col style={{ width: "35%" }} />
+              <col style={{ width: "30%" }} />
+            </>
           )}
-          <TableCell>{t("orderList.columns.status")}</TableCell>
-          {!isMobile && <TableCell>{t("orderList.columns.items")}</TableCell>}
-          <TableCell>{t("orderList.columns.action")}</TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {orders.map((order) => (
-          <OrderRow key={order.id} order={order} isMobile={isMobile} />
-        ))}
-      </TableBody>
+        </colgroup>
+        <TableHead>
+          <TableRow>
+            <TableCell>{t("orderList.columns.id")}</TableCell>
+            {!isMobile && (
+              <TableCell>{t("orderList.columns.customer")}</TableCell>
+            )}
+            <TableCell>{t("orderList.columns.status")}</TableCell>
+            {!isMobile && <TableCell>{t("orderList.columns.items")}</TableCell>}
+            <TableCell>{t("orderList.columns.action")}</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {orders.map((order) => (
+            <OrderRow key={order.id} order={order} isMobile={isMobile} />
+          ))}
+        </TableBody>
+      </Table>
     </TableContainer>
   );
 }
