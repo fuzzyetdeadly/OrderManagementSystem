@@ -60,27 +60,38 @@ describe("OrderRow.ViewMode", () => {
     expect(rows).toHaveLength(1);
   });
 
-  it("renders view mode cells correctly", () => {
-    renderRow();
+  it.each([false, true])(
+    "renders view mode cells correctly (isMobile=%s)",
+    (isMobile: boolean) => {
+      // Mobile has fewer columns
+      renderRow(defaultOrder, isMobile);
 
-    // Expect 4 cells in first row: ID, Customer, Status, Items
-    // Skip last cell (actions) for this test
-    const row = getRow(`Order ${defaultOrder.id}`);
-    const contentCells = within(row)
-      .getAllByRole("cell")
-      .slice(0, -1)
-      .map((cell) => cell.textContent);
+      // Expect 4 cells in first row: ID, Customer, Status, Items
+      // Skip last cell (actions) for this test
+      const row = getRow(`Order ${defaultOrder.id}`);
+      const contentCells = within(row)
+        .getAllByRole("cell")
+        .slice(0, -1)
+        .map((cell) => cell.textContent);
 
-    expect(contentCells).toHaveLength(4);
+      expect(contentCells).toHaveLength(isMobile ? 2 : 4);
 
-    // Assert cell contents match default order
-    expect(contentCells).toEqual([
-      defaultOrder.id.toString(),
-      defaultOrder.customerId.toString(),
-      `orderRow.status.${defaultOrder.status.toLowerCase()}`,
-      defaultOrder.items.map((item) => item.productName).join(", "),
-    ]);
-  });
+      // Assert cell contents match default order
+      if (isMobile) {
+        expect(contentCells).toEqual([
+          defaultOrder.id.toString(),
+          `orderRow.status.${defaultOrder.status.toLowerCase()}`,
+        ]);
+      } else {
+        expect(contentCells).toEqual([
+          defaultOrder.id.toString(),
+          defaultOrder.customerId.toString(),
+          `orderRow.status.${defaultOrder.status.toLowerCase()}`,
+          defaultOrder.items.map((item) => item.productName).join(", "),
+        ]);
+      }
+    },
+  );
 
   it("renders view mode buttons correctly", () => {
     renderRow();
@@ -183,28 +194,40 @@ describe("OrderRow.EditMode", () => {
     });
   });
 
-  it("edit mode displays error when save failed", async () => {
-    // Mock network error
-    updateOrderStatus.mockRejectedValueOnce(new Error("Network error"));
+  it.each([false, true])(
+    "edit mode displays error when save failed (isMobile=%s)",
+    async (isMobile: boolean) => {
+      // Mock network error
+      updateOrderStatus.mockRejectedValueOnce(new Error("Network error"));
 
-    renderRow();
+      renderRow(defaultOrder, isMobile);
 
-    const row = getRow(`Order ${defaultOrder.id}`);
+      const row = getRow(`Order ${defaultOrder.id}`);
 
-    // Switch to edit mode, change status by value and save
-    const editButton = getButton(row, "orderRow.buttons.edit");
-    await user.click(editButton);
+      // Switch to edit mode, change status by value and save
+      const editButton = getButton(row, "orderRow.buttons.edit");
+      await user.click(editButton);
 
-    const muiStatusSelect = within(row).getByRole("combobox");
-    await selectListOption(user, muiStatusSelect, "orderRow.status.processing");
+      const muiStatusSelect = within(row).getByRole("combobox");
+      await selectListOption(
+        user,
+        muiStatusSelect,
+        "orderRow.status.processing",
+      );
 
-    const saveButton = getButton(row, "orderRow.buttons.save");
-    await user.click(saveButton);
+      const saveButton = getButton(row, "orderRow.buttons.save");
+      await user.click(saveButton);
 
-    // Assert that error row appeared with expected error
-    const errorRow = getRow("errors.errorMessage");
-    expect(errorRow).toHaveTextContent("errors.failedSave");
-  });
+      // Assert that error row appeared with expected error
+      const errorRow = getRow("errors.errorMessage");
+      expect(errorRow).toHaveTextContent("errors.failedSave");
+
+      // Assert that error cell (expect 1) colSpan is as expected
+      const errorCells = within(errorRow).getAllByRole("cell");
+      expect(errorCells.length).toBe(1);
+      expect(errorCells[0]).toHaveAttribute("colSpan", `${isMobile ? 3 : 5}`);
+    },
+  );
 });
 
 describe("OrderRow.DeleteMode", () => {
@@ -301,5 +324,8 @@ describe("OrderRow.DeleteMode", () => {
     // Assert that error row appeared with expected error
     const errorRow = getRow("errors.errorMessage");
     expect(errorRow).toHaveTextContent("errors.failedDelete");
+
+    // Note: re-checking error cell colSpan is already test covered
+    // in the edit error scenario, and is intentionally not repeated
   });
 });
