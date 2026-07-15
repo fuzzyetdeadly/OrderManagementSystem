@@ -41,34 +41,4 @@ export default function OrderList({ orders }: OrderListProps) {
       </TableBody>
     </TableContainer>
   );
-
-  /* Old - disabled
-  return (
-    <div className="order-list">
-      <table>
-        <colgroup>
-          <col style={{ width: "5%" }} />
-          <col style={{ width: "15%" }} />
-          <col style={{ width: "20%" }} />
-          <col style={{ width: "40%" }} />
-          <col style={{ width: "20%" }} />
-        </colgroup>
-        <thead>
-          <tr>
-            <th>{t("orderList.columns.id")}</th>
-            <th>{t("orderList.columns.customer")}</th>
-            <th>{t("orderList.columns.status")}</th>
-            <th>{t("orderList.columns.items")}</th>
-            <th>{t("orderList.columns.action")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {orders.map((order) => (
-            <OrderRow key={order.id} order={order} />
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-  */
 }
