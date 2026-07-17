@@ -1,5 +1,17 @@
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
+import TableRow from "@mui/material/TableRow";
+import TableCell from "@mui/material/TableCell";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import IconButton from "@mui/material/IconButton";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import Alert from "@mui/material/Alert";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import { useOrders } from "../hooks/useOrders";
 import { ORDER_STATUSES } from "../types/order";
 import type {
@@ -13,9 +25,10 @@ type RowMode = "view" | "edit" | "confirmDelete";
 
 type OrderRowProps = {
   order: Order;
+  isMobile?: boolean;
 };
 
-export default function OrderRow({ order }: OrderRowProps) {
+export default function OrderRow({ order, isMobile }: OrderRowProps) {
   const { t } = useTranslation();
   const { updateOrderStatus, deleteOrder } = useOrders();
 
@@ -68,106 +81,122 @@ export default function OrderRow({ order }: OrderRowProps) {
 
   return (
     <>
-      <tr className="order-row" aria-label={`Order ${order.id}`}>
-        <td>{order.id}</td>
-        <td>{order.customerId}</td>
-        <td>
-          {mode == "edit" ? (
-            <select
-              className="status-select"
+      <TableRow aria-label={`Order ${order.id}`}>
+        <TableCell>{order.id}</TableCell>
+        {!isMobile && <TableCell>{order.customerId}</TableCell>}
+        <TableCell
+          sx={{
+            py: 1.5, // Prevent row height changes on edit
+          }}
+        >
+          {mode === "edit" ? (
+            <Select
+              size="small"
+              sx={{ ml: -1.75, fontSize: "0.875rem" }}
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value as OrderStatus)}
             >
               {ORDER_STATUSES.map((status) => (
-                <option key={status} value={status}>
+                <MenuItem key={status} value={status}>
                   {t(`orderRow.status.${status.toLowerCase()}`)}
-                </option>
+                </MenuItem>
               ))}
-            </select>
+            </Select>
           ) : (
             t(`orderRow.status.${order.status.toLowerCase()}`)
           )}
-        </td>
-        <td>{order.items.map((i) => i.productName).join(", ")}</td>
-        <td>
-          <div className="row-actions">
-            {/*Require 'div' wrapper. 'td' line-height doesn't work correctly with flex*/}
+        </TableCell>
+        {!isMobile && (
+          <TableCell>
+            {order.items.map((i) => i.productName).join(", ")}
+          </TableCell>
+        )}
+        <TableCell>
+          <Stack
+            direction="row"
+            sx={{ justifyContent: "flex-end", alignItems: "center", gap: 0.5 }}
+          >
             {mode === "view" && (
               <>
-                <button
-                  className="btn-icon"
+                <IconButton
+                  size="small"
                   onClick={() => setMode("edit")}
                   title={t("orderRow.buttons.edit")}
                   aria-label={t("orderRow.buttons.edit")}
                 >
-                  ✏️
-                </button>
-                <button
-                  className="btn-icon"
+                  <EditIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  color="error"
                   onClick={() => setMode("confirmDelete")}
                   title={t("orderRow.buttons.delete")}
                   aria-label={t("orderRow.buttons.delete")}
                 >
-                  🗑️
-                </button>
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
               </>
             )}
             {mode === "edit" && (
               <>
-                <button
-                  className="btn-icon"
+                <IconButton
+                  size="small"
+                  color="success"
                   onClick={handleSave}
                   disabled={!hasChanges || loading}
                   title={t("orderRow.buttons.save")}
                   aria-label={t("orderRow.buttons.save")}
                 >
-                  ✔️
-                </button>
-                <button
-                  className="btn-icon"
+                  <CheckIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  size="small"
                   onClick={handleCancel}
                   disabled={loading}
                   title={t("orderRow.buttons.cancel")}
                   aria-label={t("orderRow.buttons.cancel")}
                 >
-                  ❌
-                </button>
+                  <CloseIcon fontSize="small" />
+                </IconButton>
               </>
             )}
             {mode === "confirmDelete" && (
               <>
-                <span className="delete-prompt">
+                <Typography variant="caption" sx={{ mr: 0.5 }}>
                   {t("orderRow.buttons.deletePrompt")}
-                </span>
-                <button
-                  className="btn-icon"
+                </Typography>
+                <IconButton
+                  size="small"
+                  color="error"
                   onClick={handleDelete}
                   disabled={loading}
                   title={t("orderRow.buttons.confirmDelete")}
                   aria-label={t("orderRow.buttons.confirmDelete")}
                 >
-                  ✔️
-                </button>
-                <button
-                  className="btn-icon"
+                  <CheckIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  size="small"
                   onClick={() => setMode("view")}
                   disabled={loading}
                   title={t("orderRow.buttons.cancel")}
                   aria-label={t("orderRow.buttons.cancel")}
                 >
-                  ❌
-                </button>
+                  <CloseIcon fontSize="small" />
+                </IconButton>
               </>
             )}
-          </div>
-        </td>
-      </tr>
+          </Stack>
+        </TableCell>
+      </TableRow>
       {error && (
-        <tr aria-label={t("errors.errorMessage")}>
-          <td colSpan={5} className="row-error">
-            {error}
-          </td>
-        </tr>
+        <TableRow aria-label={t("errors.errorMessage")}>
+          <TableCell colSpan={isMobile ? 3 : 5} sx={{ py: 0.5 }}>
+            <Alert variant="outlined" severity="error">
+              {error}
+            </Alert>
+          </TableCell>
+        </TableRow>
       )}
     </>
   );
