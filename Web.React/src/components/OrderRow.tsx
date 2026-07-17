@@ -84,10 +84,15 @@ export default function OrderRow({ order, isMobile }: OrderRowProps) {
       <TableRow aria-label={`Order ${order.id}`}>
         <TableCell>{order.id}</TableCell>
         {!isMobile && <TableCell>{order.customerId}</TableCell>}
-        <TableCell sx={{ py: 1 }}>
+        <TableCell
+          sx={{
+            py: 1.5, // Prevent row height changes on edit
+          }}
+        >
           {mode === "edit" ? (
             <Select
               size="small"
+              sx={{ ml: -1.75, fontSize: "0.875rem" }}
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value as OrderStatus)}
             >

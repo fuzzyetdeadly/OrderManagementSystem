@@ -40,7 +40,7 @@
     "status": {
       "pending": "保留中",
       "processing": "処理中",
-      "delivered": "配達済み",
+      "scheduled": "予定済み",
       "completed": "完了",
       "cancelled": "キャンセル済み"
     }

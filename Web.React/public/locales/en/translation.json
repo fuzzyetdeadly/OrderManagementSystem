@@ -40,7 +40,7 @@
     "status": {
       "pending": "Pending",
       "processing": "Processing",
-      "delivered": "Delivered",
+      "scheduled": "Scheduled",
       "completed": "Completed",
       "cancelled": "Cancelled"
     }
