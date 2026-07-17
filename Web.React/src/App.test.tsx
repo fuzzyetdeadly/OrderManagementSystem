@@ -98,6 +98,8 @@ describe("App", () => {
   it("handles theme switch correectly", async () => {
     renderApp();
 
+    // Note: this switch called a toggle that updates it's check state.
+    // If the toggle call is removed, the test is expected to break.
     // Access the switch component, expecting it to begin checked (dark)
     const themeSwitch = screen.getByRole("switch");
 
