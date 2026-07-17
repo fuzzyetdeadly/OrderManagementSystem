@@ -84,8 +84,8 @@ export default function OrderRow({ order, isMobile }: OrderRowProps) {
       <TableRow aria-label={`Order ${order.id}`}>
         <TableCell>{order.id}</TableCell>
         {!isMobile && <TableCell>{order.customerId}</TableCell>}
-        <TableCell>
-          {mode == "edit" ? (
+        <TableCell sx={{ py: 1 }}>
+          {mode === "edit" ? (
             <Select
               size="small"
               value={selectedStatus}

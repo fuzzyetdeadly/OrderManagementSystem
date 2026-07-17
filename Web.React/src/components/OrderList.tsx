@@ -22,15 +22,12 @@ export default function OrderList({ orders }: OrderListProps) {
 
   return (
     <TableContainer component={Paper} variant="outlined">
-      <Table
-        size={isMobile ? "small" : "medium"}
-        sx={{ tableLayout: "fixed", width: 1 }}
-      >
+      <Table sx={{ tableLayout: "fixed", width: 1 }}>
         <colgroup>
           {isMobile ? (
             <>
-              <col style={{ width: "10%" }} />
-              <col style={{ width: "45%" }} />
+              <col style={{ width: "15%" }} />
+              <col style={{ width: "40%" }} />
               <col style={{ width: "45%" }} />
             </>
           ) : (
