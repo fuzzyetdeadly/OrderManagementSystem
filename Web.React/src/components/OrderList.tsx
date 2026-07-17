@@ -8,17 +8,19 @@ import TableCell from "@mui/material/TableCell";
 import Paper from "@mui/material/Paper";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { useOrders } from "../hooks/useOrders";
 import type { Order } from "../types/order";
 import OrderRow from "./OrderRow";
 
-type OrderListProps = {
-  orders: Order[];
-};
-
-export default function OrderList({ orders }: OrderListProps) {
+export default function OrderList() {
   const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  // Orders is destructured from ordersQuery and guarded with []
+  // It is inferred to have type Order[] by TS.
+  const { ordersQuery } = useOrders();
+  const orders: Order[] = ordersQuery.data ?? [];
 
   return (
     <TableContainer component={Paper} variant="outlined">

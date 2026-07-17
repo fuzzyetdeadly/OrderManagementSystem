@@ -1,9 +1,17 @@
 import { render, screen } from "@testing-library/react";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { makeOrder } from "../test/factories/orderFactory";
+import {
+  createOrdersQueryMock,
+  createUseOrdersMock,
+} from "../test/factories/useOrdersFactory";
 import type { Order } from "../types/order";
+import { useOrders } from "../hooks/useOrders";
 import OrderList from "./OrderList";
 import OrderRow from "./OrderRow";
+
+// Mock useOrders to control data returned
+vi.mock("../hooks/useOrders");
 
 // Mock 'useMediaQuery' to control 'isMobile' state
 vi.mock("@mui/material/useMediaQuery", () => {
@@ -18,61 +26,108 @@ vi.mock("./OrderRow", () => {
 // Default orders for testing
 const orders: Order[] = [makeOrder({ id: 1 }), makeOrder({ id: 2 })];
 
-describe.each([false, true])("OrderList (isMobile=%s)", (isMobile: boolean) => {
-  // Note: chose to set isMobile for each describe.each param in beforeEach;
-  // In case vite.config.ts ever sets 'restoreMocks: true'
-  // It was a choice not to do any manual mock resets,
-  // since the required return value is always set here.
-  beforeEach(() => {
-    vi.mocked(useMediaQuery).mockReturnValue(isMobile);
-  });
+// Before actions - all describes
+beforeEach(() => {
+  vi.mocked(useMediaQuery).mockReturnValue(false);
 
-  it("renders one header row with correct column names", () => {
-    render(<OrderList orders={[]} />);
-
-    // Assert that there is exactly one header row with no orders
-    const rows = screen.getAllByRole("row");
-
-    expect(rows).toHaveLength(1);
-
-    // Assert that headers have expected names
-    const headers = screen
-      .getAllByRole("columnheader")
-      .map((header) => header.textContent);
-
-    if (isMobile) {
-      expect(headers).toEqual([
-        "orderList.columns.id",
-        "orderList.columns.status",
-        "orderList.columns.action",
-      ]);
-    } else {
-      expect(headers).toEqual([
-        "orderList.columns.id",
-        "orderList.columns.customer",
-        "orderList.columns.status",
-        "orderList.columns.items",
-        "orderList.columns.action",
-      ]);
-    }
-  });
-
-  it("passes props correctly to each OrderRow", () => {
-    render(<OrderList orders={orders} />);
-
-    // Collect passed props
-    const orderRowProps = vi
-      .mocked(OrderRow)
-      .mock.calls.map(([props]) => props);
-
-    // Assert that row orders match the orders passed to OrderList
-    expect(orderRowProps.map((prop) => prop.order)).toEqual(orders);
-
-    // Assert that 'isMobile' properly drilled to order row
-    // 'isMobile' is a pass-through prop, but this is asserted to
-    // ensure it is consistent for both variants
-    expect(orderRowProps.map((props) => props.isMobile)).toEqual(
-      orders.map(() => isMobile),
-    );
-  });
+  // Reset 'useOrders' mock before each test to ensure clean state
+  vi.mocked(useOrders).mockReturnValue(
+    createUseOrdersMock({
+      ordersQuery: createOrdersQueryMock({ data: orders }),
+    }),
+  );
 });
+
+describe("OrderList (no variants)", () => {
+  // When passing array as 'each' arg, needs to be wrapped with []
+  // This is a Vite 'gotcha'. Chose to pass as {} items, less confusing
+  it.each([
+    { orderData: [] as Order[], expected: 1 },
+    { orderData: orders, expected: 1 + orders.length },
+  ])(
+    "invokes orders hook and renders correct number of rows (expect=$expected)",
+    ({ orderData, expected }) => {
+      // Override 'useOrders' mock to return variant data
+      vi.mocked(useOrders).mockReturnValue(
+        createUseOrdersMock({
+          ordersQuery: createOrdersQueryMock({ data: orderData }),
+        }),
+      );
+
+      render(<OrderList />);
+
+      // Assert that orders hook was invoked
+      expect(useOrders).toHaveBeenCalledOnce();
+
+      // Assert the correct row counts
+      const rows = screen.getAllByRole("row");
+
+      expect(rows).toHaveLength(expected);
+    },
+  );
+});
+
+describe.each([false, true])(
+  "OrderList (variant, isMobile=%s)",
+  (isMobile: boolean) => {
+    // Before actions - isMobile variants only
+    // Note: chose to set isMobile for each describe.each param in beforeEach;
+    // In case vite.config.ts ever sets 'restoreMocks: true'
+    // It was a choice not to do any manual mock resets,
+    // since the required return value is always set here.
+    beforeEach(() => {
+      vi.mocked(useMediaQuery).mockReturnValue(isMobile);
+    });
+
+    it("renders correct header column names when no orders", () => {
+      // Override 'useOrders' mock to return undefined data
+      vi.mocked(useOrders).mockReturnValue(
+        createUseOrdersMock({
+          ordersQuery: createOrdersQueryMock({ data: undefined }),
+        }),
+      );
+
+      render(<OrderList />);
+
+      // Assert that headers have expected names
+      const headers = screen
+        .getAllByRole("columnheader")
+        .map((header) => header.textContent);
+
+      if (isMobile) {
+        expect(headers).toEqual([
+          "orderList.columns.id",
+          "orderList.columns.status",
+          "orderList.columns.action",
+        ]);
+      } else {
+        expect(headers).toEqual([
+          "orderList.columns.id",
+          "orderList.columns.customer",
+          "orderList.columns.status",
+          "orderList.columns.items",
+          "orderList.columns.action",
+        ]);
+      }
+    });
+
+    it("passes props correctly to each OrderRow", () => {
+      render(<OrderList />);
+
+      // Collect passed props
+      const orderRowProps = vi
+        .mocked(OrderRow)
+        .mock.calls.map(([props]) => props);
+
+      // Assert that row orders match the orders passed to OrderList
+      expect(orderRowProps.map((prop) => prop.order)).toEqual(orders);
+
+      // Assert that 'isMobile' properly drilled to order row
+      // 'isMobile' is a pass-through prop, but this is asserted to
+      // ensure it is consistent for both variants
+      expect(orderRowProps.map((props) => props.isMobile)).toEqual(
+        orders.map(() => isMobile),
+      );
+    });
+  },
+);
