@@ -1,0 +1,168 @@
+import { useTranslation } from "react-i18next";
+import { useForm } from "react-hook-form";
+import axios from "axios";
+import { useOrders } from "../hooks/useOrders";
+import type { CreateOrderPayload } from "../types/order";
+import type { ValidationProblemDetails } from "../types/common";
+
+// Data shape for RHF useForm
+type OrderFormValues = {
+  customerId: number;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+};
+
+const PRODUCT_OPTIONS = ["Carrot", "Eggplant", "Garlic", "Potato", "Spinach"];
+const UNSELECTED = "";
+
+// Note: no props because queries handled by 'useOrders' hook
+export default function OrderForm() {
+  const { t } = useTranslation();
+  const { createOrder } = useOrders();
+
+  // UseForm returns functions/states that can be used
+  // For server-side errors from the catch block, use setError
+  // to update the internal state of RHF.
+  const {
+    register,
+    handleSubmit,
+    setError,
+    clearErrors,
+    formState: { errors },
+  } = useForm<OrderFormValues>({
+    mode: "onChange",
+    defaultValues: {
+      customerId: 1,
+      productName: UNSELECTED,
+      quantity: 1,
+      unitPrice: 0.01,
+    },
+  });
+
+  // RHF's handleSubmit will wrap this method,
+  // injecting validated values and blocking invalid submissions
+  const onSubmit = async (data: OrderFormValues) => {
+    // Clear all errors on "root" node
+    clearErrors("root");
+
+    const payload: CreateOrderPayload = {
+      customerId: data.customerId,
+      items: [
+        {
+          productName: data.productName,
+          quantity: data.quantity,
+          unitPrice: data.unitPrice,
+        },
+      ],
+    };
+
+    try {
+      // Create order, then invoke callback
+      await createOrder(payload);
+    } catch (err) {
+      // 400 status usually returns *.errors, while 404 returns *.detail
+      if (
+        axios.isAxiosError<ValidationProblemDetails>(err) &&
+        err.response?.data
+      ) {
+        // Cannot use 'data', because it is used by onSubmit's anon function
+        const responseData = err.response.data;
+        if (responseData.errors) {
+          Object.values(responseData.errors)
+            .flat()
+            .forEach((msg) => {
+              // Note: if there are multiple errors, use only the last
+              // Unlikely to reach here unless form isn't validating everything it should.
+              setError("root", { message: msg });
+            });
+        } else if (responseData.details) {
+          setError("root", { message: responseData.details });
+        } else {
+          setError("root", { message: t("errors.unknown") });
+        }
+      }
+    }
+  };
+
+  return (
+    <div className="order-form">
+      <div className="form-field">
+        <label htmlFor="customerId">{t("orderForm.labels.customerId")}</label>
+        <input
+          id="customerId"
+          type="number"
+          min={1}
+          {...register("customerId", { valueAsNumber: true, min: 1 })}
+          onChange={() => clearErrors("root")}
+        />
+      </div>
+
+      <div className="form-field">
+        <label htmlFor="productName">
+          {t("orderForm.labels.productName")}*
+        </label>
+        <select
+          id="productName"
+          {...register("productName", {
+            validate: (v) => v !== UNSELECTED || t("errors.unselectedProduct"),
+          })}
+        >
+          <option value={UNSELECTED}>{t("orderForm.labels.select")}</option>
+          {PRODUCT_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="form-field">
+        <label htmlFor="quantity">{t("orderForm.labels.quantity")}</label>
+        <input
+          id="quantity"
+          type="number"
+          min={1}
+          {...register("quantity", {
+            valueAsNumber: true,
+            required: t("orderForm.validation.quantityRequired"),
+            min: {
+              value: 1,
+              message: t("orderForm.validation.quantityInvalid"),
+            },
+          })}
+        />
+      </div>
+
+      <div className="form-field">
+        <label htmlFor="unitPrice">{t("orderForm.labels.unitPrice")}</label>
+        <input
+          id="unitPrice"
+          type="number"
+          min={0.01}
+          step="0.01"
+          {...register("unitPrice", {
+            valueAsNumber: true,
+            required: t("orderForm.validation.unitPriceRequired"),
+            min: {
+              value: 0.01,
+              message: t("orderForm.validation.unitPriceInvalid"),
+            },
+          })}
+        />
+      </div>
+
+      <button onClick={handleSubmit(onSubmit)}>
+        {t("orderForm.labels.addOrder")}
+      </button>
+
+      {Object.values(errors).length > 0 && (
+        <ul className="form-errors">
+          {Object.values(errors).map((err, i) => (
+            <li key={i}>{err?.message}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}

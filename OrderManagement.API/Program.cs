@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using OrderManagement.API.DTOs;
 using OrderManagement.API.Extensions;
+using OrderManagement.API.Middleware;
 using OrderManagement.Application.Services;
 using OrderManagement.Domain.Entities;
 using OrderManagement.Domain.Interfaces;
@@ -39,10 +40,27 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddSwaggerExamplesFromAssemblyOf<CreateOrderDtoExample>();
+
+// CORS is essential. Without it, React can't call the API at all
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("SecurePolicy", policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+            .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE")    
+            .WithHeaders("Content-Type", "Authorization");
+    });
+});
 #endregion
 
 #region middleware
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -68,6 +86,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("SecurePolicy");
 #endregion
 
 #region endpoints

@@ -1,0 +1,55 @@
+{
+  "app": {
+    "title": "注文管理",
+    "toggleTheme": "テーマ切替"
+  },
+  "orderForm": {
+    "labels": {
+      "customerId": "顧客ID",
+      "productName": "商品名",
+      "quantity": "数量",
+      "unitPrice": "単価",
+      "select": "選択してください",
+      "addOrder": "注文を追加"
+    },
+    "validation": {
+      "quantityRequired": "数量は必須です",
+      "quantityInvalid": "数量は1以上である必要があります",
+      "unitPriceRequired": "単価は必須です",
+      "unitPriceInvalid": "単価は0.01以上である必要があります"
+    }
+  },
+  "orderList": {
+    "columns": {
+      "id": "ID",
+      "customer": "顧客",
+      "status": "ステータス",
+      "items": "商品",
+      "action": "操作"
+    }
+  },
+  "orderRow": {
+    "buttons": {
+      "edit": "編集",
+      "save": "保存",
+      "delete": "削除",
+      "deletePrompt": "削除しますか?",
+      "confirmDelete": "削除を確定",
+      "cancel": "キャンセル"
+    },
+    "status": {
+      "pending": "保留中",
+      "processing": "処理中",
+      "scheduled": "予定済み",
+      "completed": "完了",
+      "cancelled": "キャンセル済み"
+    }
+  },
+  "errors": {
+    "errorMessage": "エラーメッセージ",
+    "unselectedProduct": "商品を選択してください",
+    "unknown": "問題が発生しました。もう一度お試しください。",
+    "failedSave": "保存に失敗しました。",
+    "failedDelete": "削除に失敗しました。"
+  }
+}
