@@ -15,7 +15,7 @@ public abstract class ApiControllerBase : ControllerBase
         [ErrorCodes.OrderNotFound] = Errors.Order.NotFound
     };
 
-    // Helper override to construct problems from ErrorOn errors
+    // Helper override to construct problems from ErrorOr errors
     protected IActionResult Problem(List<Error> errors)
     {
         var firstError = errors.First();

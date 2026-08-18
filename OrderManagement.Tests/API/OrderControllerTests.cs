@@ -122,7 +122,8 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             .ReadFromJsonAsync<List<OrderResponse>>(TestContext.Current.CancellationToken);
 
         // Expect no orders
-        Assert.Empty(orders!);
+        Assert.NotNull(orders);
+        Assert.Empty(orders);
     }
 
     [Theory]
@@ -135,7 +136,7 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     {
         await CreateOrdersViaApiAsync(3);
 
-        // Note: page size 1 is NOT supported
+        // Note: page size 1 is NOT supported (covered in another test)
         var response = await _client
             .GetAsync(GetOrdersRoute(page: page, pageSize: pageSize), TestContext.Current.CancellationToken);
 
@@ -145,7 +146,8 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             .ReadFromJsonAsync<List<OrderResponse>>(TestContext.Current.CancellationToken);
 
         // Expect orders to match prescibed count
-        Assert.Equal(expectedCount, orders?.Count);
+        Assert.NotNull(orders);
+        Assert.Equal(expectedCount, orders.Count);
     }
 
     [Theory]
@@ -168,8 +170,9 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         var orders = await response.Content
             .ReadFromJsonAsync<List<OrderResponse>>(TestContext.Current.CancellationToken);
 
-        // Expect single order
-        Assert.Equal(expectedCount, orders?.Count);
+        // Expect orders to match prescibed count
+        Assert.NotNull(orders);
+        Assert.Equal(expectedCount, orders.Count);
     }
 
     [Theory]
@@ -192,11 +195,37 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         var orders = await response.Content
             .ReadFromJsonAsync<List<OrderResponse>>(TestContext.Current.CancellationToken);
 
-        // Expect single order
-        Assert.Equal(expectedCount, orders?.Count);
+        // Expect orders to match prescibed count
+        Assert.NotNull(orders);
+        Assert.Equal(expectedCount, orders.Count);
     }
 
-    // BadRequest cases (invalid page/pageSize)
-    // TO BE CONTINUED
+    [Theory]
+    [Layer("Api")]
+    [Scope("Order")]
+    [InlineData(-1)]
+    [InlineData(0)]
+    public async Task GetAll_ReturnsBadRequest_ForInvalidPage(int page)
+    {
+        string route = $"api/orders?page={page}";
+        var response = await _client
+            .GetAsync(route, TestContext.Current.CancellationToken);
+        
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Theory]
+    [Layer("Api")]
+    [Scope("Order")]
+    [InlineData(0)]
+    [InlineData(101)]
+    public async Task GetAll_ReturnsBadRequest_ForInvalidPageSize(int pageSize)
+    {
+        string route = $"api/orders?pageSize={pageSize}";
+        var response = await _client
+            .GetAsync(route, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
     #endregion
 }
