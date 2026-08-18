@@ -97,7 +97,7 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         return $"{route}?page={page}&pageSize={pageSize}";
     }
 
-    private async static void AssertOk(HttpResponseMessage response)
+    private static async Task AssertOk(HttpResponseMessage response)
     {
         // Ensure status ok before continue (prevent unhandled exception)
         var uri = response.RequestMessage?.RequestUri;
@@ -116,7 +116,7 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         var response = await _client
             .GetAsync(GetOrdersRoute(), TestContext.Current.CancellationToken);
 
-        AssertOk(response);
+        await AssertOk(response);
 
         var orders = await response.Content
             .ReadFromJsonAsync<List<OrderResponse>>(TestContext.Current.CancellationToken);
@@ -139,7 +139,7 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         var response = await _client
             .GetAsync(GetOrdersRoute(page: page, pageSize: pageSize), TestContext.Current.CancellationToken);
 
-        AssertOk(response);
+        await AssertOk(response);
 
         var orders = await response.Content
             .ReadFromJsonAsync<List<OrderResponse>>(TestContext.Current.CancellationToken);
@@ -163,7 +163,7 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         var response = await _client
             .GetAsync(route, TestContext.Current.CancellationToken);
 
-        AssertOk(response);
+        await AssertOk(response);
 
         var orders = await response.Content
             .ReadFromJsonAsync<List<OrderResponse>>(TestContext.Current.CancellationToken);
@@ -187,7 +187,7 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         var response = await _client
             .GetAsync(route, TestContext.Current.CancellationToken);
 
-        AssertOk(response);
+        await AssertOk(response);
 
         var orders = await response.Content
             .ReadFromJsonAsync<List<OrderResponse>>(TestContext.Current.CancellationToken);
