@@ -565,9 +565,11 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
         var createdOrder = await response.Content.ReadFromJsonAsync<OrderResponse>(TestContext.Current.CancellationToken);
-        
-        // Assert: created order returned with expected values
+
+        // Assert: created order returned with expected header and values
         Assert.NotNull(createdOrder);
+        Assert.NotNull(response.Headers.Location);
+        Assert.Equal($"/api/orders/{createdOrder.Id}", response.Headers.Location.AbsolutePath);
         Assert.Equal(dto.CustomerId, createdOrder.CustomerId);
         Assert.Single(createdOrder.Items);
         Assert.Equal(dto.Items[0].ProductName, createdOrder.Items[0].ProductName);
