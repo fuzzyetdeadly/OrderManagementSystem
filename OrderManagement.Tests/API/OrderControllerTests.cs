@@ -328,5 +328,45 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         Assert.NotNull(orders);
         Assert.Equal(expectedCount, orders.Count);
     }
+
+    [Fact]
+    [Layer("Api")]
+    [Scope("Order")]
+    public async Task GetByCustomerId_ReturnsNotFound_ForCustomerIdNotFound()
+    {
+        string route = "api/customers/2/orders";
+        var response = await _client
+            .GetAsync(route, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Theory]
+    [Layer("Api")]
+    [Scope("Order")]
+    [InlineData(-1)]
+    [InlineData(0)]
+    public async Task GetByCustomerId_ReturnsBadRequest_ForInvalidPage(int page)
+    {
+        string route = $"api/customers/1/orders?page={page}";
+        var response = await _client
+            .GetAsync(route, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Theory]
+    [Layer("Api")]
+    [Scope("Order")]
+    [InlineData(0)]
+    [InlineData(101)]
+    public async Task GetByCustomerId_ReturnsBadRequest_ForInvalidPageSize(int pageSize)
+    {
+        string route = $"api/customers/1/orders?pageSize={pageSize}";
+        var response = await _client
+            .GetAsync(route, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
     #endregion
 }
