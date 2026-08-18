@@ -104,7 +104,8 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         var uri = response.RequestMessage?.RequestUri;
         var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
-        Assert.True(HttpStatusCode.OK == response.StatusCode, $"Uri: {uri}, Content = {content}");
+        Assert.True(HttpStatusCode.OK == response.StatusCode, 
+            $"AssertOk: Expected status OK, but got status {response.StatusCode}. Uri: {uri}, Content = {content}");
     }
     #endregion
 
@@ -479,6 +480,7 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     [Scope("Order")]
     [InlineData(null)]
     [InlineData(0)]
+    [InlineData(-1)]
     public async Task Create_ReturnsBadRequest_WhenItemQuantityInvalid(int? quantity)
     {
         // Arrange: create an order DTO with an invalid quantity
@@ -500,6 +502,7 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     [Scope("Order")]
     [InlineData(null)]
     [InlineData(0.00)]
+    [InlineData(-0.01)]
     public async Task Create_ReturnsBadRequest_WhenItemPriceInvalid(double? unitPrice)
     {
         // Arrange: create an order DTO with an invalid price
@@ -541,6 +544,35 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
 
         Assert.All(requiredFields, field =>
             Assert.Contains(problem.Errors.Keys, k => k.Contains(field)));
+    }
+
+    [Fact]
+    [Layer("Api")]
+    [Scope("Order")]
+    public async Task Create_ReturnsCreatedOrder_WhenValid()
+    {
+        // Arrange: create an order DTO with valid data
+        var dto = new CreateOrderDto()
+        {
+            CustomerId = 1,
+            Items = [new() { ProductName = "Potato", Quantity = 1, UnitPrice = 0.99m }]
+        };
+
+        // Act: send POST request to create order
+        var response = await _client.PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+
+        // Assert: order created successfully
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var createdOrder = await response.Content.ReadFromJsonAsync<OrderResponse>(TestContext.Current.CancellationToken);
+        
+        // Assert: created order returned with expected values
+        Assert.NotNull(createdOrder);
+        Assert.Equal(dto.CustomerId, createdOrder.CustomerId);
+        Assert.Single(createdOrder.Items);
+        Assert.Equal(dto.Items[0].ProductName, createdOrder.Items[0].ProductName);
+        Assert.Equal(dto.Items[0].Quantity, createdOrder.Items[0].Quantity);
+        Assert.Equal(dto.Items[0].UnitPrice, createdOrder.Items[0].UnitPrice);
     }
     #endregion
 
