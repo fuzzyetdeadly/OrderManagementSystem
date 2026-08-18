@@ -409,7 +409,113 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     #endregion
 
     #region Create
+    [Theory]
+    [Layer("Api")]
+    [Scope("Order")]
+    [InlineData(null, HttpStatusCode.BadRequest)]
+    [InlineData(0, HttpStatusCode.BadRequest)]
+    [InlineData(2, HttpStatusCode.NotFound)]
+    public async Task Create_ReturnsExpectedStatus_ForCustomerIdIssues(int? customerId, HttpStatusCode expectedStatus)
+    {
+        // Arrange: create an order DTO with invalid data (missing CustomerId)
+        var dto = new CreateOrderDto()
+        {
+            CustomerId = customerId,
+            Items = [new() { ProductName = "Potato", Quantity = 1, UnitPrice = 0.99m }]
+        };
 
+        // Act: send POST request to create order
+        var response = await _client.PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+
+        // Assert: bad request due to missing CustomerId
+        Assert.Equal(expectedStatus, response.StatusCode);
+    }
+
+    [Fact]
+    [Layer("Api")]
+    [Scope("Order")]
+    public async Task Create_ReturnsBadRequest_WhenItemsEmpty()
+    {
+        // Arrange: create an order DTO with a non-existent customerId
+        // Note: items is empty by default when not set, but empty list is used to be explicity
+        var dto = new CreateOrderDto()
+        {
+            CustomerId = 1,
+            Items = []
+        };
+
+        // Act: send POST request to create order
+        var response = await _client.PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+
+        // Assert: customer not found
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Theory]
+    [Layer("Api")]
+    [Scope("Order")]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task Create_ReturnsBadRequest_WhenItemProductNameInvalid(string? productName)
+    {
+        // Arrange: create an order DTO with an invalid product name
+        var dto = new CreateOrderDto()
+        {
+            CustomerId = 1,
+            Items = [new() { ProductName = productName, Quantity = 1, UnitPrice = 0.99m }]
+        };
+
+        // Act: send POST request to create order
+        var response = await _client.PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+
+        // Assert: bad request due to invalid product name
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Theory]
+    [Layer("Api")]
+    [Scope("Order")]
+    [InlineData(null)]
+    [InlineData(0)]
+    public async Task Create_ReturnsBadRequest_WhenItemQuantityInvalid(int? quantity)
+    {
+        // Arrange: create an order DTO with an invalid quantity
+        var dto = new CreateOrderDto()
+        {
+            CustomerId = 1,
+            Items = [new() { ProductName = "Potato", Quantity = quantity, UnitPrice = 0.99m }]
+        };
+        
+        // Act: send POST request to create order
+        var response = await _client.PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+        
+        // Assert: bad request due to invalid quantity
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Theory]
+    [Layer("Api")]
+    [Scope("Order")]
+    [InlineData(null)]
+    [InlineData(0.00)]
+    public async Task Create_ReturnsBadRequest_WhenItemPriceInvalid(double? unitPrice)
+    {
+        // Arrange: create an order DTO with an invalid price
+        // Note: inline doesn't support decimal, so need to cast from double
+        decimal? price = unitPrice.HasValue ? (decimal)unitPrice.Value : null;
+        var dto = new CreateOrderDto()
+        {
+            CustomerId = 1,
+            Items = [new() { ProductName = "Potato", Quantity = 1, UnitPrice = price }]
+        };
+
+        // Act: send POST request to create order
+        var response = await _client.PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+
+        // Assert: bad request due to invalid price
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
     #endregion
 
     #region UpdateStatus
