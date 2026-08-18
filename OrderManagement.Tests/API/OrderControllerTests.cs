@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using OrderManagement.API.DTOs;
 using OrderManagement.Application.Models;
 using OrderManagement.Domain.Entities;
@@ -515,6 +516,31 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
 
         // Assert: bad request due to invalid price
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    [Layer("Api")]
+    [Scope("Order")]
+    public async Task Create_ReturnsAllValidationErrors_WhenMultipleFieldsInvalid()
+    {
+        // Arrange: create an order DTO with multiple invalid fields
+        var dto = new CreateOrderDto()
+        {
+            CustomerId = null,
+            Items = [new() { ProductName = null, Quantity = null, UnitPrice = null }]
+        };
+
+        // Act: send POST request to create order
+        var response = await _client.PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+        var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(TestContext.Current.CancellationToken);
+
+        // Assert: problem details returned with multiple validation errors
+        Assert.NotNull(problem);
+
+        var requiredFields = new[] { "CustomerId", "ProductName", "Quantity", "UnitPrice" };
+
+        Assert.All(requiredFields, field =>
+            Assert.Contains(problem.Errors.Keys, k => k.Contains(field)));
     }
     #endregion
 
