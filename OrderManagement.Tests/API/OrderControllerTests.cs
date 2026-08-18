@@ -7,6 +7,7 @@ using OrderManagement.Infrastructure.Persistence;
 using OrderManagement.Tests.Common;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text;
 
 namespace OrderManagement.Tests.API;
 
@@ -14,13 +15,15 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
 {
     private readonly HttpClient _client;
     private readonly CustomWebApplicationFactory _factory;
+    private readonly ITestOutputHelper _output;
 
     private static bool _hasRunOnce = false;
 
-    public OrderControllerTests(CustomWebApplicationFactory factory)
+    public OrderControllerTests(CustomWebApplicationFactory factory, ITestOutputHelper output)
     {
         _factory = factory;
         _client = factory.CreateClient();
+        _output = output;
     }
 
     #region interface methods
@@ -544,6 +547,44 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
 
         Assert.All(requiredFields, field =>
             Assert.Contains(problem.Errors.Keys, k => k.Contains(field)));
+    }
+
+    [Fact]
+    [Layer("Api")]
+    [Scope("Order")]
+    public async Task Create_ReturnsBadRequest_ForMalformedJsonBody()
+    {
+        // Arrange: truncated JSON to simulate malformed body
+        var malformedContent = new StringContent(
+            "{ \"customerId\": 1, \"items\": [ { \"productName\": \"Potato\" ",
+            Encoding.UTF8,
+            "application/json");
+
+        // Act: send POST request with malformed body
+        var response = await _client.PostAsync("api/orders", malformedContent, TestContext.Current.CancellationToken);
+
+        // Assert: bad request due to malformed JSON, before validator or handler even runs
+        // Also expect response details to be a problem-details response
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task Create_ReturnsBadRequest_ForValidJsonWrongShape()
+    {
+        // Arrange: JSON with wrong shape
+        var wrongShapeContent = new StringContent(
+            "{ \"unexpectedField\": true }",
+            Encoding.UTF8,
+            "application/json");
+
+        // Act: send POST request with wrong shape JSON body
+        var response = await _client.PostAsync("api/orders", wrongShapeContent, TestContext.Current.CancellationToken);
+
+        // Assert: bad request due to valid JSON but wrong shape, before validator or handler even runs
+        // Also expect response details to be a problem-details response
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
     }
 
     [Fact]
