@@ -84,11 +84,11 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     }
 
 
-    private async Task CreateOrdersViaApiAsync(int count)
+    private async Task CreateOrdersViaApiAsync(int count, int customerId = 1)
     {
         for (var i = 0; i < count; i++)
         {
-            await CreateOrderViaApiAsync();
+            await CreateOrderViaApiAsync(customerId);
         }
     }
 
@@ -121,7 +121,7 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         var orders = await response.Content
             .ReadFromJsonAsync<List<OrderResponse>>(TestContext.Current.CancellationToken);
 
-        // Expect no orders
+        // Assert: no orders
         Assert.NotNull(orders);
         Assert.Empty(orders);
     }
@@ -145,7 +145,7 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         var orders = await response.Content
             .ReadFromJsonAsync<List<OrderResponse>>(TestContext.Current.CancellationToken);
 
-        // Expect orders to match prescibed count
+        // Assert: orders match prescribed count
         Assert.NotNull(orders);
         Assert.Equal(expectedCount, orders.Count);
     }
@@ -170,7 +170,7 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         var orders = await response.Content
             .ReadFromJsonAsync<List<OrderResponse>>(TestContext.Current.CancellationToken);
 
-        // Expect orders to match prescibed count
+        // Assert: orders match prescribed count
         Assert.NotNull(orders);
         Assert.Equal(expectedCount, orders.Count);
     }
@@ -195,7 +195,7 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         var orders = await response.Content
             .ReadFromJsonAsync<List<OrderResponse>>(TestContext.Current.CancellationToken);
 
-        // Expect orders to match prescibed count
+        // Assert: orders match prescribed count
         Assert.NotNull(orders);
         Assert.Equal(expectedCount, orders.Count);
     }
@@ -226,6 +226,107 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             .GetAsync(route, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+    #endregion
+
+    #region GetByCustomerId
+    [Fact]
+    [Layer("Api")]
+    [Scope("Order")]
+    public async Task GetByCustomerId_ReturnsCorrectly_WhenNoOrders()
+    {
+        var response = await _client
+            .GetAsync(GetOrdersRoute(route: "api/customers/1/orders"), TestContext.Current.CancellationToken);
+        
+        await AssertOk(response);
+        
+        var orders = await response.Content
+            .ReadFromJsonAsync<List<OrderResponse>>(TestContext.Current.CancellationToken);
+
+        // Assert: no orders
+        Assert.NotNull(orders);
+        Assert.Empty(orders);
+    }
+
+    [Theory]
+    [Layer("Api")]
+    [Scope("Order")]
+    [InlineData(1, 2, 2)]
+    [InlineData(2, 2, 1)]
+    [InlineData(3, 2, 0)]
+    public async Task GetByCustomerId_ReturnsCorrectly_ForCompleteQuery(int page, int pageSize, int expectedCount)
+    {
+        // Arrange: create customer 2 and orders for both customers
+        // Note: customer 1 is always seeded by default
+        SeedCustomer(2);
+        await CreateOrdersViaApiAsync(2, customerId: 1);
+        await CreateOrdersViaApiAsync(3, customerId: 2);
+
+        // Act: query for customer 2 orders
+        var route = GetOrdersRoute(route: $"api/customers/2/orders", page: page, pageSize: pageSize);
+        var response = await _client
+            .GetAsync(route, TestContext.Current.CancellationToken);
+
+        await AssertOk(response);
+
+        var orders = await response.Content
+            .ReadFromJsonAsync<List<OrderResponse>>(TestContext.Current.CancellationToken);
+
+        // Assert: orders match prescribed count
+        Assert.NotNull(orders);
+        Assert.Equal(expectedCount, orders.Count);
+    }
+
+    [Theory]
+    [Layer("Api")]
+    [Scope("Order")]
+    [InlineData(10, 10)]
+    [InlineData(20, 20)]
+    [InlineData(30, 21)]
+    public async Task GetByCustomerId_ReturnsCorrectly_ForDefaultPage(int pageSize, int expectedCount)
+    {
+        // Arrange: create orders for customer 1
+        await CreateOrdersViaApiAsync(21, customerId: 1);
+
+        // Act: query customer 1 orders with default page (1) and specified pageSize
+        string route = $"api/customers/1/orders?pageSize={pageSize}";
+        var response = await _client
+            .GetAsync(route, TestContext.Current.CancellationToken);
+
+        await AssertOk(response);
+
+        var orders = await response.Content
+            .ReadFromJsonAsync<List<OrderResponse>>(TestContext.Current.CancellationToken);
+
+        // Assert: orders match prescribed count
+        Assert.NotNull(orders);
+        Assert.Equal(expectedCount, orders.Count);
+    }
+
+    [Theory]
+    [Layer("Api")]
+    [Scope("Order")]
+    [InlineData(1, 20)]
+    [InlineData(2, 1)]
+    [InlineData(3, 0)]
+    public async Task GetByCustomerId_ReturnsCorrectly_ForDefaultPageSize(int page, int expectedCount)
+    {
+        // Arrange: create orders for customer 1
+        await CreateOrdersViaApiAsync(21, customerId: 1);
+
+        // Act: query customer 1 orders with specified page and default pageSize (20)
+        string route = $"api/customers/1/orders?page={page}";
+        var response = await _client
+            .GetAsync(route, TestContext.Current.CancellationToken);
+
+        await AssertOk(response);
+
+        var orders = await response.Content
+            .ReadFromJsonAsync<List<OrderResponse>>(TestContext.Current.CancellationToken);
+
+        // Assert: orders match prescribed count
+        Assert.NotNull(orders);
+        Assert.Equal(expectedCount, orders.Count);
     }
     #endregion
 }
