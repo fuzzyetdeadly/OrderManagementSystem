@@ -108,6 +108,34 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     #endregion
 
     #region GetAll
+    [Theory]
+    [Layer("Api")]
+    [Scope("Order")]
+    [InlineData(-1)]
+    [InlineData(0)]
+    public async Task GetAll_ReturnsBadRequest_ForInvalidPage(int page)
+    {
+        string route = $"api/orders?page={page}";
+        var response = await _client
+            .GetAsync(route, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Theory]
+    [Layer("Api")]
+    [Scope("Order")]
+    [InlineData(0)]
+    [InlineData(101)]
+    public async Task GetAll_ReturnsBadRequest_ForInvalidPageSize(int pageSize)
+    {
+        string route = $"api/orders?pageSize={pageSize}";
+        var response = await _client
+            .GetAsync(route, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
     [Fact]
     [Layer("Api")]
     [Scope("Order")]
@@ -199,18 +227,32 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         Assert.NotNull(orders);
         Assert.Equal(expectedCount, orders.Count);
     }
+    #endregion
+
+    #region GetByCustomerId
+    [Fact]
+    [Layer("Api")]
+    [Scope("Order")]
+    public async Task GetByCustomerId_ReturnsNotFound_WhenCustomerNotFound()
+    {
+        string route = "api/customers/2/orders";
+        var response = await _client
+            .GetAsync(route, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
 
     [Theory]
     [Layer("Api")]
     [Scope("Order")]
     [InlineData(-1)]
     [InlineData(0)]
-    public async Task GetAll_ReturnsBadRequest_ForInvalidPage(int page)
+    public async Task GetByCustomerId_ReturnsBadRequest_ForInvalidPage(int page)
     {
-        string route = $"api/orders?page={page}";
+        string route = $"api/customers/1/orders?page={page}";
         var response = await _client
             .GetAsync(route, TestContext.Current.CancellationToken);
-        
+
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
@@ -219,17 +261,15 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     [Scope("Order")]
     [InlineData(0)]
     [InlineData(101)]
-    public async Task GetAll_ReturnsBadRequest_ForInvalidPageSize(int pageSize)
+    public async Task GetByCustomerId_ReturnsBadRequest_ForInvalidPageSize(int pageSize)
     {
-        string route = $"api/orders?pageSize={pageSize}";
+        string route = $"api/customers/1/orders?pageSize={pageSize}";
         var response = await _client
             .GetAsync(route, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
-    #endregion
 
-    #region GetByCustomerId
     [Fact]
     [Layer("Api")]
     [Scope("Order")]
@@ -328,45 +368,55 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         Assert.NotNull(orders);
         Assert.Equal(expectedCount, orders.Count);
     }
+    #endregion
+
+    #region GetById
+    [Fact]
+    [Layer("Api")]
+    [Scope("Order")]
+    public async Task GetById_ReturnsNotFound_WhenOrderNotFound()
+    {
+        // Act: query for the order by id
+        var route = $"api/orders/1";
+        var response = await _client
+            .GetAsync(route, TestContext.Current.CancellationToken);
+
+        // Assert: order not found
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
 
     [Fact]
     [Layer("Api")]
     [Scope("Order")]
-    public async Task GetByCustomerId_ReturnsNotFound_ForCustomerIdNotFound()
+    public async Task GetById_ReturnsCorrectly_WhenOrderExists()
     {
-        string route = "api/customers/2/orders";
+        // Arrange: create an order via API
+        var createdOrder = await CreateOrderViaApiAsync();
+
+        // Act: query for the order by id
         var response = await _client
-            .GetAsync(route, TestContext.Current.CancellationToken);
+            .GetAsync($"api/orders/{createdOrder.Id}", TestContext.Current.CancellationToken);
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        await AssertOk(response);
+        
+        var order = await response.Content
+            .ReadFromJsonAsync<OrderResponse>(TestContext.Current.CancellationToken);
+
+        // Assert: order matches created order
+        Assert.NotNull(order);
+        Assert.Equal(createdOrder.Id, order.Id);
     }
+    #endregion
 
-    [Theory]
-    [Layer("Api")]
-    [Scope("Order")]
-    [InlineData(-1)]
-    [InlineData(0)]
-    public async Task GetByCustomerId_ReturnsBadRequest_ForInvalidPage(int page)
-    {
-        string route = $"api/customers/1/orders?page={page}";
-        var response = await _client
-            .GetAsync(route, TestContext.Current.CancellationToken);
+    #region Create
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
+    #endregion
 
-    [Theory]
-    [Layer("Api")]
-    [Scope("Order")]
-    [InlineData(0)]
-    [InlineData(101)]
-    public async Task GetByCustomerId_ReturnsBadRequest_ForInvalidPageSize(int pageSize)
-    {
-        string route = $"api/customers/1/orders?pageSize={pageSize}";
-        var response = await _client
-            .GetAsync(route, TestContext.Current.CancellationToken);
+    #region UpdateStatus
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
+    #endregion
+
+    #region Delete
+
     #endregion
 }
