@@ -137,12 +137,4 @@ public abstract class OrderControllerTestsBase : IClassFixture<CustomWebApplicat
     protected static IEnumerable<(string, int, decimal)> OrderResponseItemsToTuples(IEnumerable<OrderItemResponse> items)
         => items.Select(i => (i.ProductName, i.Quantity, i.UnitPrice));
     #endregion
-
-    #region UpdateStatus
-
-    #endregion
-
-    #region Delete
-
-    #endregion
 }
