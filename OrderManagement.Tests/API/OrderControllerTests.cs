@@ -72,21 +72,40 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         }
     }
 
-    private async Task<OrderResponse> CreateOrderViaApiAsync(int customerId = 1)
+    private static string GetOrdersRoute(string route = "api/orders", int page = 1, int pageSize = 20)
     {
-        var dto = new CreateOrderDto()
+        return $"{route}?page={page}&pageSize={pageSize}";
+    }
+
+    private async Task<(HttpResponseMessage Response, OrderResponse Order)> CreateOrderViaApiAsync(CreateOrderDto? dto = null)
+    {
+        // Arrange: create an order DTO with valid data
+        dto ??= new CreateOrderDto
         {
-            CustomerId = customerId,
+            CustomerId = 1,
             Items = [new() { ProductName = "Potato", Quantity = 1, UnitPrice = 0.99m }]
         };
 
-        var response = await _client.PostAsJsonAsync("api/orders", dto);
+        // Act: send POST request to create order
+        var response = await _client.PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
 
-        response.EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        return (await response.Content.ReadFromJsonAsync<OrderResponse>())!;
+        // Act: read the created order from the response
+        var order = await response.Content.ReadFromJsonAsync<OrderResponse>(TestContext.Current.CancellationToken);
+
+        Assert.NotNull(order);
+
+        return (response, order);
     }
 
+    // Overload for existing call sites that only vary customerId
+    private Task<(HttpResponseMessage Response, OrderResponse Order)> CreateOrderViaApiAsync(int customerId)
+        => CreateOrderViaApiAsync(new CreateOrderDto
+        {
+            CustomerId = customerId,
+            Items = [new() { ProductName = "Potato", Quantity = 1, UnitPrice = 0.99m }]
+        });
 
     private async Task CreateOrdersViaApiAsync(int count, int customerId = 1)
     {
@@ -94,11 +113,6 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         {
             await CreateOrderViaApiAsync(customerId);
         }
-    }
-
-    private static string GetOrdersRoute(string route = "api/orders", int page = 1, int pageSize = 20) 
-    {
-        return $"{route}?page={page}&pageSize={pageSize}";
     }
 
     private static async Task AssertOk(HttpResponseMessage response)
@@ -396,7 +410,7 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     public async Task GetById_ReturnsCorrectly_WhenOrderExists()
     {
         // Arrange: create an order via API
-        var createdOrder = await CreateOrderViaApiAsync();
+        var(_, createdOrder) = await CreateOrderViaApiAsync();
 
         // Act: query for the order by id
         var response = await _client
@@ -599,23 +613,54 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Items = [new() { ProductName = "Potato", Quantity = 1, UnitPrice = 0.99m }]
         };
 
-        // Act: send POST request to create order
-        var response = await _client.PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
-
-        // Assert: order created successfully
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-
-        var createdOrder = await response.Content.ReadFromJsonAsync<OrderResponse>(TestContext.Current.CancellationToken);
+        var (response, createdOrder) = await CreateOrderViaApiAsync(dto);
 
         // Assert: created order returned with expected header and values
         Assert.NotNull(createdOrder);
-        Assert.NotNull(response.Headers.Location);
-        Assert.Equal($"/api/orders/{createdOrder.Id}", response.Headers.Location.AbsolutePath);
         Assert.Equal(dto.CustomerId, createdOrder.CustomerId);
         Assert.Single(createdOrder.Items);
-        Assert.Equal(dto.Items[0].ProductName, createdOrder.Items[0].ProductName);
-        Assert.Equal(dto.Items[0].Quantity, createdOrder.Items[0].Quantity);
-        Assert.Equal(dto.Items[0].UnitPrice, createdOrder.Items[0].UnitPrice);
+        Assert.Equal(OrderStatus.Pending.ToString(), createdOrder.Status);
+        Assert.Equal(
+            dto.Items.Select(i => (i.ProductName!, i.Quantity!.Value, i.UnitPrice!.Value)),
+            createdOrder.Items.Select(i => (i.ProductName, i.Quantity, i.UnitPrice))
+        );
+    }
+
+    [Fact]
+    [Layer("Api")]
+    [Scope("Order")]
+    public async Task Create_ReturnsResolvableOrderLocation_WhenValid()
+    {
+        // Arrange: create an order DTO with valid data
+        var dto = new CreateOrderDto()
+        {
+            CustomerId = 1,
+            Items = [new() { ProductName = "Potato", Quantity = 1, UnitPrice = 0.99m }]
+        };
+
+        var (response, createdOrder) = await CreateOrderViaApiAsync(dto);
+
+        // Assert: location can be resolved to get the created order
+        Assert.NotNull(createdOrder);
+        Assert.NotNull(response.Headers.Location);
+        Assert.Equal($"/api/orders/{createdOrder.Id}", response.Headers.Location.AbsolutePath);
+
+        var orderResponse = await _client.GetAsync(response.Headers.Location, TestContext.Current.CancellationToken);
+
+        // Assert: order retrieved successfully
+        await AssertOk(orderResponse);
+
+        var retrievedOrder = await orderResponse.Content.ReadFromJsonAsync<OrderResponse>(TestContext.Current.CancellationToken);
+
+        Assert.NotNull(retrievedOrder);
+        Assert.Equal(createdOrder.Id, retrievedOrder.Id);
+        Assert.Equal(dto.CustomerId, retrievedOrder.CustomerId);
+        Assert.Single(retrievedOrder.Items);
+        Assert.Equal(OrderStatus.Pending.ToString(), retrievedOrder.Status);
+        Assert.Equal(
+            dto.Items.Select(i => (i.ProductName!, i.Quantity!.Value, i.UnitPrice!.Value)),
+            retrievedOrder.Items.Select(i => (i.ProductName, i.Quantity, i.UnitPrice))
+        );
     }
     #endregion
 
