@@ -77,6 +77,15 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         return $"{route}?page={page}&pageSize={pageSize}";
     }
 
+    /// <summary>
+    /// Creates an order via the API and returns the response and created order.
+    /// If no DTO is provided, a default valid DTO will be used.
+    /// </summary>
+    /// <remarks>
+    /// Should NOT be used for negative tests (will always fail the status check).
+    /// </remarks>
+    /// <param name="dto">The CreateOrderDto to use for creating the order. If null, a default valid DTO will be used.</param>
+    /// <returns>A tuple containing the HttpResponseMessage and the created OrderResponse.</returns>
     private async Task<(HttpResponseMessage Response, OrderResponse Order)> CreateOrderViaApiAsync(CreateOrderDto? dto = null)
     {
         // Arrange: create an order DTO with valid data
@@ -99,7 +108,7 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         return (response, order);
     }
 
-    // Overload for existing call sites that only vary customerId
+    // Overload to set only customerId and a default valid order dto
     private Task<(HttpResponseMessage Response, OrderResponse Order)> CreateOrderViaApiAsync(int customerId)
         => CreateOrderViaApiAsync(new CreateOrderDto
         {
