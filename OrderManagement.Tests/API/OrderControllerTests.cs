@@ -638,7 +638,35 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         // Assert: created order returned with expected header and values
         Assert.NotNull(createdOrder);
         Assert.Equal(dto.CustomerId, createdOrder.CustomerId);
+        Assert.Equal(OrderStatus.Pending.ToString(), createdOrder.Status);
         Assert.Single(createdOrder.Items);
+        Assert.Equal(
+            OrderItemDtosToTuples(dto.Items),
+            OrderResponseItemsToTuples(createdOrder.Items)
+        );
+    }
+
+    [Fact]
+    [Layer("Api")]
+    [Scope("Order")]
+    public async Task Create_ReturnsCreatedOrderWithMultipleItems_WhenValid()
+    {
+        // Arrange: create an order DTO with multiple items
+        var dto = new CreateOrderDto()
+        {
+            CustomerId = 1,
+            Items = [
+                new() { ProductName = "Potato", Quantity = 1, UnitPrice = 0.99m },
+                new() { ProductName = "Tomato", Quantity = 2, UnitPrice = 1.49m }
+            ]
+        };
+
+        var (_, createdOrder) = await CreateOrderViaApiAsync(dto);
+
+        // Assert: created order returned with expected header and values
+        Assert.NotNull(createdOrder);
+        Assert.Equal(dto.CustomerId, createdOrder.CustomerId);
+        Assert.Equal(2, createdOrder.Items.Count);
         Assert.Equal(OrderStatus.Pending.ToString(), createdOrder.Status);
         Assert.Equal(
             OrderItemDtosToTuples(dto.Items),
