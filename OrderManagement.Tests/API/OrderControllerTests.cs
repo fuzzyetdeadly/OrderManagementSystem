@@ -124,6 +124,12 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         Assert.True(HttpStatusCode.OK == response.StatusCode, 
             $"AssertOk: Expected status OK, but got status {response.StatusCode}. Uri: {uri}, Content = {content}");
     }
+
+    private static IEnumerable<(string, int, decimal)> OrderItemDtosToTuples(IEnumerable<CreateOrderItemDto> items) 
+        => items.Select(i => (i.ProductName!, i.Quantity!.Value, i.UnitPrice!.Value));
+
+    private static IEnumerable<(string, int, decimal)> OrderResponseItemsToTuples(IEnumerable<OrderItemResponse> items)
+        => items.Select(i => (i.ProductName, i.Quantity, i.UnitPrice));
     #endregion
 
     #region GetAll
@@ -552,6 +558,9 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
 
         // Act: send POST request to create order
         var response = await _client.PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
         var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(TestContext.Current.CancellationToken);
 
         // Assert: problem details returned with multiple validation errors
@@ -584,6 +593,8 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
     }
 
     [Fact]
+    [Layer("Api")]
+    [Scope("Order")]
     public async Task Create_ReturnsBadRequest_ForValidJsonWrongShape()
     {
         // Arrange: JSON with wrong shape
@@ -613,7 +624,7 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
             Items = [new() { ProductName = "Potato", Quantity = 1, UnitPrice = 0.99m }]
         };
 
-        var (response, createdOrder) = await CreateOrderViaApiAsync(dto);
+        var (_, createdOrder) = await CreateOrderViaApiAsync(dto);
 
         // Assert: created order returned with expected header and values
         Assert.NotNull(createdOrder);
@@ -621,8 +632,8 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         Assert.Single(createdOrder.Items);
         Assert.Equal(OrderStatus.Pending.ToString(), createdOrder.Status);
         Assert.Equal(
-            dto.Items.Select(i => (i.ProductName!, i.Quantity!.Value, i.UnitPrice!.Value)),
-            createdOrder.Items.Select(i => (i.ProductName, i.Quantity, i.UnitPrice))
+            OrderItemDtosToTuples(dto.Items),
+            OrderResponseItemsToTuples(createdOrder.Items)
         );
     }
 
@@ -658,8 +669,8 @@ public class OrderControllerTests : IClassFixture<CustomWebApplicationFactory>, 
         Assert.Single(retrievedOrder.Items);
         Assert.Equal(OrderStatus.Pending.ToString(), retrievedOrder.Status);
         Assert.Equal(
-            dto.Items.Select(i => (i.ProductName!, i.Quantity!.Value, i.UnitPrice!.Value)),
-            retrievedOrder.Items.Select(i => (i.ProductName, i.Quantity, i.UnitPrice))
+            OrderItemDtosToTuples(dto.Items),
+            OrderResponseItemsToTuples(retrievedOrder.Items)
         );
     }
     #endregion
