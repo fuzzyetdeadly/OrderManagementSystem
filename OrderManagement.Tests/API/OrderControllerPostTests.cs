@@ -31,7 +31,8 @@ namespace OrderManagement.Tests.API
             };
 
             // Act: send POST request to create order
-            var response = await _client.PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+            var response = await _client
+                .PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
 
             // Assert: bad request due to missing CustomerId
             Assert.Equal(expectedStatus, response.StatusCode);
@@ -51,7 +52,8 @@ namespace OrderManagement.Tests.API
             };
 
             // Act: send POST request to create order
-            var response = await _client.PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+            var response = await _client
+                .PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
 
             // Assert: customer not found
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -73,7 +75,8 @@ namespace OrderManagement.Tests.API
             };
 
             // Act: send POST request to create order
-            var response = await _client.PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+            var response = await _client
+                .PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
 
             // Assert: bad request due to invalid product name
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -95,7 +98,8 @@ namespace OrderManagement.Tests.API
             };
 
             // Act: send POST request to create order
-            var response = await _client.PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+            var response = await _client
+                .PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
 
             // Assert: bad request due to invalid quantity
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -119,7 +123,8 @@ namespace OrderManagement.Tests.API
             };
 
             // Act: send POST request to create order
-            var response = await _client.PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+            var response = await _client
+                .PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
 
             // Assert: bad request due to invalid price
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -138,11 +143,13 @@ namespace OrderManagement.Tests.API
             };
 
             // Act: send POST request to create order
-            var response = await _client.PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+            var response = await _client
+                .PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
-            var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(TestContext.Current.CancellationToken);
+            var problem = await response.Content
+                .ReadFromJsonAsync<ValidationProblemDetails>(TestContext.Current.CancellationToken);
 
             // Assert: problem details returned with multiple validation errors
             Assert.NotNull(problem);
@@ -165,7 +172,8 @@ namespace OrderManagement.Tests.API
                 "application/json");
 
             // Act: send POST request with malformed body
-            var response = await _client.PostAsync("api/orders", malformedContent, TestContext.Current.CancellationToken);
+            var response = await _client
+                .PostAsync("api/orders", malformedContent, TestContext.Current.CancellationToken);
 
             // Assert: bad request due to malformed JSON, before validator or handler even runs
             // Also expect response details to be a problem-details response
@@ -185,7 +193,8 @@ namespace OrderManagement.Tests.API
                 "application/json");
 
             // Act: send POST request with wrong shape JSON body
-            var response = await _client.PostAsync("api/orders", wrongShapeContent, TestContext.Current.CancellationToken);
+            var response = await _client
+                .PostAsync("api/orders", wrongShapeContent, TestContext.Current.CancellationToken);
 
             // Assert: bad request due to valid JSON but wrong shape, before validator or handler even runs
             // Also expect response details to be a problem-details response
@@ -270,7 +279,8 @@ namespace OrderManagement.Tests.API
             // Assert: order retrieved successfully
             await AssertOk(orderResponse);
 
-            var retrievedOrder = await orderResponse.Content.ReadFromJsonAsync<OrderResponse>(TestContext.Current.CancellationToken);
+            var retrievedOrder = await orderResponse.Content
+                .ReadFromJsonAsync<OrderResponse>(TestContext.Current.CancellationToken);
 
             Assert.NotNull(retrievedOrder);
             Assert.Equal(createdOrder.Id, retrievedOrder.Id);

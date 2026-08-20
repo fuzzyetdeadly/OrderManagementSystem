@@ -12,7 +12,7 @@ public abstract class OrderControllerTestsBase : IClassFixture<CustomWebApplicat
 {
     protected readonly HttpClient _client;
     private readonly CustomWebApplicationFactory _factory;
-    private readonly ITestOutputHelper _output;
+    protected readonly ITestOutputHelper _output;
 
     private static bool _hasRunOnce = false;
 
