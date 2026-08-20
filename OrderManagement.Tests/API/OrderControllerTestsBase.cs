@@ -74,6 +74,12 @@ public abstract class OrderControllerTestsBase : IClassFixture<CustomWebApplicat
         return $"{route}?page={page}&pageSize={pageSize}";
     }
 
+    protected async Task<HttpResponseMessage> PostOrderViaApiAsync(CreateOrderDto dto)
+    {
+        return await _client
+            .PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+    }
+
     /// <summary>
     /// Creates an order via the API and returns the response and created order.
     /// If no DTO is provided, a default valid DTO will be used.
@@ -93,7 +99,7 @@ public abstract class OrderControllerTestsBase : IClassFixture<CustomWebApplicat
         };
 
         // Act: send POST request to create order
-        var response = await _client.PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+        var response = await PostOrderViaApiAsync(dto);
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 

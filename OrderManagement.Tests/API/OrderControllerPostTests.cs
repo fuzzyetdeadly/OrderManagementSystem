@@ -31,8 +31,7 @@ namespace OrderManagement.Tests.API
             };
 
             // Act: send POST request to create order
-            var response = await _client
-                .PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+            var response = await PostOrderViaApiAsync(dto);
 
             // Assert: bad request due to missing CustomerId
             Assert.Equal(expectedStatus, response.StatusCode);
@@ -52,8 +51,7 @@ namespace OrderManagement.Tests.API
             };
 
             // Act: send POST request to create order
-            var response = await _client
-                .PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+            var response = await PostOrderViaApiAsync(dto);
 
             // Assert: customer not found
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -75,8 +73,7 @@ namespace OrderManagement.Tests.API
             };
 
             // Act: send POST request to create order
-            var response = await _client
-                .PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+            var response = await PostOrderViaApiAsync(dto);
 
             // Assert: bad request due to invalid product name
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -98,8 +95,7 @@ namespace OrderManagement.Tests.API
             };
 
             // Act: send POST request to create order
-            var response = await _client
-                .PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+            var response = await PostOrderViaApiAsync(dto);
 
             // Assert: bad request due to invalid quantity
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -123,8 +119,7 @@ namespace OrderManagement.Tests.API
             };
 
             // Act: send POST request to create order
-            var response = await _client
-                .PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+            var response = await PostOrderViaApiAsync(dto);
 
             // Assert: bad request due to invalid price
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -143,8 +138,7 @@ namespace OrderManagement.Tests.API
             };
 
             // Act: send POST request to create order
-            var response = await _client
-                .PostAsJsonAsync("api/orders", dto, TestContext.Current.CancellationToken);
+            var response = await PostOrderViaApiAsync(dto);
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 

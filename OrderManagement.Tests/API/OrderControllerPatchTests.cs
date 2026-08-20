@@ -13,6 +13,14 @@ namespace OrderManagement.Tests.API
         public OrderControllerPatchTests(CustomWebApplicationFactory factory, ITestOutputHelper output)
         : base(factory, output) { }
 
+        #region helpers
+        private async Task<HttpResponseMessage> PatchOrderViaApiAsync(int orderId, UpdateOrderStatusDto dto)
+        {
+            return await _client
+                .PatchAsJsonAsync($"/api/orders/{orderId}/status", dto, TestContext.Current.CancellationToken);
+        }
+        #endregion
+
         #region UpdateStatus
         [Theory]
         [Layer("Api")]
@@ -25,8 +33,7 @@ namespace OrderManagement.Tests.API
             var dto = new UpdateOrderStatusDto { Status = OrderStatus.Processing };
 
             // Act: send PATCH request to update status of invalid order
-            var response = await _client
-                .PatchAsJsonAsync($"/api/orders/{invalidId}/status", dto, TestContext.Current.CancellationToken);
+            var response = await PatchOrderViaApiAsync(invalidId, dto);
 
             // Assert: correct status code returned
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -61,8 +68,7 @@ namespace OrderManagement.Tests.API
             var dto = new UpdateOrderStatusDto { Status = invalidStatus };
 
             // Act: send PATCH request with invalid status
-            var response = await _client
-                .PatchAsJsonAsync($"/api/orders/{order.Id}/status", dto, TestContext.Current.CancellationToken);
+            var response = await PatchOrderViaApiAsync(order.Id, dto);
 
             // Assert: correct status code returned
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -98,8 +104,7 @@ namespace OrderManagement.Tests.API
             var dto = new UpdateOrderStatusDto { Status = OrderStatus.Scheduled };
 
             // Act: send PATCH request to update status
-            var response = await _client
-                .PatchAsJsonAsync($"/api/orders/{order.Id}/status", dto, TestContext.Current.CancellationToken);
+            var response = await PatchOrderViaApiAsync(order.Id, dto);
 
             // Assert: correct status code returned and only order status updated
             // i.e. no other fields should be changed, and items should remain the same
