@@ -19,14 +19,14 @@ namespace OrderManagement.Tests.API
         [Scope("Order")]
         [InlineData(0)]
         [InlineData(-1)]
-        public async Task UpdateStatus_ReturnsNotFound_WhenOrderDoesNotExist(int nonExistentOrderId)
+        public async Task UpdateStatus_ReturnsNotFound_ForInvalidId(int invalidId)
         {
             // Arrange: valid dto
             var dto = new UpdateOrderStatusDto { Status = OrderStatus.Processing };
 
-            // Act: send PATCH request to update status of non-existent order
+            // Act: send PATCH request to update status of invalid order
             var response = await _client
-                .PatchAsJsonAsync($"/api/orders/{nonExistentOrderId}/status", dto, TestContext.Current.CancellationToken);
+                .PatchAsJsonAsync($"/api/orders/{invalidId}/status", dto, TestContext.Current.CancellationToken);
 
             // Assert: correct status code returned
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -40,7 +40,7 @@ namespace OrderManagement.Tests.API
             // Arrange: valid dto
             var dto = new UpdateOrderStatusDto { Status = OrderStatus.Processing };
 
-            // Act: send PATCH request to update status of non-existent order
+            // Act: send PATCH request to update status of non-numeric order ID
             var response = await _client
                 .PatchAsJsonAsync($"/api/orders/a/status", dto, TestContext.Current.CancellationToken);
 

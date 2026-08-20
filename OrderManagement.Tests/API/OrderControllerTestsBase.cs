@@ -98,7 +98,8 @@ public abstract class OrderControllerTestsBase : IClassFixture<CustomWebApplicat
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
         // Act: read the created order from the response
-        var order = await response.Content.ReadFromJsonAsync<OrderResponse>(TestContext.Current.CancellationToken);
+        var order = await response.Content
+            .ReadFromJsonAsync<OrderResponse>(TestContext.Current.CancellationToken);
 
         Assert.NotNull(order);
 
@@ -125,7 +126,8 @@ public abstract class OrderControllerTestsBase : IClassFixture<CustomWebApplicat
     {
         // Ensure status ok before continue (prevent unhandled exception)
         var uri = response.RequestMessage?.RequestUri;
-        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var content = await response.Content
+            .ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         Assert.True(HttpStatusCode.OK == response.StatusCode, 
             $"AssertOk: Expected status OK, but got status {response.StatusCode}. Uri: {uri}, Content = {content}");
