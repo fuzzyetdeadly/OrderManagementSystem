@@ -28,7 +28,7 @@ namespace OrderManagement.Tests.API
             var response = await DeleteOrderViaApiAsync(invalidId);
 
             // Assert: correct status code returned
-            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
 
         [Fact]

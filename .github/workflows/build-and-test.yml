@@ -6,7 +6,7 @@ on:
 
 jobs:
   backend:
-    name: Backend (.NET)
+    name: Backend tests (.NET)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -29,7 +29,7 @@ jobs:
         run: dotnet test OrderManagement.slnx --no-build --configuration Release --verbosity normal
 
   frontend:
-    name: Frontend (React)
+    name: Frontend tests (React)
     runs-on: ubuntu-latest
     defaults:
       run:
