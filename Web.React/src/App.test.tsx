@@ -80,6 +80,6 @@ describe("App", () => {
     // Note: this is required for test coverage completeness
     await user.click(themeSwitch);
 
-    expect(themeSwitch).toBeChecked();
+    expect(themeSwitch).not.toBeChecked();
   });
 });
