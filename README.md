@@ -14,10 +14,17 @@ SQLite is used as an in memory database for testing, prioritizing speed and simp
 * Swagger UI for testing the API
 * Contains built in validation logic for existing scenarios
 * In developer mode, will seed a test customer if there is none on startup
+* Near complete test coverage for repository, service and controllers
 
 ### Front-end
 
-* A simple React web app, to add a basic order and manage orders
+* A simple React web app using Material UI
+* Allows basic order creation and management
+* Near complete test coverage for front-end API client and component tests
+
+### Repository 
+
+* CI configuration to automate tests for changes to pull requests, which includes package caching for NuGet and Node
 
 ## How to run
 
@@ -44,7 +51,7 @@ Note: If you see the logs creating tables, it should have succeeded, but you can
 which requires a re-install to fix.)  
 6\. (Optional) Inspect the DB to verify that tables were created correctly.  
 7\. Click the `run` button in `Visual Studio` to start the back-end  
-8\. `cd Frontend.React`, then `npm run dev` to run in development mode
+8\. `cd Web.React`, then `npm run dev` to run in development mode
 
 ## Accessing the API and Web app
 
@@ -63,25 +70,35 @@ If there are changes to any of the following:
 Then it will be necessary to reset migrations for fresh clones.
 This can be done by running `ResetMigrations.bat` from the solution folder.
 
-Warning: Must be done from the solution folder, or the script will fail!
+*Warning*: Must be done from the solution folder, or the script will fail!
+
+## Running tests
+
+1\. Run tests with `npm run test`.
+2\. Check test coverage with `npm run test:coverage` 
 
 ## Future work
 
-Planned additions, updated as time and priorities allow.
+Planned additions to be explored as time and priorities allow.
 
 ### Features
 
-* Translations for user facing text 
-* Implement react router
-* Better order submission form (add/remove items)
+* Translations for user facing text (ongoing)
+* Message queue with event driven architecture. In memory first, RabbitMQ later.
+* Proper middleware (existing is minimum viable setup)
+* Auth with a minimal JSON Web Token (JWT)
+* Implement React-Router
+* Implement state machine for order status
+* Better order submission form (cart management style)
+* Deploy to Render
 
 ### Tests
 
-* End-to-end controller tests (halfway done, needed to re-prioritize React learning)
+* No technical debt (for now)
 
 ## Author's professional summary
 
-Timothy Guan is a Software Engineering Manager with 14 years of experience across the full SDLC, delivering enterprise-grade applications and tools in a global multinational environment. 
+Timothy Guan is a Senior Software Engineer with 14 years of experience across the full SDLC, delivering enterprise-grade applications and tools in a global multinational environment.
 
 His experience covers working within distributed international teams spanning multiple continents and time zones, with a strong background in Agile/Scrum including the Scrum Master role.
 
