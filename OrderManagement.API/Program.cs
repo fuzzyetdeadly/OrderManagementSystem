@@ -3,9 +3,12 @@ using Microsoft.EntityFrameworkCore;
 using OrderManagement.API.DTOs;
 using OrderManagement.API.Extensions;
 using OrderManagement.API.Middleware;
+using OrderManagement.API.Workers;
+using OrderManagement.Application.Messaging;
 using OrderManagement.Application.Services;
 using OrderManagement.Domain.Entities;
 using OrderManagement.Domain.Interfaces;
+using OrderManagement.Infrastructure.Messaging;
 using OrderManagement.Infrastructure.Persistence;
 using OrderManagement.Infrastructure.Repositories;
 using Swashbuckle.AspNetCore.Filters;
@@ -24,6 +27,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<OrderService>();
+
+// Register messaging queue (in-memory for now, RabbitMQ later)
+// Singleton: one queue must persist across all requests
+// unlike scoped services which are per-request.
+// Also add consumer to process messages in the background.
+builder.Services.AddSingleton<IOrderCreatedQueue, InMemoryOrderCreateQueue>();
+builder.Services.AddHostedService<OrderCreatedConsumer>();
 
 // Add custom controller support
 builder.Services.AddCustomControllers();
