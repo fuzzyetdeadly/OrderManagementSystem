@@ -3,11 +3,11 @@ using OrderManagement.Tests.Common;
 using System.Net;
 using System.Net.Http.Json;
 
-namespace OrderManagement.Tests.API
+namespace OrderManagement.Tests.API.Orders
 {
-    public class OrderControllerGetTests : OrderControllerTestsBase
+    public class OrdersControllerGetTests : OrdersControllerTestsBase
     {
-        public OrderControllerGetTests(CustomWebApplicationFactory factory, ITestOutputHelper output)
+        public OrdersControllerGetTests(CustomWebApplicationFactory factory, ITestOutputHelper output)
         : base(factory, output) { }
 
         #region GetAll
