@@ -210,6 +210,23 @@ public class OrderServiceTests
     [Fact]
     [Layer("Service")]
     [Scope("Order")]
+    public async Task Create_DoesNotPublish_WhenCustomerNotFound()
+    {
+        // Arrange: setup customer not found
+        SetupCustomerExists(false);
+
+        // Act: call the service method
+        var requestDto = CreatePostRequest();
+
+        await _service.CreateAsync(requestDto);
+
+        // Assert: that the message was not published
+        _orderCreatedQueue.Verify(q => q.PublishAsync(It.IsAny<OrderCreatedMessage>()), Times.Never());
+    }
+
+    [Fact]
+    [Layer("Service")]
+    [Scope("Order")]
     public async Task Create_CallsRepoCorrectly_WhenCustomerFound()
     {
         SetupCustomerExists();
