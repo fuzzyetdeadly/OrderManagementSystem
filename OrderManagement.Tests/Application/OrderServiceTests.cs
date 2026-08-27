@@ -1,6 +1,7 @@
 ﻿using ErrorOr;
 using Moq;
 using OrderManagement.Application.Common;
+using OrderManagement.Application.Messaging;
 using OrderManagement.Application.Models;
 using OrderManagement.Application.Services;
 using OrderManagement.Domain.Common;
@@ -18,15 +19,17 @@ public class OrderServiceTests
     // Fields
     private readonly Mock<ICustomerRepository> _customerRepo;
     private readonly Mock<IOrderRepository> _orderRepo;
+    private readonly Mock<IOrderCreatedQueue> _orderCreatedQueue;
     private readonly OrderService _service;
 
     public OrderServiceTests()
     {
         _customerRepo = new Mock<ICustomerRepository>();
         _orderRepo = new Mock<IOrderRepository>();
+        _orderCreatedQueue = new Mock<IOrderCreatedQueue>();
 
         // Access '*.Object' for mock instance
-        _service = new OrderService(_customerRepo.Object, _orderRepo.Object);
+        _service = new OrderService(_customerRepo.Object, _orderRepo.Object, _orderCreatedQueue.Object);
     }
 
     #region helpers
@@ -222,23 +225,50 @@ public class OrderServiceTests
 
         var result = await _service.CreateAsync(requestDto);
 
-        // Verify that exists and create methods were both invoked correctly
+        // Assert: exists and create methods were both invoked correctly
         // Note: CreateAsync is redundant, but verify to make explicit it's expected call
         _customerRepo.Verify(r => r.ExistsAsync(requestDto.CustomerId), Times.Once());
         _orderRepo.Verify(r => r.CreateAsync(capturedOrder), Times.Once());
 
-        // Assert that no errors, and that request to order mapped correctly
+        // Assert: no errors, and that request to order mapped correctly
         Assert.False(result.IsError);
         Assert.Equal(requestDto.CustomerId, capturedOrder?.CustomerId);
         Assert.Equal(requestDto.Items.Count, capturedOrder?.Items.Count);
 
-        // Assert that item mapped correctly
+        // Assert: that item mapped correctly
         var expectedItem = requestDto.Items.First();
         var capturedItem = capturedOrder?.Items.First();
 
         Assert.Equal(expectedItem.ProductName, capturedItem?.ProductName);
         Assert.Equal(expectedItem.Quantity, capturedItem?.Quantity);
         Assert.Equal(expectedItem.UnitPrice, capturedItem?.UnitPrice);
+    }
+
+    [Fact]
+    [Layer("Service")]
+    [Scope("Order")]
+    public async Task Create_PublishesOrderCreatedMessage_WhenCustomerFound()
+    {
+        // Arrange: setup customer exists, and create to return a persisted order 
+        SetupCustomerExists();
+
+        var persistedOrder = CreateOrder();
+
+        _orderRepo
+            .Setup(r => r.CreateAsync(It.IsAny<Order>()))
+            .ReturnsAsync(persistedOrder);
+
+        // Act: call the service method
+        var requestDto = CreatePostRequest();
+
+        await _service.CreateAsync(requestDto);
+
+        // Assert: that the message published has the correct values
+        _orderCreatedQueue.Verify(q => q.PublishAsync(
+            It.Is<OrderCreatedMessage>(m =>
+                m.OrderId == persistedOrder.Id &&
+                m.CustomerId == persistedOrder.CustomerId &&
+                m.CreatedAt == persistedOrder.Created)), Times.Once());
     }
     #endregion
 
