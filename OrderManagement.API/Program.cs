@@ -79,7 +79,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 
     // Seed test customer data (if there are none)
-    using(var scope = app.Services.CreateScope())
+    using (var scope = app.Services.CreateScope())
     {
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
