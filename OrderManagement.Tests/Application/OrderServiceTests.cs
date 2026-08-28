@@ -227,6 +227,26 @@ public class OrderServiceTests
     [Fact]
     [Layer("Service")]
     [Scope("Order")]
+    public async Task Create_PropagatesException_WhenQueueFails()
+    {
+        // Arrange: customer exists and mock repo and queue behaviors
+        SetupCustomerExists();
+
+        _orderRepo.Setup(r => r.CreateAsync(It.IsAny<Order>()))
+            .ReturnsAsync(CreateOrder());
+        _orderCreatedQueue.Setup(q => q.PublishAsync(It.IsAny<OrderCreatedMessage>()))
+            .ThrowsAsync(new InvalidOperationException("Queue failure"));
+
+        // Act & Assert: call the service method and expect an exception
+        var requestDto = CreatePostRequest();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            async () => await _service.CreateAsync(requestDto));
+    }
+
+    [Fact]
+    [Layer("Service")]
+    [Scope("Order")]
     public async Task Create_CallsRepoCorrectly_WhenCustomerFound()
     {
         SetupCustomerExists();
@@ -267,9 +287,11 @@ public class OrderServiceTests
     public async Task Create_PublishesOrderCreatedMessage_WhenCustomerFound()
     {
         // Arrange: setup customer exists, and create to return a persisted order 
+        // Note: intentionally use different persisted values from requestDto
+        // This is to ensure that the message published uses the persisted values, not the request values
         SetupCustomerExists();
 
-        var persistedOrder = CreateOrder();
+        var persistedOrder = CreateOrder(id: 99, status: OrderStatus.Scheduled, customerId: 2);
 
         _orderRepo
             .Setup(r => r.CreateAsync(It.IsAny<Order>()))
