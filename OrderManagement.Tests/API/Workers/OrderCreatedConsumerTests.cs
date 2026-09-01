@@ -145,10 +145,11 @@ public class OrderCreatedConsumerTests
         }
         finally
         {
-            // Stop the consumer and wait for 'consumerTask' to complete,
-            // even if the delay above was cancelled/threw.
+            // StopAsync waits for the consumer's background loop to actually finish
+            // and rethrows any exception it hit. This is the real "did it stop
+            // cleanly" check, not consumerTask (which finished the instant
+            // StartAsync returned and tells us nothing about the loop itself).
             await consumer.StopAsync(cts.Token);
-            await consumerTask;
         }
 
         // Assert: info log was written, but no error log was
@@ -192,6 +193,10 @@ public class OrderCreatedConsumerTests
 
             // Assert: StopAsync completed promptly (within 2 seconds)
             Assert.Same(stopTask, completedTask);
+
+            // Await stopTask to ensure any exception from StopAsync is observed and
+            // actually fails the test, rather than being silently discarded.
+            await stopTask;
         }
     }
 
@@ -215,13 +220,25 @@ public class OrderCreatedConsumerTests
         // consumerTask for this; we poll the logger below to see the error instead.
         var consumerTask = consumer.StartAsync(cancelToken);
 
-        // Poll for any error or the deadline instead of delay
-        var deadline = DateTime.UtcNow.AddSeconds(2);
-
-        while (!_logger.Collector.GetSnapshot()
-            .Any(log => log.Level == LogLevel.Error) && DateTime.UtcNow < deadline)
+        try
         {
-            await Task.Delay(20, cancelToken);
+            // Poll for any error or the deadline instead of delay
+            var deadline = DateTime.UtcNow.AddSeconds(2);
+
+            while (!_logger.Collector.GetSnapshot()
+                .Any(log => log.Level == LogLevel.Error) && DateTime.UtcNow < deadline)
+            {
+                await Task.Delay(20, cancelToken);
+            }
+        }
+        finally
+        {
+            // StopAsync itself swallows exceptions from the loop (it uses
+            // Task.WhenAny internally, which doesn't rethrow). The loop's actual
+            // task is exposed separately as consumer.ExecuteTask. That's what
+            // rethrows the `throw;` from ExecuteAsync's catch block.
+            await consumer.StopAsync(cancelToken);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => consumer.ExecuteTask!);
         }
 
         // Assert: error log was written with an exception attached
