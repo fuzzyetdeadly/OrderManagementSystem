@@ -5,6 +5,7 @@ using OrderManagement.API.Workers;
 using OrderManagement.Application.Messaging;
 using OrderManagement.Infrastructure.Messaging;
 using OrderManagement.Tests.Common;
+using System.Runtime.CompilerServices;
 
 namespace OrderManagement.Tests.API.Workers;
 
@@ -16,6 +17,31 @@ public class OrderCreatedConsumerTests
     {
         return new(queue, _logger);
     }
+
+    #region helpers
+    private static async IAsyncEnumerable<OrderCreatedMessage> HangingAsyncEnumerable([EnumeratorCancellation] CancellationToken ct)
+    {
+        // Simulate a hanging queue that can be cancelled via `ct`.
+        // The [EnumeratorToken] attribute is required to resolve a parser warning.
+        // Without it, "the cancellation token parameter from the generated 'GetAsyncEnumerator'
+        // will be unconsumed."
+        await Task.Delay(Timeout.Infinite, ct);
+
+        // Unreachable code, but required to satisfy iterator return type
+        yield break;
+    }
+
+    private static async IAsyncEnumerable<OrderCreatedMessage> ThrowingAsyncEnumerable()
+    {
+        await Task.Yield();
+
+        throw new InvalidOperationException("Simulated queue failure");
+
+#pragma warning disable CS0162 // Unreachable code — required to satisfy iterator return type
+        yield break;
+#pragma warning restore CS0162
+    }
+    #endregion
 
     [Fact]
     [Layer("Api")]
@@ -94,6 +120,50 @@ public class OrderCreatedConsumerTests
     [Fact]
     [Layer("Api")]
     [Scope("Worker")]
+    public async Task ExecuteAsync_LogsInfoNotError_WhenCancelledDuringShutdown()
+    {
+        // Arrange: mock queue that hangs until cancelled, consumer and messages
+        // Note: for this test, the cancel token of 'ReadAllAsync' is forwarded to 'HangingAsyncEnumerable'
+        var mockQueue = new Mock<IOrderCreatedQueue>();
+
+        mockQueue.Setup(q => q.ReadAllAsync(It.IsAny<CancellationToken>()))
+            .Returns((CancellationToken ct) => HangingAsyncEnumerable(ct));
+
+        var consumer = SetupConsumer(mockQueue.Object);
+        var cancelToken = TestContext.Current.CancellationToken;
+
+        // Act: start the consumer and delay it awhile before cancelling with a 'cts'
+        // Link 'cts' to the test's own cancellation token, so that if the test
+        // runner cancels the test mid-run, 'cts' is cancelled too — ensuring the
+        // consumer is always stopped and never left hanging past this test.
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancelToken);
+        var consumerTask = consumer.StartAsync(cts.Token);
+
+        try
+        {
+            await Task.Delay(50, cancelToken);
+        }
+        finally
+        {
+            // Stop the consumer and wait for 'consumerTask' to complete,
+            // even if the delay above was cancelled/threw.
+            await consumer.StopAsync(cts.Token);
+            await consumerTask;
+        }
+
+        // Assert: info log was written, but no error log was
+        // Note: there are two info logs, "started" and "stopped". Only "stopped" is relevant to this test
+        var logs = _logger.Collector.GetSnapshot();
+
+        Assert.Contains(logs, log => 
+            log.Level == LogLevel.Information && log.Message.Contains("stopped"));
+
+        Assert.DoesNotContain(logs, log => log.Level == LogLevel.Error);
+    }
+
+    [Fact]
+    [Layer("Api")]
+    [Scope("Worker")]
     public async Task ExecuteAsync_LogsError_WhenQueueThrowsUnexpectedException()
     {
         // Arrange: mock queue that throws mid-stream, consumer and messages
@@ -127,16 +197,5 @@ public class OrderCreatedConsumerTests
         Assert.NotNull(errorLog);
         Assert.NotNull(errorLog.Exception);
         Assert.Contains("unexpected error", errorLog.Message);
-    }
-
-    private static async IAsyncEnumerable<OrderCreatedMessage> ThrowingAsyncEnumerable() 
-    {
-        await Task.Yield();
-
-        throw new InvalidOperationException("Simulated queue failure");
-
-#pragma warning disable CS0162 // Unreachable code — required to satisfy iterator return type
-        yield break;
-#pragma warning restore CS0162
     }
 }
