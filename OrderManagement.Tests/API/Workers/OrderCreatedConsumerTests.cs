@@ -164,6 +164,40 @@ public class OrderCreatedConsumerTests
     [Fact]
     [Layer("Api")]
     [Scope("Worker")]
+    public async Task ExecuteAsync_StopsPromptly_AfterCancelRequested()
+    {
+        // Arrange: mock queue that hangs until cancelled, consumer and messages
+        var mockQueue = new Mock<IOrderCreatedQueue>();
+        mockQueue.Setup(q => q.ReadAllAsync(It.IsAny<CancellationToken>()))
+            .Returns((CancellationToken ct) => HangingAsyncEnumerable(ct));
+
+        var consumer = SetupConsumer(mockQueue.Object);
+        var cancelToken = TestContext.Current.CancellationToken;
+
+        // Act: start the consumer and delay it awhile before cancelling with a 'cts'
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancelToken);
+        var consumerTask = consumer.StartAsync(cts.Token);
+
+        try
+        {
+            await Task.Delay(50, cancelToken);
+        }
+        finally
+        {
+            // Stop task and check if it completes within 2 seconds
+            // Note, no await for 'consumer.StopAsync', because Task.WhenAny handles it.
+            var stopTask = consumer.StopAsync(cts.Token);
+            var delayTask = Task.Delay(TimeSpan.FromSeconds(2), cancelToken);
+            var completedTask = await Task.WhenAny(stopTask, delayTask);
+
+            // Assert: StopAsync completed promptly (within 2 seconds)
+            Assert.Same(stopTask, completedTask);
+        }
+    }
+
+    [Fact]
+    [Layer("Api")]
+    [Scope("Worker")]
     public async Task ExecuteAsync_LogsError_WhenQueueThrowsUnexpectedException()
     {
         // Arrange: mock queue that throws mid-stream, consumer and messages
