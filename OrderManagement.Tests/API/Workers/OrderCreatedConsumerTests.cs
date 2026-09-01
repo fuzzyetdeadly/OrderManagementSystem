@@ -144,9 +144,7 @@ public class OrderCreatedConsumerTests
         finally
         {
             // StopAsync waits for the consumer's background loop to actually finish
-            // and rethrows any exception it hit. This is the real "did it stop
-            // cleanly" check, not consumerTask (which finished the instant
-            // StartAsync returned and tells us nothing about the loop itself).
+            // and rethrows any exception it hit. This is the real "did it stop cleanly" check.
             await consumer.StopAsync(cts.Token);
         }
 
@@ -214,9 +212,9 @@ public class OrderCreatedConsumerTests
         var cancelToken = TestContext.Current.CancellationToken;
 
         // Act: Start the consumer. BackgroundService.StartAsync only reports failure
-        // if ExecuteAsync crashes immediately — otherwise it says "started fine" and
-        // walks away, even if ExecuteAsync fails moments later. So we don't rely on
-        // consumerTask for this; we poll the logger below to see the error instead.
+        // if ExecuteAsync crashes immediately. Otherwise, it says "started fine" and
+        // walks away, even if ExecuteAsync fails moments later. So we poll the logger
+        // below to see the error instead of relying on the result of StartAsync.
         await consumer.StartAsync(cancelToken);
 
         try
