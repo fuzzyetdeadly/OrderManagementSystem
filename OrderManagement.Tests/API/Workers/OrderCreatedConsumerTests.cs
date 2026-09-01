@@ -56,8 +56,7 @@ public class OrderCreatedConsumerTests
 
         // Act: publish message, then start, poll, stop consumer
         await queue.PublishAsync(message, cancelToken);
-
-        var consumerTask = consumer.StartAsync(cancelToken);
+        await consumer.StartAsync(cancelToken);
 
         // Poll for expected text instead of fixed delay to avoid flaky tests
         var expectedText = $"Order {message.OrderId} created for customer {message.CustomerId}";
@@ -70,7 +69,6 @@ public class OrderCreatedConsumerTests
         }
 
         await consumer.StopAsync(cancelToken);
-        await consumerTask;
 
         // Assert: text is as expected in the logs
         Assert.Contains(_logger.Collector.GetSnapshot(), 
@@ -96,7 +94,7 @@ public class OrderCreatedConsumerTests
             await queue.PublishAsync(message, cancelToken);
         }
 
-        var consumerTask = consumer.StartAsync(cancelToken);
+        await consumer.StartAsync(cancelToken);
 
         // Poll for all expected lines or deadline instead of delay
         var deadline = DateTime.UtcNow.AddSeconds(2);
@@ -108,7 +106,6 @@ public class OrderCreatedConsumerTests
         }
 
         await consumer.StopAsync(cancelToken);
-        await consumerTask;
 
         // Assert: number of log messages is as expected
         var matchingEntries = _logger.Collector.GetSnapshot()
@@ -137,7 +134,8 @@ public class OrderCreatedConsumerTests
         // runner cancels the test mid-run, 'cts' is cancelled too — ensuring the
         // consumer is always stopped and never left hanging past this test.
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancelToken);
-        var consumerTask = consumer.StartAsync(cts.Token);
+
+        await consumer.StartAsync(cts.Token);
 
         try
         {
@@ -177,7 +175,8 @@ public class OrderCreatedConsumerTests
 
         // Act: start the consumer and delay it awhile before cancelling with a 'cts'
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancelToken);
-        var consumerTask = consumer.StartAsync(cts.Token);
+
+        await consumer.StartAsync(cts.Token);
 
         try
         {
@@ -218,7 +217,7 @@ public class OrderCreatedConsumerTests
         // if ExecuteAsync crashes immediately — otherwise it says "started fine" and
         // walks away, even if ExecuteAsync fails moments later. So we don't rely on
         // consumerTask for this; we poll the logger below to see the error instead.
-        var consumerTask = consumer.StartAsync(cancelToken);
+        await consumer.StartAsync(cancelToken);
 
         try
         {
