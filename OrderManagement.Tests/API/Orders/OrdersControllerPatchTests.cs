@@ -6,11 +6,11 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 
-namespace OrderManagement.Tests.API
+namespace OrderManagement.Tests.API.Orders
 {
-    public class OrderControllerPatchTests : OrderControllerTestsBase
+    public class OrdersControllerPatchTests : OrdersControllerTestsBase
     {
-        public OrderControllerPatchTests(CustomWebApplicationFactory factory, ITestOutputHelper output)
+        public OrdersControllerPatchTests(CustomWebApplicationFactory factory, ITestOutputHelper output)
         : base(factory, output) { }
 
         #region helpers

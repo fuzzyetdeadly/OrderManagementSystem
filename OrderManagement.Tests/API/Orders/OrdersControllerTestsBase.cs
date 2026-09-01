@@ -6,9 +6,9 @@ using OrderManagement.Infrastructure.Persistence;
 using System.Net;
 using System.Net.Http.Json;
 
-namespace OrderManagement.Tests.API;
+namespace OrderManagement.Tests.API.Orders;
 
-public abstract class OrderControllerTestsBase : IClassFixture<CustomWebApplicationFactory>, IAsyncLifetime
+public abstract class OrdersControllerTestsBase : IClassFixture<CustomWebApplicationFactory>, IAsyncLifetime
 {
     protected readonly HttpClient _client;
     private readonly CustomWebApplicationFactory _factory;
@@ -16,7 +16,7 @@ public abstract class OrderControllerTestsBase : IClassFixture<CustomWebApplicat
 
     private static bool _hasRunOnce = false;
 
-    public OrderControllerTestsBase(CustomWebApplicationFactory factory, ITestOutputHelper output)
+    public OrdersControllerTestsBase(CustomWebApplicationFactory factory, ITestOutputHelper output)
     {
         _factory = factory;
         _client = factory.CreateClient();

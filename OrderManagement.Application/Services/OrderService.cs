@@ -1,5 +1,6 @@
 ﻿using ErrorOr;
 using OrderManagement.Application.Common;
+using OrderManagement.Application.Messaging;
 using OrderManagement.Application.Models;
 using OrderManagement.Domain.Common;
 using OrderManagement.Domain.Entities;
@@ -13,11 +14,13 @@ public class OrderService
 {
     private readonly ICustomerRepository _customerRepository;
     private readonly IOrderRepository _orderRepository;
+    private readonly IOrderCreatedQueue _orderCreatedQueue;
 
-    public OrderService(ICustomerRepository customerRepository, IOrderRepository orderRepository)
+    public OrderService(ICustomerRepository customerRepository, IOrderRepository orderRepository, IOrderCreatedQueue orderCreatedQueue)
     {
         _customerRepository = customerRepository;
         _orderRepository = orderRepository;
+        _orderCreatedQueue = orderCreatedQueue;
     }
 
     /*
@@ -81,6 +84,10 @@ public class OrderService
         // Note: expect order create process to return
         // an order updated with assigned Id and Create time
         var createdOrder = await _orderRepository.CreateAsync(order);
+
+        // Publish successfully added order to queue for downstream processing
+        await _orderCreatedQueue.PublishAsync(
+            new OrderCreatedMessage(createdOrder.Id, createdOrder.CustomerId, createdOrder.Created));
 
         return MapToDto(createdOrder);
     }

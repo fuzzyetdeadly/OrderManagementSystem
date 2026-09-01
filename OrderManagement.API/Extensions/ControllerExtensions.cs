@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using OrderManagement.API.Constants;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace OrderManagement.API.Extensions;

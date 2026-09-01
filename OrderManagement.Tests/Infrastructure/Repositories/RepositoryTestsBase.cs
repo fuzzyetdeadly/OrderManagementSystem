@@ -6,7 +6,7 @@ using OrderManagement.Domain.Entities;
 using OrderManagement.Domain.Interfaces;
 using OrderManagement.Infrastructure.Persistence;
 
-namespace OrderManagement.Tests.Infrastructure;
+namespace OrderManagement.Tests.Infrastructure.Repositories;
 
 /*
  * Repositories normally talk to databases

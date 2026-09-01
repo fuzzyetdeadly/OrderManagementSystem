@@ -1,11 +1,11 @@
 ﻿using OrderManagement.Tests.Common;
 using System.Net;
 
-namespace OrderManagement.Tests.API
+namespace OrderManagement.Tests.API.Orders
 {
-    public class OrderControllerDeleteTests : OrderControllerTestsBase
+    public class OrdersControllerDeleteTests : OrdersControllerTestsBase
     {
-        public OrderControllerDeleteTests(CustomWebApplicationFactory factory, ITestOutputHelper output)
+        public OrdersControllerDeleteTests(CustomWebApplicationFactory factory, ITestOutputHelper output)
         : base(factory, output) { }
 
         #region helpers

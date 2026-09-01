@@ -14,7 +14,9 @@ SQLite is used as an in memory database for testing, prioritizing speed and simp
 * Swagger UI for testing the API
 * Contains built in validation logic for existing scenarios
 * In developer mode, will seed a test customer if there is none on startup
-* Near complete test coverage for repository, service and controllers
+* An in-memory message queue that accepts order created events
+* An order created consumer that subscribes to the queue and logs created orders
+* Near complete test coverage for repository, service, controllers, queue and consumer
 
 ### Front-end
 

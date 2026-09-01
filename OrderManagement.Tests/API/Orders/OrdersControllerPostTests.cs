@@ -7,9 +7,9 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 
-namespace OrderManagement.Tests.API
+namespace OrderManagement.Tests.API.Orders
 {
-    public class OrderControllerCreateTests : OrderControllerTestsBase
+    public class OrderControllerCreateTests : OrdersControllerTestsBase
     {
         public OrderControllerCreateTests(CustomWebApplicationFactory factory, ITestOutputHelper output)
         : base(factory, output) { }

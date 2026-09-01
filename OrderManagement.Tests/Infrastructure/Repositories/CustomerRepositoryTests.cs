@@ -5,7 +5,7 @@ using OrderManagement.Infrastructure.Persistence;
 using OrderManagement.Infrastructure.Repositories;
 using OrderManagement.Tests.Common;
 
-namespace OrderManagement.Tests.Infrastructure;
+namespace OrderManagement.Tests.Infrastructure.Repositories;
 
 public class CustomerRepositoryTests : RepositoryTestsBase<CustomerRepository, Customer>
 {
