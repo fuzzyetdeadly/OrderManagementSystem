@@ -182,8 +182,7 @@ public class OrderCreatedConsumerTests
         }
         finally
         {
-            // Stop task and check if it completes within 2 seconds
-            // Note, no await for 'consumer.StopAsync', because Task.WhenAny handles it.
+            // Race StopAsync against a 2-second timeout to confirm it completes promptly.
             var stopTask = consumer.StopAsync(cts.Token);
             var delayTask = Task.Delay(TimeSpan.FromSeconds(2), cancelToken);
             var completedTask = await Task.WhenAny(stopTask, delayTask);
