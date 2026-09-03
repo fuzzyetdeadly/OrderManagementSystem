@@ -1,0 +1,16 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: oms-rabbitmq
+    ports:
+      - "5672:5672"   # AMQP protocol port (app connects to this)
+      - "15672:15672" # Management plugin port (browser)
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+volumes:
+  rabbitmq_data:
+    driver: local # Local is default, but set to be explicit
