@@ -14,7 +14,8 @@ SQLite is used as an in memory database for testing, prioritizing speed and simp
 * Swagger UI for testing the API
 * Contains built in validation logic for existing scenarios
 * In developer mode, will seed a test customer if there is none on startup
-* An in-memory message queue that accepts order created events
+* In-memory message queue for order created events in development mode
+* RabbitMQ message queue for order created events in production mode
 * An order created consumer that subscribes to the queue and logs created orders
 * Near complete test coverage for repository, service, controllers, queue and consumer
 
@@ -30,30 +31,41 @@ SQLite is used as an in memory database for testing, prioritizing speed and simp
 
 ## How to run
 
-Required installs:
+Run dependencies:
 
 * PostgreSQL
 * Visual Studio (for .NET) and Visual Studio Code (for React)
 * .NET SDK for .NET 10.0
 * `dotnet ef` with `dotnet tool install --global dotnet-ef`
+* Windows subsystem for Linux (WSL) for Docker
+* Docker Desktop to run a RabbitMQ container in production mode
 * Node.js for React
 
 Run steps:
 
 1\. Clone the project and open it locally  
+
 2\. Open `OrderManagement.API/appsettings.json` and set your PostgreSQL password  
+
 3\. (Optional) Run `dotnet restore` to install dependencies  
-3\. `cd OrderManagement.API/appsettings.json` to give Visual Studio startup context  
-4\. Run `dotnet ef database update` to create the initial database and it's tables.   
+
+4\. `cd OrderManagement.API/appsettings.json` to give Visual Studio startup context  
+
+5\. Run `dotnet ef database update` to create the initial database and it's tables.   
 
 Note: If you see the logs creating tables, it should have succeeded, but you can double check with `dotnet ef migrations list`, which will connect to the DB and list them from `__EFMigrationsHistory`.
 
-5\. (Optional) Connect to the DB with `pgAdmin`  
-(run as admin, because Windows Smart control sometimes blocks `libpq.dll`,  
-which requires a re-install to fix.)  
-6\. (Optional) Inspect the DB to verify that tables were created correctly.  
-7\. Click the `run` button in `Visual Studio` to start the back-end  
-8\. `cd Web.React`, then `npm run dev` to run in development mode
+6\. (Optional) Connect to the DB with `pgAdmin`  
+(Run as admin, because Windows Smart control sometimes blocks `libpq.dll`, which requires a re-install to fix.)  
+
+7\. (Optional) Inspect the DB to verify that tables were created correctly.
+
+8\. (Production mode only) Navigate to the `../OrderManagementSystem` solution folder, and run `docker compose up -d` to start a `RabbitMQ` service with a persistent `rabbitmq_data` volume
+
+9\. Click the `run` button in `Visual Studio` to start the back-end. 
+(Use `https` for Development, and `https-prod` for Production)
+
+10\. `cd Web.React`, then `npm run dev` to run the front-end in development mode
 
 ## Accessing the API and Web app
 
