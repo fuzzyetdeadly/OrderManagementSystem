@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
+    <File Path="docker-compose.yml" />
   </Folder>
   <Project Path="OrderManagement.API/OrderManagement.API.csproj" />
   <Project Path="OrderManagement.Application/OrderManagement.Application.csproj" />
