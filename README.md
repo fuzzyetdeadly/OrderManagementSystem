@@ -37,7 +37,7 @@ Run dependencies:
 * Visual Studio (for .NET) and Visual Studio Code (for React)
 * .NET SDK for .NET 10.0
 * `dotnet ef` with `dotnet tool install --global dotnet-ef`
-* Windows subsystem for Linux (WSL) for Docker
+* Windows subsystem for Linux (WSL) for Docker, version 4.x or greater
 * Docker Desktop to run a RabbitMQ container in production mode
 * Node.js for React
 
@@ -60,7 +60,9 @@ Note: If you see the logs creating tables, it should have succeeded, but you can
 
 7\. (Optional) Inspect the DB to verify that tables were created correctly.
 
-8\. (Production mode only) Navigate to the `../OrderManagementSystem` solution folder, and run `docker compose up -d` to start a `RabbitMQ` service with a persistent `rabbitmq_data` volume
+8\. (Production mode only) Navigate to the `../OrderManagementSystem` solution folder, and run `docker compose up -d` to start a `RabbitMQ` service with a persistent `rabbitmq_data` volume.
+
+**Warning: Before you run this step, consider whether you wish to [restrict WSL/Docker disk space usage](#restricting-wsl-docker-disk-space-usage)**
 
 9\. Click the `run` button in `Visual Studio` to start the back-end. 
 (Use `https` for Development, and `https-prod` for Production)
@@ -72,6 +74,11 @@ Note: If you see the logs creating tables, it should have succeeded, but you can
 * Localhost only for now
 * SwaggerUI (development mode only): `https://localhost:7000/swagger/index.html`
 * POC React web app: `http://localhost:5173/`
+
+## Running tests
+
+1\. Run tests with `npm run test`.
+2\. Check test coverage with `npm run test:coverage` 
 
 ## Resetting migrations 
 
@@ -86,10 +93,28 @@ This can be done by running `ResetMigrations.bat` from the solution folder.
 
 *Warning*: Must be done from the solution folder, or the script will fail!
 
-## Running tests
+## Restricting WSL/Docker disk space usage
 
-1\. Run tests with `npm run test`.
-2\. Check test coverage with `npm run test:coverage` 
+This section is **optional**.
+
+From my experience, WSL/Docker eat up a lot of disk space if left unchecked.
+There are some additional configurations I attempted to set to prevent this.
+
+Add a file `%USER_PROFILE%/.wslconfig` with the following contents:
+
+```
+[wsl2]
+memory=4GB
+processors=4
+swap=2GB
+defaultVhdSize=15GB
+
+[experimental]
+sparseVhd=true
+```
+
+* I chose to use a 15GB limit for `defaultVhdSize` to prevent it eating up my hard drive. Note that this did not seem to reflect for Docker Desktop, which shows that 1TB is still the cap. Verifying that this setting works as advertised is not a priority at time of writing.
+* The use of `sparseVhd=true` requires a minimum WSL version 2.x at minimum. It is supposed to allow the virtual disk to shrink when space is freed, instead of only growing.
 
 ## Future work
 
@@ -112,9 +137,9 @@ Planned additions to be explored as time and priorities allow.
 
 ## Author's professional summary
 
-Timothy Guan is a Senior Software Engineer with 14 years of experience across the full SDLC, delivering enterprise-grade applications and tools in a global multinational environment.
+Timothy Guan is a hands-on technical Senior Software Engineer with 14 years of experience across the full SDLC, delivering enterprise-grade applications and tools in a global multinational environment. His experience covers working within distributed international teams spanning multiple continents and time zones, with a strong background in Agile/Scrum including the Scrum Master role. 
 
-His experience covers working within distributed international teams spanning multiple continents and time zones, with a strong background in Agile/Scrum including the Scrum Master role.
+The technical stacks he worked with at his previous employment are React, Typescript, and Java Spring Boot, and also a Java and Quill for the maintenance of essential tooling for product and infrastructure teams.
 
 For the past few years, he has been growing into a senior C#/.NET/ASP.NET Core and React engineering role, with a passion for specializing his career towards full stack development.
 
