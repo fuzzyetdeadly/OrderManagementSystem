@@ -19,17 +19,17 @@ public class OrderServiceTests
     // Fields
     private readonly Mock<ICustomerRepository> _customerRepo;
     private readonly Mock<IOrderRepository> _orderRepo;
-    private readonly Mock<IMessagePublisher<OrderCreated>> _orderCreatedPublisher;
+    private readonly Mock<IEventBus> _eventBus;
     private readonly OrderService _service;
 
     public OrderServiceTests()
     {
         _customerRepo = new Mock<ICustomerRepository>();
         _orderRepo = new Mock<IOrderRepository>();
-        _orderCreatedPublisher = new Mock<IMessagePublisher<OrderCreated>>();
+        _eventBus = new Mock<IEventBus>();
 
         // Access '*.Object' for mock instance
-        _service = new OrderService(_customerRepo.Object, _orderRepo.Object, _orderCreatedPublisher.Object);
+        _service = new OrderService(_customerRepo.Object, _orderRepo.Object, _eventBus.Object);
     }
 
     #region helpers
@@ -221,7 +221,7 @@ public class OrderServiceTests
         await _service.CreateAsync(requestDto);
 
         // Assert: that the message was not published
-        _orderCreatedPublisher.Verify(q => q.PublishAsync(It.IsAny<OrderCreated>()), Times.Never());
+        _eventBus.Verify(q => q.PublishAsync(It.IsAny<OrderCreated>()), Times.Never());
     }
 
     [Fact]
@@ -234,7 +234,7 @@ public class OrderServiceTests
 
         _orderRepo.Setup(r => r.CreateAsync(It.IsAny<Order>()))
             .ReturnsAsync(CreateOrder());
-        _orderCreatedPublisher.Setup(q => q.PublishAsync(It.IsAny<OrderCreated>()))
+        _eventBus.Setup(q => q.PublishAsync(It.IsAny<OrderCreated>()))
             .ThrowsAsync(new InvalidOperationException("Queue failure"));
 
         // Act & Assert: call the service method and expect an exception
@@ -303,7 +303,7 @@ public class OrderServiceTests
         await _service.CreateAsync(requestDto);
 
         // Assert: that the message published has the correct values
-        _orderCreatedPublisher.Verify(q => q.PublishAsync(
+        _eventBus.Verify(q => q.PublishAsync(
             It.Is<OrderCreated>(m =>
                 m.OrderId == persistedOrder.Id &&
                 m.CustomerId == persistedOrder.CustomerId &&

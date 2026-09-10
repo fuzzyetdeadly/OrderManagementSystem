@@ -38,6 +38,9 @@ builder.Services.AddSingleton<IMessagePublisher<OrderCreated>>(
 builder.Services.AddSingleton<IMessageConsumer<OrderCreated>>(
     sp => sp.GetRequiredService<InMemoryMessageBus<OrderCreated>>());
 
+// Register event bus to dispatch events to the appropriate message publisher
+builder.Services.AddSingleton<IEventBus, EventBus>();
+
 // Register hosted service to consume OrderCreated messages from the bus
 builder.Services.AddHostedService<OrderCreatedConsumer>();
 
