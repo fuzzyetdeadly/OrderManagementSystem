@@ -4,12 +4,12 @@ namespace OrderManagement.API.Workers;
 
 public class OrderCreatedConsumer : BackgroundService
 {
-    private readonly IOrderCreatedQueue _queue;
+    private readonly IMessageConsumer<OrderCreatedMessage> _bus;
     private readonly ILogger<OrderCreatedConsumer> _logger;
 
-    public OrderCreatedConsumer(IOrderCreatedQueue queue, ILogger<OrderCreatedConsumer> logger)
+    public OrderCreatedConsumer(IMessageConsumer<OrderCreatedMessage> bus, ILogger<OrderCreatedConsumer> logger)
     {
-        _queue = queue;
+        _bus = bus;
         _logger = logger;
     }
 
@@ -19,7 +19,7 @@ public class OrderCreatedConsumer : BackgroundService
         {
             _logger.LogInformation("OrderCreatedConsumer started...");
 
-            await foreach (var message in _queue.ReadAllAsync(stoppingToken))
+            await foreach (var message in _bus.ReadAllAsync(stoppingToken))
             {
                 _logger.LogInformation(
                     "Order {OrderId} created for customer {CustomerId} at {CreatedAt}",

@@ -28,11 +28,17 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<OrderService>();
 
-// Register messaging queue (in-memory for now, RabbitMQ later)
-// Singleton: one queue must persist across all requests
-// unlike scoped services which are per-request.
-// Also add consumer to process messages in the background.
-builder.Services.AddSingleton<IOrderCreatedQueue, InMemoryOrderCreateQueue>();
+// Message bus registration (in-memory for now, RabbitMQ later)
+// Single shared bus instance exposed under both interfaces — do NOT register
+// IMessagePublisher/IMessageConsumer directly against the concrete type, that
+// creates two separate instances instead of sharing this one.
+builder.Services.AddSingleton<InMemoryMessageBus<OrderCreatedMessage>>();
+builder.Services.AddSingleton<IMessagePublisher<OrderCreatedMessage>>(
+    sp => sp.GetRequiredService<InMemoryMessageBus<OrderCreatedMessage>>());
+builder.Services.AddSingleton<IMessageConsumer<OrderCreatedMessage>>(
+    sp => sp.GetRequiredService<InMemoryMessageBus<OrderCreatedMessage>>());
+
+// Register hosted service to consume OrderCreated messages from the bus
 builder.Services.AddHostedService<OrderCreatedConsumer>();
 
 // Add custom controller support

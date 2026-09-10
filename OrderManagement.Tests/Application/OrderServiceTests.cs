@@ -19,17 +19,17 @@ public class OrderServiceTests
     // Fields
     private readonly Mock<ICustomerRepository> _customerRepo;
     private readonly Mock<IOrderRepository> _orderRepo;
-    private readonly Mock<IOrderCreatedQueue> _orderCreatedQueue;
+    private readonly Mock<IMessagePublisher<OrderCreatedMessage>> _orderCreatedPublisher;
     private readonly OrderService _service;
 
     public OrderServiceTests()
     {
         _customerRepo = new Mock<ICustomerRepository>();
         _orderRepo = new Mock<IOrderRepository>();
-        _orderCreatedQueue = new Mock<IOrderCreatedQueue>();
+        _orderCreatedPublisher = new Mock<IMessagePublisher<OrderCreatedMessage>>();
 
         // Access '*.Object' for mock instance
-        _service = new OrderService(_customerRepo.Object, _orderRepo.Object, _orderCreatedQueue.Object);
+        _service = new OrderService(_customerRepo.Object, _orderRepo.Object, _orderCreatedPublisher.Object);
     }
 
     #region helpers
@@ -221,7 +221,7 @@ public class OrderServiceTests
         await _service.CreateAsync(requestDto);
 
         // Assert: that the message was not published
-        _orderCreatedQueue.Verify(q => q.PublishAsync(It.IsAny<OrderCreatedMessage>()), Times.Never());
+        _orderCreatedPublisher.Verify(q => q.PublishAsync(It.IsAny<OrderCreatedMessage>()), Times.Never());
     }
 
     [Fact]
@@ -234,7 +234,7 @@ public class OrderServiceTests
 
         _orderRepo.Setup(r => r.CreateAsync(It.IsAny<Order>()))
             .ReturnsAsync(CreateOrder());
-        _orderCreatedQueue.Setup(q => q.PublishAsync(It.IsAny<OrderCreatedMessage>()))
+        _orderCreatedPublisher.Setup(q => q.PublishAsync(It.IsAny<OrderCreatedMessage>()))
             .ThrowsAsync(new InvalidOperationException("Queue failure"));
 
         // Act & Assert: call the service method and expect an exception
@@ -303,7 +303,7 @@ public class OrderServiceTests
         await _service.CreateAsync(requestDto);
 
         // Assert: that the message published has the correct values
-        _orderCreatedQueue.Verify(q => q.PublishAsync(
+        _orderCreatedPublisher.Verify(q => q.PublishAsync(
             It.Is<OrderCreatedMessage>(m =>
                 m.OrderId == persistedOrder.Id &&
                 m.CustomerId == persistedOrder.CustomerId &&

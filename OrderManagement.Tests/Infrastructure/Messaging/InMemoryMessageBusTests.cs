@@ -4,10 +4,10 @@ using OrderManagement.Tests.Common;
 
 namespace OrderManagement.Tests.Infrastructure.Messaging;
 
-public class InMemoryOrderCreateQueueTests
+public class InMemoryMessageBusTests
 {
     // No mocking needed, test the actual queue implementation
-    private readonly InMemoryOrderCreateQueue _queue = new();
+    private readonly InMemoryMessageBus<OrderCreatedMessage> _bus = new();
 
     [Fact]
     [Layer("Infrastructure")]
@@ -20,9 +20,9 @@ public class InMemoryOrderCreateQueueTests
         // Act
         var cancelToken = TestContext.Current.CancellationToken;
 
-        await _queue.PublishAsync(message, cancelToken);
+        await _bus.PublishAsync(message, cancelToken);
         
-        await using var messageEnumerator = _queue
+        await using var messageEnumerator = _bus
             .ReadAllAsync(cancelToken)
             .GetAsyncEnumerator(cancelToken);
 
@@ -49,10 +49,10 @@ public class InMemoryOrderCreateQueueTests
 
         foreach (var message in messages)
         {
-            await _queue.PublishAsync(message, cancelToken);
+            await _bus.PublishAsync(message, cancelToken);
         }
 
-        await using var messageEnumerator = _queue
+        await using var messageEnumerator = _bus
             .ReadAllAsync(cancelToken)
             .GetAsyncEnumerator(cancelToken);
 
@@ -77,7 +77,7 @@ public class InMemoryOrderCreateQueueTests
 
         // Act & Assert
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
-            async () => await _queue.PublishAsync(message, cts.Token));
+            async () => await _bus.PublishAsync(message, cts.Token));
     }
 
     [Fact]
@@ -93,7 +93,7 @@ public class InMemoryOrderCreateQueueTests
         // Act & Assert
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
         {
-            await foreach (var _ in _queue.ReadAllAsync(cts.Token))
+            await foreach (var _ in _bus.ReadAllAsync(cts.Token))
             {
                 // This block should not be executed
             }
