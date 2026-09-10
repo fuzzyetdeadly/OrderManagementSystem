@@ -9,7 +9,7 @@ using OrderManagement.Domain.Entities;
 using OrderManagement.Domain.Interfaces;
 using OrderManagement.Tests.Common;
 
-namespace OrderManagement.Tests.Application;
+namespace OrderManagement.Tests.Application.Services;
 
 public class OrderServiceTests
 {
