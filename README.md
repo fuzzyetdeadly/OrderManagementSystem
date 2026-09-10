@@ -14,9 +14,9 @@ SQLite is used as an in memory database for testing, prioritizing speed and simp
 * Swagger UI for testing the API
 * Contains built in validation logic for existing scenarios
 * In developer mode, will seed a test customer if there is none on startup
-* In-memory message queue for order created events in development mode
-* RabbitMQ message queue for order created events in production mode
-* An order created consumer that subscribes to the queue and logs created orders
+* Event bus to dispatch order created events to an in-memory message bus in development mode
+* A RabbitMQ publisher and consumer for production mode (requires Docker)
+* An order created consumer that consumes from the bus and logs created orders
 * Near complete test coverage for repository, service, controllers, queue and consumer
 
 ### Front-end
@@ -123,8 +123,8 @@ Planned additions to be explored as time and priorities allow.
 ### Features
 
 * Translations for user facing text (ongoing)
-* Message queue with event driven architecture. In memory first, RabbitMQ later.
-* Proper middleware (existing is minimum viable setup)
+* Producer/Consumer event-driven messaging. In memory first, RabbitMQ later.
+* Proper logging middleware (existing is minimum viable setup)
 * Auth with a minimal JSON Web Token (JWT)
 * Implement React-Router
 * Implement state machine for order status
