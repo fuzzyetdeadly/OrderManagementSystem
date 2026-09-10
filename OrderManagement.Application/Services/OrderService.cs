@@ -14,9 +14,9 @@ public class OrderService
 {
     private readonly ICustomerRepository _customerRepository;
     private readonly IOrderRepository _orderRepository;
-    private readonly IMessagePublisher<OrderCreatedMessage> _orderCreatedPublisher;
+    private readonly IMessagePublisher<OrderCreated> _orderCreatedPublisher;
 
-    public OrderService(ICustomerRepository customerRepository, IOrderRepository orderRepository, IMessagePublisher<OrderCreatedMessage> orderCreatedPublisher)
+    public OrderService(ICustomerRepository customerRepository, IOrderRepository orderRepository, IMessagePublisher<OrderCreated> orderCreatedPublisher)
     {
         _customerRepository = customerRepository;
         _orderRepository = orderRepository;
@@ -87,7 +87,7 @@ public class OrderService
 
         // Publish successfully added order to queue for downstream processing
         await _orderCreatedPublisher.PublishAsync(
-            new OrderCreatedMessage(createdOrder.Id, createdOrder.CustomerId, createdOrder.Created));
+            new OrderCreated(createdOrder.Id, createdOrder.CustomerId, createdOrder.Created));
 
         return MapToDto(createdOrder);
     }

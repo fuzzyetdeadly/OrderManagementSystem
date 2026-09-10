@@ -5,6 +5,7 @@ namespace OrderManagement.Infrastructure.Messaging;
 
 // Generic in-memory message bus implementation to pub/sub concrete TMessage types
 public class InMemoryMessageBus<TMessage> : IMessagePublisher<TMessage>, IMessageConsumer<TMessage>
+    where TMessage: IMessage
 {
     private readonly Channel<TMessage> _channel = Channel.CreateUnbounded<TMessage>();
 

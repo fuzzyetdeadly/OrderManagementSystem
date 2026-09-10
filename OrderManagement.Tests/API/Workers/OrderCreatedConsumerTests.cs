@@ -13,13 +13,13 @@ public class OrderCreatedConsumerTests
 {
     private readonly FakeLogger<OrderCreatedConsumer> _logger = new();
 
-    private OrderCreatedConsumer SetupConsumer(IMessageConsumer<OrderCreatedMessage> consumer)
+    private OrderCreatedConsumer SetupConsumer(IMessageConsumer<OrderCreated> consumer)
     {
         return new(consumer, _logger);
     }
 
     #region helpers
-    private static async IAsyncEnumerable<OrderCreatedMessage> HangingAsyncEnumerable([EnumeratorCancellation] CancellationToken ct)
+    private static async IAsyncEnumerable<OrderCreated> HangingAsyncEnumerable([EnumeratorCancellation] CancellationToken ct)
     {
         // Simulate a hanging queue that can be cancelled via `ct`.
         // The [EnumeratorToken] attribute is required to resolve a parser warning.
@@ -31,7 +31,7 @@ public class OrderCreatedConsumerTests
         yield break;
     }
 
-    private static async IAsyncEnumerable<OrderCreatedMessage> ThrowingAsyncEnumerable()
+    private static async IAsyncEnumerable<OrderCreated> ThrowingAsyncEnumerable()
     {
         await Task.Yield();
 
@@ -49,10 +49,10 @@ public class OrderCreatedConsumerTests
     public async Task ExecuteAsync_LogsMessage_WhenMessageIsPublished()
     {
         // Arrange: real queue, consumer, cancelToken and message
-        var bus = new InMemoryMessageBus<OrderCreatedMessage>();
+        var bus = new InMemoryMessageBus<OrderCreated>();
         var consumer = SetupConsumer(bus);
         var cancelToken = TestContext.Current.CancellationToken;
-        var message = new OrderCreatedMessage(OrderId: 1, CustomerId: 1, CreatedAt: DateTime.UtcNow);
+        var message = new OrderCreated(OrderId: 1, CustomerId: 1, CreatedAt: DateTime.UtcNow);
 
         // Act: publish message, then start, poll, stop consumer
         await bus.PublishAsync(message, cancelToken);
@@ -81,11 +81,11 @@ public class OrderCreatedConsumerTests
     public async Task ExecuteAsync_LogsOncePerMessage_WhenMultipleMessagesPublished()
     {
         // Arrange: real queue, consumer and messages
-        var bus = new InMemoryMessageBus<OrderCreatedMessage>();
+        var bus = new InMemoryMessageBus<OrderCreated>();
         var consumer = SetupConsumer(bus);
         var cancelToken = TestContext.Current.CancellationToken;
         var messages = Enumerable.Range(1, 3)
-            .Select(i => new OrderCreatedMessage(OrderId: i, CustomerId: i, CreatedAt: DateTime.UtcNow))
+            .Select(i => new OrderCreated(OrderId: i, CustomerId: i, CreatedAt: DateTime.UtcNow))
             .ToList();
 
         // Act: publish messages, then start, poll, stop consumer
@@ -121,7 +121,7 @@ public class OrderCreatedConsumerTests
     {
         // Arrange: mock queue that hangs until cancelled, consumer and messages
         // Note: for this test, the cancel token of 'ReadAllAsync' is forwarded to 'HangingAsyncEnumerable'
-        var mockConsumer = new Mock<IMessageConsumer<OrderCreatedMessage>>();
+        var mockConsumer = new Mock<IMessageConsumer<OrderCreated>>();
 
         mockConsumer.Setup(c => c.ReadAllAsync(It.IsAny<CancellationToken>()))
             .Returns((CancellationToken ct) => HangingAsyncEnumerable(ct));
@@ -164,7 +164,7 @@ public class OrderCreatedConsumerTests
     public async Task ExecuteAsync_StopsPromptly_AfterCancelRequested()
     {
         // Arrange: mock queue that hangs until cancelled, consumer and messages
-        var mockConsumer = new Mock<IMessageConsumer<OrderCreatedMessage>>();
+        var mockConsumer = new Mock<IMessageConsumer<OrderCreated>>();
         mockConsumer.Setup(c => c.ReadAllAsync(It.IsAny<CancellationToken>()))
             .Returns((CancellationToken ct) => HangingAsyncEnumerable(ct));
 
@@ -202,7 +202,7 @@ public class OrderCreatedConsumerTests
     public async Task ExecuteAsync_LogsError_WhenQueueThrowsUnexpectedException()
     {
         // Arrange: mock queue that throws mid-stream, consumer and messages
-        var mockConsumer = new Mock<IMessageConsumer<OrderCreatedMessage>>();
+        var mockConsumer = new Mock<IMessageConsumer<OrderCreated>>();
 
         mockConsumer.Setup(c => c.ReadAllAsync(It.IsAny<CancellationToken>()))
             .Returns(ThrowingAsyncEnumerable());

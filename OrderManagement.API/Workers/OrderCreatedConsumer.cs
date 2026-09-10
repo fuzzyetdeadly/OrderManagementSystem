@@ -4,10 +4,10 @@ namespace OrderManagement.API.Workers;
 
 public class OrderCreatedConsumer : BackgroundService
 {
-    private readonly IMessageConsumer<OrderCreatedMessage> _bus;
+    private readonly IMessageConsumer<OrderCreated> _bus;
     private readonly ILogger<OrderCreatedConsumer> _logger;
 
-    public OrderCreatedConsumer(IMessageConsumer<OrderCreatedMessage> bus, ILogger<OrderCreatedConsumer> logger)
+    public OrderCreatedConsumer(IMessageConsumer<OrderCreated> bus, ILogger<OrderCreatedConsumer> logger)
     {
         _bus = bus;
         _logger = logger;

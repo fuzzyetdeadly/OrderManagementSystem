@@ -7,7 +7,7 @@ namespace OrderManagement.Tests.Infrastructure.Messaging;
 public class InMemoryMessageBusTests
 {
     // No mocking needed, test the actual queue implementation
-    private readonly InMemoryMessageBus<OrderCreatedMessage> _bus = new();
+    private readonly InMemoryMessageBus<OrderCreated> _bus = new();
 
     [Fact]
     [Layer("Infrastructure")]
@@ -15,7 +15,7 @@ public class InMemoryMessageBusTests
     public async Task PublishAsync_MessageIsReadable_ViaReadAllAsync()
     {
         // Arrange
-        var message = new OrderCreatedMessage(OrderId: 1, CustomerId: 1, CreatedAt: DateTime.UtcNow);
+        var message = new OrderCreated(OrderId: 1, CustomerId: 1, CreatedAt: DateTime.UtcNow);
 
         // Act
         var cancelToken = TestContext.Current.CancellationToken;
@@ -37,7 +37,7 @@ public class InMemoryMessageBusTests
     public async Task PublishAsync_MultipleMessages_ReadInFifoOrder()
     {
         // Arrange
-        var messages = new List<OrderCreatedMessage>
+        var messages = new List<OrderCreated>
         {
             new(OrderId: 1, CustomerId: 1, CreatedAt: DateTime.UtcNow),
             new(OrderId: 2, CustomerId: 2, CreatedAt: DateTime.UtcNow.AddSeconds(1)),
@@ -70,7 +70,7 @@ public class InMemoryMessageBusTests
     public async Task PublishAsync_CancelledToken_ThrowsOperationCanceled()
     {
         // Arrange
-        var message = new OrderCreatedMessage(OrderId: 1, CustomerId: 1, CreatedAt: DateTime.UtcNow);
+        var message = new OrderCreated(OrderId: 1, CustomerId: 1, CreatedAt: DateTime.UtcNow);
         using var cts = new CancellationTokenSource();
 
         cts.Cancel();

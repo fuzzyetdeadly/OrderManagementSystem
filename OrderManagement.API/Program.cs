@@ -32,11 +32,11 @@ builder.Services.AddScoped<OrderService>();
 // Single shared bus instance exposed under both interfaces — do NOT register
 // IMessagePublisher/IMessageConsumer directly against the concrete type, that
 // creates two separate instances instead of sharing this one.
-builder.Services.AddSingleton<InMemoryMessageBus<OrderCreatedMessage>>();
-builder.Services.AddSingleton<IMessagePublisher<OrderCreatedMessage>>(
-    sp => sp.GetRequiredService<InMemoryMessageBus<OrderCreatedMessage>>());
-builder.Services.AddSingleton<IMessageConsumer<OrderCreatedMessage>>(
-    sp => sp.GetRequiredService<InMemoryMessageBus<OrderCreatedMessage>>());
+builder.Services.AddSingleton<InMemoryMessageBus<OrderCreated>>();
+builder.Services.AddSingleton<IMessagePublisher<OrderCreated>>(
+    sp => sp.GetRequiredService<InMemoryMessageBus<OrderCreated>>());
+builder.Services.AddSingleton<IMessageConsumer<OrderCreated>>(
+    sp => sp.GetRequiredService<InMemoryMessageBus<OrderCreated>>());
 
 // Register hosted service to consume OrderCreated messages from the bus
 builder.Services.AddHostedService<OrderCreatedConsumer>();
