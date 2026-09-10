@@ -4,10 +4,10 @@ using OrderManagement.Tests.Common;
 
 namespace OrderManagement.Tests.Infrastructure.Messaging;
 
-public class InMemoryOrderCreateQueueTests
+public class InMemoryMessageBusTests
 {
     // No mocking needed, test the actual queue implementation
-    private readonly InMemoryOrderCreateQueue _queue = new();
+    private readonly InMemoryMessageBus<OrderCreated> _bus = new();
 
     [Fact]
     [Layer("Infrastructure")]
@@ -15,14 +15,14 @@ public class InMemoryOrderCreateQueueTests
     public async Task PublishAsync_MessageIsReadable_ViaReadAllAsync()
     {
         // Arrange
-        var message = new OrderCreatedMessage(OrderId: 1, CustomerId: 1, CreatedAt: DateTime.UtcNow);
+        var message = new OrderCreated(OrderId: 1, CustomerId: 1, CreatedAt: DateTime.UtcNow);
 
         // Act
         var cancelToken = TestContext.Current.CancellationToken;
 
-        await _queue.PublishAsync(message, cancelToken);
+        await _bus.PublishAsync(message, cancelToken);
         
-        await using var messageEnumerator = _queue
+        await using var messageEnumerator = _bus
             .ReadAllAsync(cancelToken)
             .GetAsyncEnumerator(cancelToken);
 
@@ -37,7 +37,7 @@ public class InMemoryOrderCreateQueueTests
     public async Task PublishAsync_MultipleMessages_ReadInFifoOrder()
     {
         // Arrange
-        var messages = new List<OrderCreatedMessage>
+        var messages = new List<OrderCreated>
         {
             new(OrderId: 1, CustomerId: 1, CreatedAt: DateTime.UtcNow),
             new(OrderId: 2, CustomerId: 2, CreatedAt: DateTime.UtcNow.AddSeconds(1)),
@@ -49,10 +49,10 @@ public class InMemoryOrderCreateQueueTests
 
         foreach (var message in messages)
         {
-            await _queue.PublishAsync(message, cancelToken);
+            await _bus.PublishAsync(message, cancelToken);
         }
 
-        await using var messageEnumerator = _queue
+        await using var messageEnumerator = _bus
             .ReadAllAsync(cancelToken)
             .GetAsyncEnumerator(cancelToken);
 
@@ -70,14 +70,14 @@ public class InMemoryOrderCreateQueueTests
     public async Task PublishAsync_CancelledToken_ThrowsOperationCanceled()
     {
         // Arrange
-        var message = new OrderCreatedMessage(OrderId: 1, CustomerId: 1, CreatedAt: DateTime.UtcNow);
+        var message = new OrderCreated(OrderId: 1, CustomerId: 1, CreatedAt: DateTime.UtcNow);
         using var cts = new CancellationTokenSource();
 
         cts.Cancel();
 
         // Act & Assert
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
-            async () => await _queue.PublishAsync(message, cts.Token));
+            async () => await _bus.PublishAsync(message, cts.Token));
     }
 
     [Fact]
@@ -93,7 +93,7 @@ public class InMemoryOrderCreateQueueTests
         // Act & Assert
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
         {
-            await foreach (var _ in _queue.ReadAllAsync(cts.Token))
+            await foreach (var _ in _bus.ReadAllAsync(cts.Token))
             {
                 // This block should not be executed
             }

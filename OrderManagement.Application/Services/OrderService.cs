@@ -14,13 +14,13 @@ public class OrderService
 {
     private readonly ICustomerRepository _customerRepository;
     private readonly IOrderRepository _orderRepository;
-    private readonly IOrderCreatedQueue _orderCreatedQueue;
+    private readonly IEventBus _eventBus;
 
-    public OrderService(ICustomerRepository customerRepository, IOrderRepository orderRepository, IOrderCreatedQueue orderCreatedQueue)
+    public OrderService(ICustomerRepository customerRepository, IOrderRepository orderRepository, IEventBus eventBus)
     {
         _customerRepository = customerRepository;
         _orderRepository = orderRepository;
-        _orderCreatedQueue = orderCreatedQueue;
+        _eventBus = eventBus;
     }
 
     /*
@@ -85,9 +85,10 @@ public class OrderService
         // an order updated with assigned Id and Create time
         var createdOrder = await _orderRepository.CreateAsync(order);
 
-        // Publish successfully added order to queue for downstream processing
-        await _orderCreatedQueue.PublishAsync(
-            new OrderCreatedMessage(createdOrder.Id, createdOrder.CustomerId, createdOrder.Created));
+        // Publish successfully added order to bus for downstream processing
+        // The bus will dispatch the event to the correct publisher by event type
+        await _eventBus.PublishAsync(
+            new OrderCreated(createdOrder.Id, createdOrder.CustomerId, createdOrder.Created));
 
         return MapToDto(createdOrder);
     }
