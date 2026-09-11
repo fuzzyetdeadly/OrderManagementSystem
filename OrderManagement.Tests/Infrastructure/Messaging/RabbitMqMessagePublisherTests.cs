@@ -62,6 +62,10 @@ public class RabbitMqMessagePublisherTests
     [Scope("Messaging")]
     public async Task PublishAsync_CancelledToken_ThrowsOperationCanceledException()
     {
+        // Note: this is currently a low value test just to verify that the exception
+        // is propagated. I decided to keep it for now, in case try/catch is added with throw
+        // in future.
+
         // Arrange: prepare mock interfaces
         var mockConnection = new Mock<IConnection>();
         var mockChannel = new Mock<IChannel>();
