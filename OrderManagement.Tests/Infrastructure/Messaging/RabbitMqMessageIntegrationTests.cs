@@ -75,3 +75,19 @@ public class RabbitMqMessageIntegrationTests : IAsyncLifetime
             Times.Once());
     }
 }
+
+/* Note: gaps
+Integration test (RabbitMqMessageIntegrationTests.cs)
+
+* Null/malformed message deserialization — untested; message gets acked and silently dropped, no verification this is intended.
+* Handler exception behavior — if mediator.Publish throws, BasicAckAsync never runs; no test confirms resulting behavior (redelivery, stuck message, etc.) — real production risk (poison-message loop).
+* Explicit ack verification — test proves the message was consumed/dispatched, not that it was acknowledged in RabbitMQ afterward.
+* Scope-per-message behavior — the intentional design (_scopeFactory.CreateScope() per message) is untested; nothing confirms a new scope is created each time rather than reused.
+* DisposeAsync — no test that channel/connection are actually closed, or that publishing after disposal fails predictably.
+* Concurrent/multiple messages — only a single message is tested; no coverage for ordering or race conditions across multiple messages.
+* Durable queue survival — reasonable to skip; impractical to test without restarting the broker mid-test.
+
+Priority to close gaps: 
+
+* handler-exception and null-deserialization ack path are the most valuable additions
+*/
