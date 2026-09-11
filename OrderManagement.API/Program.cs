@@ -45,7 +45,7 @@ if (builder.Environment.IsProduction())
         var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
 
         return RabbitMqMessagePublisher<OrderCreated>
-            .CreateAsync(options.HostName, options.UserName, options.Password, scopeFactory)
+            .CreateAsync(options.HostName, options.Port, options.UserName, options.Password, scopeFactory)
             .GetAwaiter().GetResult();
     });
 

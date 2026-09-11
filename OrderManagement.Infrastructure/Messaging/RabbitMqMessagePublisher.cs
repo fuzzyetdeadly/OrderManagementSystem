@@ -28,13 +28,14 @@ public class RabbitMqMessagePublisher<TMessage> : IMessagePublisher<TMessage>, I
     }
 
     public static async Task<RabbitMqMessagePublisher<TMessage>> CreateAsync(
-        string hostName, string username, string password, 
+        string hostName, int port, string username, string password, 
         IServiceScopeFactory scopeFactory, CancellationToken cancelToken = default)
     {
         // Use connection factory to create a connection and channel
         var factory = new ConnectionFactory()
         {
             HostName = hostName,
+            Port     = port,
             UserName = username,
             Password = password
         };
