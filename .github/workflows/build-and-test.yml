@@ -29,7 +29,7 @@ jobs:
         run: dotnet test OrderManagement.slnx --no-build --configuration Release --filter "Category!=Integration" --verbosity normal
         
       - name: Run integration tests
-        run: dotnet test OrderManagement.slnx --no-build --configuration Release --filter "Category==Integration" --verbosity normal
+        run: dotnet test OrderManagement.slnx --no-build --configuration Release --filter "Category=Integration" --verbosity normal
 
   frontend:
     name: Frontend tests (React)
