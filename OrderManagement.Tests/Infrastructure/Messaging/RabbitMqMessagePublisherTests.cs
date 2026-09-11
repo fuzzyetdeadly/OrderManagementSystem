@@ -27,11 +27,8 @@ public class RabbitMqMessagePublisherTests
 
         mockChannel
             .Setup(c => c.BasicPublishAsync(
-                It.IsAny<string>(),
-                It.IsAny<string>(),
-                It.IsAny<bool>(),
-                It.IsAny<BasicProperties>(),
-                It.IsAny<ReadOnlyMemory<byte>>(),
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(),
+                It.IsAny<BasicProperties>(), It.IsAny<ReadOnlyMemory<byte>>(),
                 It.IsAny<CancellationToken>()))
             .Callback<string, string, bool, BasicProperties, ReadOnlyMemory<byte>, CancellationToken>(
                 (_, routingKey, _, _, body, _) =>
@@ -51,12 +48,47 @@ public class RabbitMqMessagePublisherTests
         // Act: post the message
         await publisher.PublishAsync(message, testCancelToken);
 
-        // Assert: that the message was serialized correctly and published to the correct queue
+        // Assert: that the message was published to the correct queue and serialized correctly
         var expectedRoutingKey = nameof(OrderCreated);
         var jsonBody = Encoding.UTF8.GetString(capturedBody!);
         var receivedMessage = JsonSerializer.Deserialize<OrderCreated>(jsonBody);
 
         Assert.Equal(expectedRoutingKey, capturedRoutingKey);
         Assert.Equal(message, receivedMessage);
+    }
+
+    [Fact]
+    [Layer("Infrastructure")]
+    [Scope("Messaging")]
+    public async Task PublishAsync_CancelledToken_ThrowsOperationCanceledException()
+    {
+        // Arrange: prepare mock interfaces
+        var mockConnection = new Mock<IConnection>();
+        var mockChannel = new Mock<IChannel>();
+        var mockScopeFactory = new Mock<IServiceScopeFactory>();
+
+        // Setup mock channel to return a ValueTask from the cancel token
+        // This is to simulate RabbitMQ's behavior when a cancellation happens mid-operation
+        mockChannel
+            .Setup(c => c.BasicPublishAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(),
+                It.IsAny<BasicProperties>(), It.IsAny<ReadOnlyMemory<byte>>(),
+                It.IsAny<CancellationToken>()))
+            .Returns<string, string, bool, BasicProperties, ReadOnlyMemory<byte>, CancellationToken>(
+                (_, _, _, _, _, ct) => ValueTask.FromCanceled(ct));
+
+        // Instantiate the publisher with mocks
+        var publisher = new RabbitMqMessagePublisher<OrderCreated>(
+            mockConnection.Object, mockChannel.Object, mockScopeFactory.Object);
+
+        // Prepare a message and a cancellation token that is already cancelled
+        var message = new OrderCreated(OrderId: 1, CustomerId: 1, CreatedAt: DateTime.UtcNow);
+        using var cts = new CancellationTokenSource();
+        
+        cts.Cancel();
+
+        // Act/Assert: expect OperationCanceledException due to cancelled token
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            async () => await publisher.PublishAsync(message, cts.Token));
     }
 }
