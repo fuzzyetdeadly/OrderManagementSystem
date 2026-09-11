@@ -123,19 +123,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 
     // Seed test customer data (if there are none)
-    using (var scope = app.Services.CreateScope())
-    {
-        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        if(!context.Customers.Any())
+    if (!context.Customers.Any())
+    {
+        context.Customers.Add(new Customer()
         {
-            context.Customers.Add(new Customer()
-            {
-                Name = "Jane Doe",
-                Email = "Jane.Doe@gmail.com"
-            });
-            await context.SaveChangesAsync();
-        }
+            Name = "Jane Doe",
+            Email = "Jane.Doe@gmail.com"
+        });
+        await context.SaveChangesAsync();
     }
 }
 

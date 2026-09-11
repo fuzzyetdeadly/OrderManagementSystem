@@ -20,7 +20,8 @@ public class RabbitMqMessagePublisher<TMessage> : IMessagePublisher<TMessage>, I
     // as MediatR can sometimes depend on scoped services (e.g. DbContext) to handle messages.
     private readonly IServiceScopeFactory _scopeFactory;
 
-    private RabbitMqMessagePublisher(IConnection connection, IChannel channel, IServiceScopeFactory scopeFactory)
+    // Note: constructor is internal to allow test project to access it
+    internal RabbitMqMessagePublisher(IConnection connection, IChannel channel, IServiceScopeFactory scopeFactory)
     {
         _connection = connection;
         _channel = channel;
@@ -45,7 +46,9 @@ public class RabbitMqMessagePublisher<TMessage> : IMessagePublisher<TMessage>, I
 
         // Declare the queue
         // 'durable: true' allows the queue to survive broker restarts.
-        await channel.QueueDeclareAsync(queue: QueueName, durable: true, exclusive: false, autoDelete: false);
+        await channel.QueueDeclareAsync(queue: QueueName, 
+            durable: true, exclusive: false, autoDelete: false, 
+            cancellationToken: cancelToken);
 
         var instance = new RabbitMqMessagePublisher<TMessage>(connection, channel, scopeFactory);
 
@@ -108,5 +111,8 @@ public class RabbitMqMessagePublisher<TMessage> : IMessagePublisher<TMessage>, I
     {
         await _channel.CloseAsync();
         await _connection.CloseAsync();
+
+        // Prevent GC from calling finalizer on this object, since we already cleaned up.
+        GC.SuppressFinalize(this);
     }
 }
