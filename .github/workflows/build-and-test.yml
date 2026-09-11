@@ -25,8 +25,11 @@ jobs:
       - name: Build
         run: dotnet build OrderManagement.slnx --no-restore --configuration Release
 
-      - name: Run tests
-        run: dotnet test OrderManagement.slnx --no-build --configuration Release --verbosity normal
+      - name: Run unit tests
+        run: dotnet test OrderManagement.slnx --no-build --configuration Release --filter "Category!=Integration" --verbosity normal
+        
+      - name: Run integration tests
+        run: dotnet test OrderManagement.slnx --no-build --configuration Release --filter "Category==Integration" --verbosity normal
 
   frontend:
     name: Frontend tests (React)
