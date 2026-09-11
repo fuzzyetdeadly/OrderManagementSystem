@@ -49,8 +49,10 @@ public class RabbitMqMessagePublisherTests
         await publisher.PublishAsync(message, testCancelToken);
 
         // Assert: that the message was published to the correct queue and serialized correctly
+        Assert.NotNull(capturedBody);
+
         var expectedRoutingKey = nameof(OrderCreated);
-        var jsonBody = Encoding.UTF8.GetString(capturedBody!);
+        var jsonBody = Encoding.UTF8.GetString(capturedBody);
         var receivedMessage = JsonSerializer.Deserialize<OrderCreated>(jsonBody);
 
         Assert.Equal(expectedRoutingKey, capturedRoutingKey);
