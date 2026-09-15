@@ -14,7 +14,7 @@ namespace OrderManagement.Tests.Infrastructure.Messaging;
 public class RabbitMqMessageIntegrationTests : IAsyncLifetime
 {
     // Setup RabbitMQ container to use management image for testing
-    private readonly RabbitMqContainer _container = 
+    private readonly RabbitMqContainer _container =
         new RabbitMqBuilder("rabbitmq:4-management").Build();
 
     public ValueTask InitializeAsync() => new(_container.StartAsync());
@@ -48,7 +48,7 @@ public class RabbitMqMessageIntegrationTests : IAsyncLifetime
         return new()
         {
             HostName = uri.Host,
-            Port     = uri.Port,
+            Port = uri.Port,
             UserName = uri.UserInfo.Split(':')[0],
             Password = uri.UserInfo.Split(':')[1]
         };
@@ -231,7 +231,7 @@ public class RabbitMqMessageIntegrationTests : IAsyncLifetime
         await publisher.DisposeAsync();
 
         // Assert: mediator never invoked for malformed payload
-        mockMediator.Verify(m => 
+        mockMediator.Verify(m =>
             m.Publish(It.IsAny<OrderCreated>(), It.IsAny<CancellationToken>()),
             Times.Never());
 
@@ -239,5 +239,30 @@ public class RabbitMqMessageIntegrationTests : IAsyncLifetime
         var result = await channel.BasicGetAsync(queue: nameof(OrderCreated), autoAck: true, cancelToken);
 
         Assert.Null(result);
+    }
+
+    [Fact]
+    [Layer("Infrastructure")]
+    [Scope("Messaging")]
+    public async Task PublishAsync_AfterDispose_ThrowsBecauseChannelClosed()
+    {
+        // Arrange: mock mediator
+        var mockMediator = new Mock<IMediator>();
+        var cf = GetConnectionFactory();
+        var scopeFactory = GetScopeFactory(mockMediator.Object);
+        var cancelToken = TestContext.Current.CancellationToken;
+
+        // Create publisher and start consuming
+        var publisher = await RabbitMqMessagePublisher<OrderCreated>.CreateAsync(
+            cf.HostName, cf.Port, cf.UserName, cf.Password, scopeFactory, cancelToken);
+
+        // Dispose the publisher (close connection/channel)
+        await publisher.DisposeAsync();
+
+        // Act/Assert: an exception is thrown when publishing message to disposed publisher
+        var message = GetOrderCreatedMessage(orderId: 3);
+
+        await Assert.ThrowsAnyAsync<Exception>(
+            () => publisher.PublishAsync(message, cancelToken));
     }
 }

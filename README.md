@@ -77,7 +77,20 @@ Note: If you see the logs creating tables, it should have succeeded, but you can
 
 ## Running tests
 
+This repository has CI setup to automatically run unit and integration tets for the back and front end for pull-requests.
+
+Tests can also be run manually as follows:
+
+### Back end 
+
+1\. Ensure you are in the root solution folder
+
+2\. Run the command `dotnet test`, optionally with a filter like `--filter="Scope=Messaging"` if you wish to only run a subset of tests.
+
+### Front end
+
 1\. Run tests with `npm run test`.
+
 2\. Check test coverage with `npm run test:coverage` 
 
 ## Resetting migrations 
