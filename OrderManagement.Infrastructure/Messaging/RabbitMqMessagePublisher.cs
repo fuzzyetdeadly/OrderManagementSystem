@@ -68,22 +68,30 @@ public class RabbitMqMessagePublisher<TMessage> : IMessagePublisher<TMessage>, I
         // Finally, tell RabbitMQ "got it, you can remove this from the queue now."
         consumer.ReceivedAsync += async (_, eventArgs) =>
         {
-            var jsonBody = Encoding.UTF8.GetString(eventArgs.Body.ToArray());
-            var message = JsonSerializer.Deserialize<TMessage>(jsonBody);
-
-            if (message != null)
+            try
             {
-                // A scope per message mirrors how MassTransit/NServiceBus handles this.
-                // Handlers needing scoped services (like DbContext) will get a fresh
-                // instance per message, not one shared for the process lifetimem
-                using var scope = _scopeFactory.CreateScope();
-                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                var jsonBody = Encoding.UTF8.GetString(eventArgs.Body.ToArray());
+                var message = JsonSerializer.Deserialize<TMessage>(jsonBody);
 
-                await mediator.Publish(message, cancelToken);
+                if (message != null)
+                {
+                    // A scope per message mirrors how MassTransit/NServiceBus handles this.
+                    // Handlers needing scoped services (like DbContext) will get a fresh
+                    // instance per message, not one shared for the process lifetimem
+                    using var scope = _scopeFactory.CreateScope();
+                    var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+                    await mediator.Publish(message, cancelToken);
+                }
+
+                // Acknowledge only after the handler successfully processes the message
+                await _channel.BasicAckAsync(eventArgs.DeliveryTag, multiple: false, cancelToken);
             }
-
-            // Acknowledge only after the handler successfully processes the message
-            await _channel.BasicAckAsync(eventArgs.DeliveryTag, multiple: false, cancelToken);
+            catch(JsonException)
+            {
+                // Nack messages that can't be deserialized, no requeue
+                await _channel.BasicNackAsync(eventArgs.DeliveryTag, multiple: false, requeue: false, cancelToken);
+            }
         };
 
         // Start consuming messages from the queue

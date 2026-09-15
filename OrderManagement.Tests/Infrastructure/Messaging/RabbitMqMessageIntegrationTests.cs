@@ -5,6 +5,7 @@ using OrderManagement.Application.Messaging;
 using OrderManagement.Infrastructure.Messaging;
 using OrderManagement.Tests.Common;
 using RabbitMQ.Client;
+using System.Text;
 using Testcontainers.RabbitMq;
 
 namespace OrderManagement.Tests.Infrastructure.Messaging;
@@ -192,5 +193,51 @@ public class RabbitMqMessageIntegrationTests : IAsyncLifetime
         var result = await channel.BasicGetAsync(queue: nameof(OrderCreated), autoAck: true, cancelToken);
 
         Assert.NotNull(result);
+    }
+
+    [Fact]
+    [Layer("Infrastructure")]
+    [Scope("Messaging")]
+    public async Task PublishAsync_WithMalformedMessage_IsSilentlyAcknowledgedAndDropped()
+    {
+        // Arrange: mock mediator
+        var mockMediator = new Mock<IMediator>();
+        var cf = GetConnectionFactory();
+        var scopeFactory = GetScopeFactory(mockMediator.Object);
+        var cancelToken = TestContext.Current.CancellationToken;
+
+        // Create publisher and start consuming
+        var publisher = await RabbitMqMessagePublisher<OrderCreated>.CreateAsync(
+            cf.HostName, cf.Port, cf.UserName, cf.Password, scopeFactory, cancelToken);
+
+        // Act: publish garbage bytes directly to the queue (bypasses PublishAsync's serialize)
+        // to simulate payload fails to the message broker
+        await using var connection = await cf.CreateConnectionAsync(cancelToken);
+        await using var channel = await connection.CreateChannelAsync(cancellationToken: cancelToken);
+
+        var garbageBody = Encoding.UTF8.GetBytes("{ invalid json ]]]");
+
+        await channel.BasicPublishAsync(
+            exchange: string.Empty,
+            routingKey: nameof(OrderCreated),
+            mandatory: false,
+            basicProperties: new BasicProperties(),
+            body: garbageBody,
+            cancellationToken: cancelToken);
+
+        // Give consumer time to receive and drop the message
+        await Task.Delay(TimeSpan.FromSeconds(1), cancelToken);
+
+        await publisher.DisposeAsync();
+
+        // Assert: mediator never invoked for malformed payload
+        mockMediator.Verify(m => 
+            m.Publish(It.IsAny<OrderCreated>(), It.IsAny<CancellationToken>()),
+            Times.Never());
+
+        // and there are no messages in the queue
+        var result = await channel.BasicGetAsync(queue: nameof(OrderCreated), autoAck: true, cancelToken);
+
+        Assert.Null(result);
     }
 }
