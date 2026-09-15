@@ -85,9 +85,11 @@ Tests can also be run manually as follows:
 
 1\. Ensure you are in the root solution folder
 
-2\. Run the command `dotnet test`, optionally with a filter like `--filter="Scope=Messaging"` if you wish to only run a subset of tests.
+2\. Run `dotnet test` to run all tests, optionally with a filter like `--filter="Scope=Messaging"` if you wish to only run a subset of tests.
 
-Note: if you are including integration tests in the run, you must have `Docker desktop` running, or the tests won't be able to spin up test containers to run tests with.
+3a\. Run `dotnet test "Category!=Integration"` to run unit tests only.
+
+3b\. Run `dotnet test "Category=Integration"` to run integration tests only. These take longer as they require `Docker Desktop` to be set up, and RabbitMQ test containers to run.
 
 ### Front end
 
