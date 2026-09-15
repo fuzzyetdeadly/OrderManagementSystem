@@ -14,9 +14,9 @@ SQLite is used as an in memory database for testing, prioritizing speed and simp
 * Swagger UI for testing the API
 * Contains built in validation logic for existing scenarios
 * In developer mode, will seed a test customer if there is none on startup
-* Event bus to dispatch order created events to an in-memory message bus in development mode
-* A RabbitMQ publisher and consumer for production mode (requires Docker)
-* An order created consumer that consumes from the bus and logs created orders
+* An in-memory message bus to publish messages in development mode
+* A message consumer that consumes from the bus and dispatches via MediatR to a handler
+* A RabbitMQ publisher that pushes messages to the handler via MediatR for production mode (requires Docker)
 * Near complete test coverage for repository, service, controllers, queue and consumer
 
 ### Front-end
@@ -77,7 +77,7 @@ Note: If you see the logs creating tables, it should have succeeded, but you can
 
 ## Running tests
 
-This repository has CI setup to automatically run unit and integration tets for the back and front end for pull-requests.
+This repository has CI setup to automatically run unit and integration tests for the back and front end for pull-requests.
 
 Tests can also be run manually as follows:
 
@@ -86,6 +86,8 @@ Tests can also be run manually as follows:
 1\. Ensure you are in the root solution folder
 
 2\. Run the command `dotnet test`, optionally with a filter like `--filter="Scope=Messaging"` if you wish to only run a subset of tests.
+
+Note: if you are including integration tests in the run, you must have `Docker desktop` running, or the tests won't be able to spin up test containers to run tests with.
 
 ### Front end
 
