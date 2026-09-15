@@ -247,9 +247,8 @@ public class RabbitMqMessageIntegrationTests : IAsyncLifetime
     public async Task PublishAsync_AfterDispose_ThrowsBecauseChannelClosed()
     {
         // Arrange: mock mediator
-        var mockMediator = new Mock<IMediator>();
         var cf = GetConnectionFactory();
-        var scopeFactory = GetScopeFactory(mockMediator.Object);
+        var scopeFactory = GetScopeFactory(Mock.Of<IMediator>());
         var cancelToken = TestContext.Current.CancellationToken;
 
         // Create publisher and start consuming

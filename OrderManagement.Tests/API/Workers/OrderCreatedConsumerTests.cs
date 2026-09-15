@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using MediatR;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Testing;
 using Moq;
 using OrderManagement.API.Workers;
@@ -13,12 +15,26 @@ public class OrderCreatedConsumerTests
 {
     private readonly FakeLogger<OrderCreatedConsumer> _logger = new();
 
-    private OrderCreatedConsumer SetupConsumer(IMessageConsumer<OrderCreated> consumer)
+    #region helpers
+    private OrderCreatedConsumer SetupConsumer(IMessageConsumer<OrderCreated> consumer, IMediator mediator)
     {
-        return new(consumer, _logger);
+        return new(consumer, GetScopeFactory(mediator), _logger);
     }
 
-    #region helpers
+    private static IServiceScopeFactory GetScopeFactory(IMediator mediator)
+    {
+        // Note: builds a minimal scope factory that can be used
+        // to create a scope with only mediator
+        var services = new ServiceCollection();
+
+        services.AddSingleton(mediator);
+
+        return services.BuildServiceProvider().GetRequiredService<IServiceScopeFactory>();
+    }
+
+    private static OrderCreated GetOrderCreatedMessage(int orderId = 1) =>
+        new(OrderId: orderId, CustomerId: 1, CreatedAt: DateTime.UtcNow);
+
     private static async IAsyncEnumerable<OrderCreated> HangingAsyncEnumerable([EnumeratorCancellation] CancellationToken ct)
     {
         // Simulate a hanging queue that can be cancelled via `ct`.
@@ -46,43 +62,47 @@ public class OrderCreatedConsumerTests
     [Fact]
     [Layer("Api")]
     [Scope("Worker")]
-    public async Task ExecuteAsync_LogsMessage_WhenMessageIsPublished()
+    public async Task ExecuteAsync_DispatchesMessage_ViaMediatR_WhenMessageIsPublished()
     {
-        // Arrange: real queue, consumer, cancelToken and message
+        // Arrange: real queue, mock mediator, consumer, cancelToken and message
         var bus = new InMemoryMessageBus<OrderCreated>();
-        var consumer = SetupConsumer(bus);
-        var cancelToken = TestContext.Current.CancellationToken;
-        var message = new OrderCreated(OrderId: 1, CustomerId: 1, CreatedAt: DateTime.UtcNow);
+        var mockMediator = new Mock<IMediator>();
+        var tcs = new TaskCompletionSource();
 
-        // Act: publish message, then start, poll, stop consumer
+        mockMediator
+            .Setup(m => m.Publish(It.IsAny<OrderCreated>(), It.IsAny<CancellationToken>()))
+            .Callback(() => tcs.TrySetResult())
+            .Returns(Task.CompletedTask);
+
+        var consumer = SetupConsumer(bus, mockMediator.Object);
+        var cancelToken = TestContext.Current.CancellationToken;
+        var message = GetOrderCreatedMessage(orderId: 1);
+
+        // Act: publish message, then start consumer and wait for dispatch, then stop the consumer
         await bus.PublishAsync(message, cancelToken);
         await consumer.StartAsync(cancelToken);
 
-        // Poll for expected text instead of fixed delay to avoid flaky tests
-        var expectedText = $"Order {message.OrderId} created for customer {message.CustomerId}";
-        var deadline = DateTime.UtcNow.AddSeconds(2);
-
-        while(!_logger.Collector.GetSnapshot().Any(log => log.Message.Contains(expectedText)) 
-            && DateTime.UtcNow < deadline)
-        {
-            await Task.Delay(20, cancelToken);
-        }
+        var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(2), cancelToken));
 
         await consumer.StopAsync(cancelToken);
 
-        // Assert: text is as expected in the logs
-        Assert.Contains(_logger.Collector.GetSnapshot(), 
-            log => log.Message.Contains(expectedText));
+        // Assert: mediator dispatched message exactly once
+        Assert.Same(tcs.Task, completedTask);
+
+        mockMediator.Verify(
+            m => m.Publish(It.Is<OrderCreated>(e => e.OrderId == 1), It.IsAny<CancellationToken>()),
+            Times.Once());
     }
 
     [Fact]
     [Layer("Api")]
     [Scope("Worker")]
-    public async Task ExecuteAsync_LogsOncePerMessage_WhenMultipleMessagesPublished()
+    public async Task ExecuteAsync_DispatchesOncePerMessage_WhenMultipleMessagesPublished()
     {
         // Arrange: real queue, consumer and messages
         var bus = new InMemoryMessageBus<OrderCreated>();
-        var consumer = SetupConsumer(bus);
+        var mockMediator = new Mock<IMediator>();
+        var consumer = SetupConsumer(bus, mockMediator.Object);
         var cancelToken = TestContext.Current.CancellationToken;
         var messages = Enumerable.Range(1, 3)
             .Select(i => new OrderCreated(OrderId: i, CustomerId: i, CreatedAt: DateTime.UtcNow))
@@ -96,22 +116,24 @@ public class OrderCreatedConsumerTests
 
         await consumer.StartAsync(cancelToken);
 
-        // Poll for all expected lines or deadline instead of delay
+        // Poll for all 3 dispatches to complete, with deadline timeout
         var deadline = DateTime.UtcNow.AddSeconds(2);
 
-        while(_logger.Collector.GetSnapshot()
-            .Count(log => log.Message.Contains("created for customer")) < 3 && DateTime.UtcNow < deadline)
+        while(mockMediator.Invocations.Count(i => i.Method.Name == nameof(IMediator.Publish)) < 3 && 
+            DateTime.UtcNow < deadline)
         {
             await Task.Delay(20, cancelToken);
         }
 
         await consumer.StopAsync(cancelToken);
 
-        // Assert: number of log messages is as expected
-        var matchingEntries = _logger.Collector.GetSnapshot()
-            .Count(log => log.Level == LogLevel.Information && log.Message.Contains("created for customer"));
-
-        Assert.Equal(3, matchingEntries);
+        // Assert: each message was dispatched exactly once
+        foreach (var message in messages)
+        {
+            mockMediator.Verify(
+            m => m.Publish(It.Is<OrderCreated>(e => e.OrderId == message.OrderId), It.IsAny<CancellationToken>()),
+            Times.Once());
+        }
     }
 
     [Fact]
@@ -126,7 +148,7 @@ public class OrderCreatedConsumerTests
         mockConsumer.Setup(c => c.ReadAllAsync(It.IsAny<CancellationToken>()))
             .Returns((CancellationToken ct) => HangingAsyncEnumerable(ct));
 
-        var consumer = SetupConsumer(mockConsumer.Object);
+        var consumer = SetupConsumer(mockConsumer.Object, Mock.Of<IMediator>());
         var cancelToken = TestContext.Current.CancellationToken;
 
         // Act: start the consumer and delay it awhile before cancelling with a 'cts'
@@ -168,7 +190,7 @@ public class OrderCreatedConsumerTests
         mockConsumer.Setup(c => c.ReadAllAsync(It.IsAny<CancellationToken>()))
             .Returns((CancellationToken ct) => HangingAsyncEnumerable(ct));
 
-        var consumer = SetupConsumer(mockConsumer.Object);
+        var consumer = SetupConsumer(mockConsumer.Object, Mock.Of<IMediator>());
         var cancelToken = TestContext.Current.CancellationToken;
 
         // Act: start the consumer and delay it awhile before cancelling with a 'cts'
@@ -207,7 +229,7 @@ public class OrderCreatedConsumerTests
         mockConsumer.Setup(c => c.ReadAllAsync(It.IsAny<CancellationToken>()))
             .Returns(ThrowingAsyncEnumerable());
 
-        var consumer = SetupConsumer(mockConsumer.Object);
+        var consumer = SetupConsumer(mockConsumer.Object, Mock.Of<IMediator>());
         var cancelToken = TestContext.Current.CancellationToken;
 
         // Act: Start the consumer. BackgroundService.StartAsync only reports failure
@@ -221,8 +243,8 @@ public class OrderCreatedConsumerTests
             // Poll for any error or the deadline instead of delay
             var deadline = DateTime.UtcNow.AddSeconds(2);
 
-            while (!_logger.Collector.GetSnapshot()
-                .Any(log => log.Level == LogLevel.Error) && DateTime.UtcNow < deadline)
+            while (!_logger.Collector.GetSnapshot().Any(log => log.Level == LogLevel.Error) && 
+                DateTime.UtcNow < deadline)
             {
                 await Task.Delay(20, cancelToken);
             }
@@ -238,6 +260,55 @@ public class OrderCreatedConsumerTests
         }
 
         // Assert: error log was written with an exception attached
+        var errorLog = _logger.Collector.GetSnapshot()
+            .SingleOrDefault(log => log.Level == LogLevel.Error);
+
+        Assert.NotNull(errorLog);
+        Assert.NotNull(errorLog.Exception);
+        Assert.Contains("unexpected error", errorLog.Message);
+    }
+
+    [Fact]
+    [Layer("Api")]
+    [Scope("Worker")]
+    public async Task ExecuteAsync_LogsError_OnHandlerThrow()
+    {
+        // Arrange: real queue, mock mediator that throws on publish, consumer and message
+        var bus = new InMemoryMessageBus<OrderCreated>();
+        var mockMediator = new Mock<IMediator>();
+        
+        mockMediator
+            .Setup(m => m.Publish(It.IsAny<OrderCreated>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Simulated handler failure"));
+
+        var consumer = SetupConsumer(bus, mockMediator.Object);
+        var cancelToken = TestContext.Current.CancellationToken;
+        var message = GetOrderCreatedMessage(orderId: 1);
+
+        // Act: publish message, then start consumer
+        await bus.PublishAsync(message, cancelToken);
+        await consumer.StartAsync(cancelToken);
+
+        try
+        {
+            // Poll until error logged or timeout
+            var deadline = DateTime.UtcNow.AddSeconds(2);
+
+            while (!_logger.Collector.GetSnapshot().Any(log => log.Level == LogLevel.Error) && 
+                DateTime.UtcNow < deadline)
+            {
+                await Task.Delay(20, cancelToken);
+            }
+        }
+        finally
+        {
+            // Shutdown background service and verify that exception is propagated to consumer
+            // Note: 'consumer.ExecuteTask' is a reference to the task returned by 'ExecuteAsync'
+            await consumer.StopAsync(cancelToken);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => consumer.ExecuteTask!);
+        }
+
+        // Assert: log written with exception attached
         var errorLog = _logger.Collector.GetSnapshot()
             .SingleOrDefault(log => log.Level == LogLevel.Error);
 
