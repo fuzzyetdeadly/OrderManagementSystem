@@ -31,7 +31,9 @@ public class EventBusTests
         await eventBus.PublishAsync(@event, cancelToken);
 
         // Assert: verify that mock publisher is called with correct event and token
-        mockPublisher.Verify(p => p.PublishAsync(@event, cancelToken), Times.Once());
+        mockPublisher.Verify(p => p.PublishAsync(
+            It.Is<OrderCreated>(e => e.OrderId == 1), cancelToken),
+            Times.Once());
     }
 
     [Fact]

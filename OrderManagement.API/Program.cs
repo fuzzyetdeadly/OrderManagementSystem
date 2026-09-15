@@ -4,6 +4,7 @@ using OrderManagement.API.DTOs;
 using OrderManagement.API.Extensions;
 using OrderManagement.API.Middleware;
 using OrderManagement.API.Workers;
+using OrderManagement.Application.EventHandlers;
 using OrderManagement.Application.Messaging;
 using OrderManagement.Application.Services;
 using OrderManagement.Domain.Entities;
@@ -28,21 +29,48 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<OrderService>();
 
-// Message bus registration (in-memory for now, RabbitMQ later)
-// Single shared bus instance exposed under both interfaces — do NOT register
-// IMessagePublisher/IMessageConsumer directly against the concrete type, that
-// creates two separate instances instead of sharing this one.
-builder.Services.AddSingleton<InMemoryMessageBus<OrderCreated>>();
-builder.Services.AddSingleton<IMessagePublisher<OrderCreated>>(
-    sp => sp.GetRequiredService<InMemoryMessageBus<OrderCreated>>());
-builder.Services.AddSingleton<IMessageConsumer<OrderCreated>>(
-    sp => sp.GetRequiredService<InMemoryMessageBus<OrderCreated>>());
+// Register MediatR for handling domain events
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<OrderCreatedHandler>());
+
+if (builder.Environment.IsProduction())
+{
+    // Register RabbitMQ for order created events
+    builder.Services.AddSingleton(sp =>
+    {
+        var options = builder.Configuration
+            .GetSection(RabbitMqOptions.SectionName)
+            .Get<RabbitMqOptions>() ??
+            throw new InvalidOperationException("RabbitMQ options are not configured");
+
+        var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
+
+        return RabbitMqMessagePublisher<OrderCreated>
+            .CreateAsync(options.HostName, options.Port, options.UserName, options.Password, scopeFactory)
+            .GetAwaiter().GetResult();
+    });
+
+    // Register IMessagePublisher using the RabbitMQ publisher instance 
+    builder.Services.AddSingleton<IMessagePublisher<OrderCreated>>(sp =>
+        sp.GetRequiredService<RabbitMqMessagePublisher<OrderCreated>>());
+}
+else
+{
+    // Message bus registration (in-memory for now, RabbitMQ later)
+    // Single shared bus instance exposed under both interfaces — do NOT register
+    // IMessagePublisher/IMessageConsumer directly against the concrete type, that
+    // creates two separate instances instead of sharing this one.
+    builder.Services.AddSingleton<InMemoryMessageBus<OrderCreated>>();
+    builder.Services.AddSingleton<IMessagePublisher<OrderCreated>>(
+        sp => sp.GetRequiredService<InMemoryMessageBus<OrderCreated>>());
+    builder.Services.AddSingleton<IMessageConsumer<OrderCreated>>(
+        sp => sp.GetRequiredService<InMemoryMessageBus<OrderCreated>>());
+
+    // Register hosted service to consume OrderCreated messages from the bus
+    builder.Services.AddHostedService<OrderCreatedConsumer>();
+}
 
 // Register event bus to dispatch events to the appropriate message publisher
 builder.Services.AddSingleton<IEventBus, EventBus>();
-
-// Register hosted service to consume OrderCreated messages from the bus
-builder.Services.AddHostedService<OrderCreatedConsumer>();
 
 // Add custom controller support
 builder.Services.AddCustomControllers();
@@ -79,6 +107,13 @@ builder.Services.AddCors(options =>
 #region middleware
 var app = builder.Build();
 
+// Production only: force RabbitMQ connection.
+// Expect this to fail fast if RabbiqMQ is not available.
+if (app.Environment.IsProduction())
+{
+    app.Services.GetRequiredService<RabbitMqMessagePublisher<OrderCreated>>();
+}
+
 app.UseMiddleware<ExceptionMiddleware>();
 
 // Configure the HTTP request pipeline.
@@ -88,19 +123,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 
     // Seed test customer data (if there are none)
-    using (var scope = app.Services.CreateScope())
-    {
-        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        if(!context.Customers.Any())
+    if (!context.Customers.Any())
+    {
+        context.Customers.Add(new Customer()
         {
-            context.Customers.Add(new Customer()
-            {
-                Name = "Jane Doe",
-                Email = "Jane.Doe@gmail.com"
-            });
-            await context.SaveChangesAsync();
-        }
+            Name = "Jane Doe",
+            Email = "Jane.Doe@gmail.com"
+        });
+        await context.SaveChangesAsync();
     }
 }
 
