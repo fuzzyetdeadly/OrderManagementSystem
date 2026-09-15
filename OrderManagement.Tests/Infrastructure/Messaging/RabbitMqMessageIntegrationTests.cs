@@ -147,20 +147,50 @@ public class RabbitMqMessageIntegrationTests : IAsyncLifetime
 
         Assert.Null(result);
     }
+
+    [Fact]
+    [Layer("Infrastructure")]
+    [Scope("Messaging")]
+    public async Task PublishAsync_OnHandlerThrow_MessageNotAcknowledged_AndRequeued()
+    {
+        // Arrange: mock mediator to throw simulated failure
+        var mockMediator = new Mock<IMediator>();
+        var tcs = new TaskCompletionSource();
+
+        mockMediator
+            .Setup(m => m.Publish(It.IsAny<OrderCreated>(), It.IsAny<CancellationToken>()))
+            .Callback(() => tcs.TrySetResult())
+            .ThrowsAsync(new InvalidOperationException("Simulated handler failure"));
+
+        // Create RabbitMQ publisher and message
+        var cf = GetConnectionFactory();
+        var scopeFactory = GetScopeFactory(mockMediator.Object);
+        var cancelToken = TestContext.Current.CancellationToken;
+        var publisher = await RabbitMqMessagePublisher<OrderCreated>.CreateAsync(
+            cf.HostName, cf.Port, cf.UserName, cf.Password, scopeFactory, cancelToken);
+
+        // Act: publish a message
+        var message = GetOrderCreatedMessage(orderId: 3);
+
+        await publisher.PublishAsync(message, cancelToken);
+
+        // Assert: 'tcs' task is completed within 5s
+        var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(5), cancelToken));
+
+        Assert.Same(tcs.Task, completedTask);
+
+        // Act: let throw unwind before disposing publisher and closing connection
+        await Task.Delay(TimeSpan.FromMilliseconds(200), cancelToken);
+
+        await publisher.DisposeAsync();
+
+        // Assert: message is requeued after failure
+        await using var connection = await cf.CreateConnectionAsync(cancelToken);
+        await using var channel = await connection.CreateChannelAsync(cancellationToken: cancelToken);
+
+        // Get messages from the queue
+        var result = await channel.BasicGetAsync(queue: nameof(OrderCreated), autoAck: true, cancelToken);
+
+        Assert.NotNull(result);
+    }
 }
-
-/* Note: gaps
-Integration test (RabbitMqMessageIntegrationTests.cs)
-
-* Explicit ack verification — test proves the message was consumed/dispatched, not that it was acknowledged in RabbitMQ afterward.
-* Concurrent/multiple messages — only a single message is tested; no coverage for ordering or race conditions across multiple messages.
-* Null/malformed message deserialization — untested; message gets acked and silently dropped, no verification this is intended.
-* Handler exception behavior — if mediator.Publish throws, BasicAckAsync never runs; no test confirms resulting behavior (redelivery, stuck message, etc.) — real production risk (poison-message loop).
-* Scope-per-message behavior — the intentional design (_scopeFactory.CreateScope() per message) is untested; nothing confirms a new scope is created each time rather than reused.
-* DisposeAsync — no test that channel/connection are actually closed, or that publishing after disposal fails predictably.
-* Durable queue survival — reasonable to skip; impractical to test without restarting the broker mid-test.
-
-Priority to close gaps: 
-
-* handler-exception and null-deserialization ack path are the most valuable additions
-*/
