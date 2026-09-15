@@ -13,7 +13,7 @@ public class OrderCreatedHandler : INotificationHandler<OrderCreated>
         _logger = logger;
     }
 
-    public Task Handle(OrderCreated notification, CancellationToken cancelToken)
+    public Task Handle(OrderCreated notification, CancellationToken cancelToken = default)
     {
         _logger.LogInformation(
             "Order {OrderId} created for customer {CustomerId} at {CreatedAt}",
