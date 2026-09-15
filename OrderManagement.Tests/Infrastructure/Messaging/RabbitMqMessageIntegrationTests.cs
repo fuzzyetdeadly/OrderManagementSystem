@@ -198,7 +198,7 @@ public class RabbitMqMessageIntegrationTests : IAsyncLifetime
     [Fact]
     [Layer("Infrastructure")]
     [Scope("Messaging")]
-    public async Task PublishAsync_WithMalformedMessage_IsSilentlyAcknowledgedAndDropped()
+    public async Task PublishAsync_WithMalformedMessage_IsNackedAndDropped()
     {
         // Arrange: mock mediator
         var mockMediator = new Mock<IMediator>();
@@ -211,7 +211,7 @@ public class RabbitMqMessageIntegrationTests : IAsyncLifetime
             cf.HostName, cf.Port, cf.UserName, cf.Password, scopeFactory, cancelToken);
 
         // Act: publish garbage bytes directly to the queue (bypasses PublishAsync's serialize)
-        // to simulate payload fails to the message broker
+        // to simulate payload that will fail to deserialize in 'consumer.ReceivedAsync'
         await using var connection = await cf.CreateConnectionAsync(cancelToken);
         await using var channel = await connection.CreateChannelAsync(cancellationToken: cancelToken);
 
